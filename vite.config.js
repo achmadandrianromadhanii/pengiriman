@@ -1,7 +1,6 @@
 import { defineConfig } from "vite";
 import laravel from "laravel-vite-plugin";
 import vue from "@vitejs/plugin-vue";
-import path from "path";
 
 export default defineConfig({
     plugins: [
@@ -23,8 +22,15 @@ export default defineConfig({
     ],
     resolve: {
         alias: {
+            // [UPDATE: ALIAS PATH UTAMA]
+            // Fungsi: Shortcut "@" agar import komponen menjadi singkat dan rapi
+            // Contoh: import Navbar from '@/Components/Navbar.vue'
             "@": "/resources/js",
-            "ziggy-js": path.resolve("vendor/tightenco/ziggy"),
+            // [UPDATE: ZIGGY RESOLUSI OTOMATIS]
+            // Fungsi: ziggy-js di-resolve dari node_modules (package.json) secara otomatis
+            // Penjelasan: Tidak perlu alias manual ke vendor/ karena sudah ada di npm dependencies
+            // Ini juga menjamin kompatibilitas saat build di Vercel (npm build jalan duluan sebelum composer install)
         },
     },
 });
+

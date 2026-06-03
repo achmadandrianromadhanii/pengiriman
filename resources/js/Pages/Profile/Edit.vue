@@ -4,6 +4,9 @@
     import UpdatePasswordForm from './Partials/UpdatePasswordForm.vue';
     import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm.vue';
     import { Head } from '@inertiajs/vue3';
+    import { ref } from 'vue';
+
+    const activeTab = ref('profile');
 
     defineOptions({ layout: AppLayout });
 
@@ -87,21 +90,72 @@
             </div>
         </div>
 
-        <!-- Wrapper Kartu Premium untuk form -->
+        <!-- [UPDATE: NAVIGASI TAB KHUSUS MOBILE] -->
+        <!-- Fungsi: Menghilangkan scroll panjang di HP dengan menu tab interaktif. Tidak tampil di desktop (md:hidden). -->
         <div
-            class="card md:p-8 p-5 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:bg-card-dark border-none max-w-xl"
+            class="md:hidden flex gap-2 p-1 bg-gray-100/80 dark:bg-gray-800/80 rounded-2xl p-1.5 overflow-x-auto hide-scrollbar w-full max-w-xl backdrop-blur-md shadow-inner"
+        >
+            <button
+                @click="activeTab = 'profile'"
+                :class="[
+                    'flex-1 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-300',
+                    activeTab === 'profile'
+                        ? 'bg-white dark:bg-gray-700 text-blue-600 shadow-sm ring-1 ring-black/5'
+                        : 'text-gray-500 hover:text-gray-700',
+                ]"
+            >
+                <i class="bi bi-person-gear mr-1"></i> Profil
+            </button>
+            <button
+                @click="activeTab = 'security'"
+                :class="[
+                    'flex-1 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-300',
+                    activeTab === 'security'
+                        ? 'bg-white dark:bg-gray-700 text-blue-600 shadow-sm ring-1 ring-black/5'
+                        : 'text-gray-500 hover:text-gray-700',
+                ]"
+            >
+                <i class="bi bi-shield-lock mr-1"></i> Keamanan
+            </button>
+            <button
+                @click="activeTab = 'danger'"
+                :class="[
+                    'flex-1 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-300',
+                    activeTab === 'danger'
+                        ? 'bg-red-50 dark:bg-red-900/30 text-red-600 shadow-sm ring-1 ring-red-500/10'
+                        : 'text-gray-500 hover:text-red-500',
+                ]"
+            >
+                <i class="bi bi-exclamation-triangle mr-1"></i> Bahaya
+            </button>
+        </div>
+
+        <!-- Wrapper Kartu Premium untuk form Profil -->
+        <div
+            :class="[
+                'card md:p-8 p-5 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:bg-card-dark border-none max-w-xl transition-all duration-300',
+                activeTab === 'profile' ? 'block animate-fade-in' : 'hidden md:block',
+            ]"
         >
             <UpdateProfileInformationForm :must-verify-email="mustVerifyEmail" :status="status" />
         </div>
 
+        <!-- Wrapper Kartu Premium untuk form Password -->
         <div
-            class="card md:p-8 p-5 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:bg-card-dark border-none max-w-xl"
+            :class="[
+                'card md:p-8 p-5 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:bg-card-dark border-none max-w-xl transition-all duration-300',
+                activeTab === 'security' ? 'block animate-fade-in' : 'hidden md:block',
+            ]"
         >
             <UpdatePasswordForm />
         </div>
 
+        <!-- Wrapper Kartu Premium untuk form Hapus Akun -->
         <div
-            class="card md:p-8 p-5 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:bg-card-dark border-none max-w-xl"
+            :class="[
+                'card md:p-8 p-5 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:bg-card-dark border-none max-w-xl transition-all duration-300',
+                activeTab === 'danger' ? 'block animate-fade-in' : 'hidden md:block',
+            ]"
         >
             <DeleteUserForm />
         </div>

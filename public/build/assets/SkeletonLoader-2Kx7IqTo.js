@@ -1,0 +1,1 @@
+import{g as a,n as s,o as t}from"./app-BD4ud3bT.js";const o={__name:"SkeletonLoader",props:{className:{type:String,default:""}},setup(e){return(n,r)=>(t(),a("div",{class:s(["skeleton",e.className]),"aria-hidden":"true"},null,2))}};export{o as _};

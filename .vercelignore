@@ -1,0 +1,20 @@
+# ============================================================================
+# [VERCEL IGNORE FILE]
+# ============================================================================
+# Fungsi: Memberitahu Vercel file/folder mana yang TIDAK perlu diunggah
+# Penjelasan: Mengurangi ukuran deployment agar proses deploy lebih cepat
+# ============================================================================
+/.git
+/node_modules
+/tests
+/storage/logs
+/storage/framework/cache
+/storage/framework/sessions
+/storage/framework/views
+/.env
+/.env.backup
+/.phpunit.cache
+/phpunit.xml
+/.vscode
+/.idea
+/.fleet

@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests;
 
-use App\Models\User;
+use App\Models\Admin;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -24,7 +24,11 @@ class ProfileUpdateRequest extends FormRequest
                 'lowercase',
                 'email',
                 'max:255',
-                Rule::unique(User::class)->ignore($this->user()->id),
+                // ── [UPDATE: KOMPATIBILITAS TABEL AUTH] ─────────────
+                // Fungsi: Memvalidasi keunikan email pada tabel admin, bukan tabel users (default bawaan Laravel).
+                // Penjelasan: Error "Undefined table: users" terjadi karena Laravel mencoba mencari email di tabel "users".
+                // Karena kita menggunakan tabel "admins", maka kita harus mengubah referensi modelnya ke Admin::class.
+                Rule::unique(Admin::class)->ignore($this->user()->id),
             ],
         ];
     }
