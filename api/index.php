@@ -53,6 +53,7 @@ foreach ($directories as $dir) {
 //
 $envOverrides = [
     'APP_STORAGE_PATH' => $storagePath,
+    'VIEW_COMPILED_PATH' => "$storagePath/framework/views",
     'APP_SERVICES_CACHE' => "$cachePath/services.php",
     'APP_PACKAGES_CACHE' => "$cachePath/packages.php",
     'APP_CONFIG_CACHE' => "$cachePath/config.php",
