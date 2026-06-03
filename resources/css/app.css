@@ -1,0 +1,401 @@
+/* ── Google Fonts ─────────────────────────────── */
+/* ── Google Fonts (Dipindah ke app.blade.php untuk preconnect LCP 100%) ── */
+
+/* ── Library CSS ───────────────────────────────── */
+@import 'leaflet/dist/leaflet.css';
+@import 'nprogress/nprogress.css';
+@import 'bootstrap-icons/font/bootstrap-icons.css';
+
+/* ── Tailwind ─────────────────────────────────── */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── NProgress Override ───────────────────────── */
+#nprogress .bar {
+    background: #6366f1 !important;
+    height: 3px !important;
+    box-shadow:
+        0 0 8px rgba(99, 102, 241, 0.8),
+        0 0 4px rgba(99, 102, 241, 0.6) !important;
+}
+#nprogress .peg {
+    box-shadow:
+        0 0 10px #6366f1,
+        0 0 5px #6366f1 !important;
+}
+#nprogress .spinner {
+    display: none !important;
+}
+#nprogress {
+    pointer-events: none;
+}
+.dark #nprogress .bar {
+    background: #818cf8 !important;
+}
+
+/* ── Base ─────────────────────────────────────── */
+@layer base {
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
+
+    body {
+        @apply font-sans bg-body-light dark:bg-body-dark text-gray-800 dark:text-gray-100;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        background-image:
+            radial-gradient(at 0% 0%, rgba(30, 58, 138, 0.04) 0px, transparent 50%),
+            radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.04) 0px, transparent 50%);
+        background-attachment: fixed;
+    }
+
+    .dark body {
+        background-image:
+            radial-gradient(at 0% 0%, rgba(30, 58, 138, 0.15) 0px, transparent 50%),
+            radial-gradient(at 100% 100%, rgba(6, 182, 212, 0.08) 0px, transparent 50%);
+    }
+
+    /* ── Global Theme Transition (Aktif hanya saat tombol dark mode diklik) ── */
+    /* Fungsi: Menganimasikan perpindahan warna gelap↔terang secara halus */
+    /* Cara Kerja: Kelas ini disuntikkan sesaat oleh JS, lalu dicabut kembali */
+    /*             agar tidak memberatkan hover/interaksi biasa */
+    /* Durasi: 0.35s — cukup cepat agar tidak terasa lemot, */
+    /*         cukup lambat agar tidak terasa kasar/instan */
+    html.theme-transition,
+    html.theme-transition * {
+        transition:
+            background-color 0.35s ease,
+            border-color 0.35s ease,
+            color 0.35s ease !important;
+        transition-delay: 0s !important;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        font-family: 'Sora', sans-serif;
+    }
+
+    input,
+    textarea,
+    select {
+        @apply transition-all duration-200;
+    }
+
+    /* Fokus aksesibilitas (ring tetap dari Tailwind focus:ring) */
+    :focus-visible {
+        outline: none;
+    }
+}
+
+/* ── Komponen Reusable ───────────────────────── */
+@layer components {
+    /* Glass helper (AeroGlass Premium) */
+    .glass {
+        @apply bg-white/70 dark:bg-white/5 backdrop-blur-2xl border border-white/40 dark:border-white/10 shadow-glass;
+    }
+
+    .divider {
+        @apply border-t border-gray-100 dark:border-gray-700/50;
+    }
+
+    /* Buttons */
+    .btn-base {
+        @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold
+               transition-all duration-[400ms] ease-spring active:scale-95
+               disabled:opacity-60 disabled:cursor-not-allowed will-change-transform;
+    }
+
+    .btn-primary {
+        @apply btn-base bg-primary hover:bg-primary-light text-white shadow-sm hover:shadow-glass-hover
+               focus:outline-none focus:ring-2 focus:ring-primary/40 cursor-pointer;
+    }
+
+    .btn-secondary {
+        @apply btn-base bg-white/80 dark:bg-gray-800 border border-gray-200 dark:border-gray-700
+               text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700;
+    }
+
+    .btn-danger {
+        @apply btn-base bg-red-500 hover:bg-red-600 text-white
+               hover:-translate-y-0.5;
+    }
+
+    /* Card */
+    .card {
+        @apply bg-white dark:bg-card-dark rounded-2xl shadow-soft
+               border border-gray-100 dark:border-gray-700/50 p-6
+               transition-all duration-[400ms] ease-spring;
+    }
+
+    .card-solid {
+        @apply bg-white dark:bg-card-dark rounded-2xl shadow-soft
+               border border-gray-100 dark:border-gray-700/50 p-6;
+    }
+
+    .card-hover {
+        @apply hover:shadow-premium hover:-translate-y-1 will-change-transform;
+    }
+
+    /* Inputs */
+    .input-field {
+        @apply w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600
+               bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100
+               placeholder-gray-400 dark:placeholder-gray-500
+               focus:border-primary focus:ring-2 focus:ring-primary/20
+               outline-none transition-all duration-200 text-sm;
+    }
+
+    /* Badges */
+    .badge {
+        @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold;
+    }
+
+    .badge-gray {
+        @apply badge bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300;
+    }
+
+    .badge-amber {
+        @apply badge bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400;
+    }
+
+    .badge-blue {
+        @apply badge bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400;
+    }
+
+    .badge-green {
+        @apply badge bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400;
+    }
+
+    .badge-red {
+        @apply badge bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400;
+    }
+
+    .badge-indigo {
+        @apply badge bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400;
+    }
+}
+
+/* ── Scrollbar Tipis ─────────────────────────── */
+::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 dark:bg-gray-600 rounded-full;
+}
+::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-400 dark:bg-gray-500;
+}
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+}
+
+/* Scrollbar alternatif (opsional untuk container tertentu) */
+.nice-scrollbar::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+.nice-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 999px;
+}
+.dark .nice-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* ── Leaflet Map ─────────────────────────────── */
+.leaflet-map-container {
+    height: 400px;
+    width: 100%;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+    z-index: 1;
+}
+@media (max-width: 768px) {
+    .leaflet-map-container {
+        height: 260px;
+    }
+}
+.leaflet-container {
+    z-index: 1;
+}
+.custom-icon {
+    background: transparent !important;
+    border: none !important;
+}
+
+/* ── Print — Cetak Resi ──────────────────────── */
+@media print {
+    .no-print,
+    nav,
+    aside,
+    header,
+    footer,
+    .btn-primary,
+    .btn-secondary,
+    .btn-danger {
+        display: none !important;
+    }
+    body {
+        background: white !important;
+        color: black !important;
+        font-size: 12pt;
+    }
+    .print-container {
+        width: 100%;
+        max-width: 100%;
+        padding: 0;
+        margin: 0;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    th,
+    td {
+        border: 1px solid #ccc;
+        padding: 6px 10px;
+        text-align: left;
+    }
+    th {
+        background: #6366f1;
+        color: white;
+    }
+    .barcode-container svg {
+        max-width: 200px;
+    }
+    .qr-container img {
+        max-width: 100px;
+    }
+}
+
+/* ── Sidebar Transition ──────────────────────── */
+.sidebar-expanded {
+    width: 260px;
+}
+.sidebar-collapsed {
+    width: 80px;
+}
+.sidebar-transition {
+    transition: width 250ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Step Form Progress ──────────────────────── */
+.step-connector {
+    flex: 1;
+    height: 2px;
+    @apply bg-gray-200 dark:bg-gray-700;
+    transition: background-color 0.3s;
+}
+.step-connector.active {
+    @apply bg-primary;
+}
+
+/* ── Skeleton Shimmer ────────────────────────── */
+/* NOTE: pakai shimmerBg supaya tidak bentrok dengan keyframes Tailwind "shimmer" */
+@keyframes shimmerBg {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+.skeleton {
+    @apply rounded-lg;
+    background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+    background-size: 200% 100%;
+    animation: shimmerBg 1.5s infinite;
+}
+.dark .skeleton {
+    background: linear-gradient(90deg, #374151 25%, #4b5563 50%, #374151 75%);
+    background-size: 200% 100%;
+}
+
+/* ── Page Transition ─────────────────────────── */
+.page-enter-active,
+.page-leave-active {
+    transition: all 0.25s ease;
+}
+.page-enter-from {
+    opacity: 0;
+    transform: translateY(12px);
+}
+.page-leave-to {
+    opacity: 0;
+    transform: translateY(-12px);
+}
+
+/* ── Tracking: scale-in untuk status terkirim ─────────────────── */
+@keyframes scaleInSoft {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+.animate-scale-in-soft {
+    animation: scaleInSoft 0.35s ease-out both;
+}
+
+/* ── MOBILE APP STYLES (V50+) ──────────────────── */
+/* HANYA berlaku di < 768px - Desktop TIDAK terpengaruh */
+@media (max-width: 767px) {
+    body {
+        font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+        overflow-x: hidden;
+    }
+    .font-heading,
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        font-family: 'Outfit', 'Sora', sans-serif;
+    }
+    button,
+    a,
+    input,
+    select,
+    textarea {
+        min-height: 44px;
+    }
+    .glass,
+    .card,
+    .card-solid {
+        border-radius: 1.25rem;
+    }
+    .pb-safe {
+        padding-bottom: calc(80px + env(safe-area-inset-bottom));
+    }
+}
+
+/* ── Reduced motion ─────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
