@@ -33,7 +33,7 @@ return new class extends Migration
             $table->timestamp('created_at')->useCurrent();
 
             $table->foreign('pengiriman_id')->references('id')->on('pengiriman')->cascadeOnDelete();
-            $table->index('pengiriman_id', 'idx_pengiriman');
+            $table->index('pengiriman_id', 'idx_barang_pengiriman');
         });
     }
 

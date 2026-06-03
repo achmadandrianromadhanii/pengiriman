@@ -27,7 +27,7 @@ return new class extends Migration
             $table->foreign('pengiriman_id')->references('id')->on('pengiriman')->cascadeOnDelete();
             $table->foreign('admin_id')->references('id')->on('admins')->restrictOnDelete();
 
-            $table->index('pengiriman_id', 'idx_pengiriman');
+            $table->index('pengiriman_id', 'idx_tracking_pengiriman');
         });
     }
 

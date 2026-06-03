@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Pengiriman;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -59,13 +60,23 @@ class DashboardController extends Controller
             $start = now()->startOfMonth()->subMonths(11);
             $end = now()->endOfMonth();
 
-            $shipmentsByMonth = Pengiriman::selectRaw('DATE_FORMAT(created_at, "%Y-%m") as ym, COUNT(*) as total')
+            // ── [UPDATE: KOMPATIBILITAS DATABASE (POSTGRESQL & MYSQL)] ─────────────
+            // Fungsi: Mendeteksi jenis database yang sedang digunakan untuk query tanggal
+            // Penjelasan: MySQL menggunakan DATE_FORMAT, sedangkan PostgreSQL menggunakan TO_CHAR.
+            // Kode ini membuat sistem pintar mendeteksi driver sehingga aman dari error "Undefined column"
+            // baik di server lokal (MySQL/PgSQL) maupun di Vercel Neon (PostgreSQL).
+            $dbDriver = DB::connection()->getDriverName();
+            $dateFormatRaw = $dbDriver === 'pgsql'
+                ? "TO_CHAR(created_at, 'YYYY-MM')"
+                : "DATE_FORMAT(created_at, '%Y-%m')";
+
+            $shipmentsByMonth = Pengiriman::selectRaw("$dateFormatRaw as ym, COUNT(*) as total")
                 ->whereBetween('created_at', [$start, $end])
                 ->groupBy('ym')
                 ->pluck('total', 'ym')
                 ->toArray();
 
-            $revenueByMonth = Pengiriman::selectRaw('DATE_FORMAT(created_at, "%Y-%m") as ym, COALESCE(SUM(total_biaya), 0) as total')
+            $revenueByMonth = Pengiriman::selectRaw("$dateFormatRaw as ym, COALESCE(SUM(total_biaya), 0) as total")
                 ->where('status', 'terkirim')
                 ->whereBetween('created_at', [$start, $end])
                 ->groupBy('ym')
