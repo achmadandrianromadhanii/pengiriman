@@ -51,17 +51,39 @@
             </div>
 
             <div>
-                <h1
-                    class="font-heading font-extrabold text-2xl md:text-3xl text-gray-900 dark:text-white tracking-tight"
-                >
-                    {{ $page.props.auth.user.name }}
-                </h1>
-                <p
-                    class="text-sm font-medium text-gray-500 dark:text-gray-400 mt-1 flex items-center justify-center md:justify-start gap-1.5"
-                >
-                    <i class="bi bi-envelope-at text-gray-400"></i>
-                    {{ $page.props.auth.user.email }}
-                </p>
+                <!-- [UPDATE: NAMA & BADGE TERVERIFIKASI] -->
+                <!-- Fungsi: Menampilkan nama dengan badge biru verifikasi untuk kesan profesional -->
+                <div class="flex items-center justify-center md:justify-start gap-2">
+                    <h1
+                        class="font-heading font-extrabold text-2xl md:text-3xl text-gray-900 dark:text-white tracking-tight"
+                    >
+                        {{ $page.props.auth.user.name }}
+                    </h1>
+                    <!-- Ikon Centang Biru (Verified) murni bawaan Bootstrap Icons -->
+                    <i
+                        class="bi bi-patch-check-fill text-blue-500 text-xl"
+                        title="Verified Account"
+                    ></i>
+                </div>
+
+                <!-- [UPDATE: EMAIL & STATUS CHIP] -->
+                <!-- Fungsi: Menampilkan email beserta chip status "Administrator" -->
+                <div class="mt-2 flex flex-col md:flex-row items-center gap-2 md:gap-3">
+                    <p
+                        class="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1.5"
+                    >
+                        <i class="bi bi-envelope-at text-gray-400"></i>
+                        {{ $page.props.auth.user.email }}
+                    </p>
+
+                    <!-- Chip Status (Super Ringan, murni Tailwind CSS) -->
+                    <span
+                        class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
+                    >
+                        <span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
+                        Administrator
+                    </span>
+                </div>
             </div>
         </div>
 

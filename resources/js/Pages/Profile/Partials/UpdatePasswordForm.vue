@@ -9,6 +9,12 @@
     const passwordInput = ref(null);
     const currentPasswordInput = ref(null);
 
+    // [UPDATE: STATE UNTUK TOGGLE PASSWORD]
+    // Fungsi: Mengatur visibilitas kata sandi secara reaktif
+    const showCurrentPassword = ref(false);
+    const showNewPassword = ref(false);
+    const showConfirmPassword = ref(false);
+
     const form = useForm({
         current_password: '',
         password: '',
@@ -36,72 +42,144 @@
 <template>
     <section>
         <header>
-            <h2 class="text-lg font-medium text-gray-900">Update Password</h2>
+            <!-- [UPDATE: JUDUL PREMIUM] -->
+            <!-- Fungsi: Identitas visual halaman update password -->
+            <h2
+                class="text-xl font-black text-gray-900 dark:text-white flex items-center gap-2 tracking-tight"
+            >
+                <i class="bi bi-key-fill text-blue-600"></i> Update Password
+            </h2>
 
-            <p class="mt-1 text-sm text-gray-600">
-                Ensure your account is using a long, random password to stay secure.
+            <p class="mt-1.5 text-sm text-gray-500 dark:text-gray-400 font-medium">
+                Pastikan akun Anda menggunakan kata sandi yang panjang dan acak agar tetap aman.
             </p>
         </header>
 
         <form @submit.prevent="updatePassword" class="mt-6 space-y-8">
+            <!-- [UPDATE: INPUT KATA SANDI SAAT INI] -->
+            <!-- Fungsi: Input dengan ikon dan toggle mata -->
             <div>
                 <InputLabel
                     for="current_password"
-                    value="Current Password"
+                    value="CURRENT PASSWORD"
                     class="text-[10px] uppercase font-extrabold tracking-widest text-slate-500 dark:text-gray-400 mb-1.5"
                 />
 
-                <TextInput
-                    id="current_password"
-                    ref="currentPasswordInput"
-                    v-model="form.current_password"
-                    type="password"
-                    class="mt-1 block w-full bg-gray-100 shadow-inner dark:bg-white/5 border-transparent md:border-gray-200 rounded-2xl md:rounded-lg focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 h-12 transition-all px-4"
-                    autocomplete="current-password"
-                />
+                <div class="relative group">
+                    <div
+                        class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"
+                    >
+                        <i
+                            class="bi bi-shield-lock-fill text-gray-400 group-focus-within:text-blue-500 transition-colors duration-300"
+                        ></i>
+                    </div>
+                    <TextInput
+                        id="current_password"
+                        ref="currentPasswordInput"
+                        v-model="form.current_password"
+                        :type="showCurrentPassword ? 'text' : 'password'"
+                        class="mt-1 block w-full bg-gray-100/50 shadow-inner dark:bg-white/5 border-transparent md:border-gray-200 rounded-2xl md:rounded-lg focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 h-12 transition-all pl-12 pr-12 peer"
+                        autocomplete="current-password"
+                    />
+                    <button
+                        type="button"
+                        @click="showCurrentPassword = !showCurrentPassword"
+                        class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none"
+                    >
+                        <i
+                            :class="showCurrentPassword ? 'bi bi-eye-slash-fill' : 'bi bi-eye-fill'"
+                        ></i>
+                    </button>
+                </div>
 
                 <InputError :message="form.errors.current_password" class="mt-2" />
             </div>
 
+            <!-- [UPDATE: INPUT KATA SANDI BARU] -->
+            <!-- Fungsi: Input dengan ikon dan toggle mata -->
             <div>
                 <InputLabel
                     for="password"
-                    value="New Password"
+                    value="NEW PASSWORD"
                     class="text-[10px] uppercase font-extrabold tracking-widest text-slate-500 dark:text-gray-400 mb-1.5"
                 />
 
-                <TextInput
-                    id="password"
-                    ref="passwordInput"
-                    v-model="form.password"
-                    type="password"
-                    class="mt-1 block w-full bg-gray-100 shadow-inner dark:bg-white/5 border-transparent md:border-gray-200 rounded-2xl md:rounded-lg focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 h-12 transition-all px-4"
-                    autocomplete="new-password"
-                />
+                <div class="relative group">
+                    <div
+                        class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"
+                    >
+                        <i
+                            class="bi bi-shield-lock-fill text-gray-400 group-focus-within:text-blue-500 transition-colors duration-300"
+                        ></i>
+                    </div>
+                    <TextInput
+                        id="password"
+                        ref="passwordInput"
+                        v-model="form.password"
+                        :type="showNewPassword ? 'text' : 'password'"
+                        class="mt-1 block w-full bg-gray-100/50 shadow-inner dark:bg-white/5 border-transparent md:border-gray-200 rounded-2xl md:rounded-lg focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 h-12 transition-all pl-12 pr-12 peer"
+                        autocomplete="new-password"
+                    />
+                    <button
+                        type="button"
+                        @click="showNewPassword = !showNewPassword"
+                        class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none"
+                    >
+                        <i :class="showNewPassword ? 'bi bi-eye-slash-fill' : 'bi bi-eye-fill'"></i>
+                    </button>
+                </div>
 
                 <InputError :message="form.errors.password" class="mt-2" />
             </div>
 
+            <!-- [UPDATE: INPUT KONFIRMASI KATA SANDI] -->
+            <!-- Fungsi: Input dengan ikon, toggle mata, dan perbaikan label agar seragam -->
             <div>
-                <InputLabel for="password_confirmation" value="Confirm Password" />
-
-                <TextInput
-                    id="password_confirmation"
-                    v-model="form.password_confirmation"
-                    type="password"
-                    class="mt-1 block w-full bg-gray-100 shadow-inner dark:bg-white/5 border-transparent md:border-gray-200 rounded-2xl md:rounded-lg focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/20 h-12 transition-all px-4"
-                    autocomplete="new-password"
+                <InputLabel
+                    for="password_confirmation"
+                    value="CONFIRM PASSWORD"
+                    class="text-[10px] uppercase font-extrabold tracking-widest text-slate-500 dark:text-gray-400 mb-1.5"
                 />
+
+                <div class="relative group">
+                    <div
+                        class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"
+                    >
+                        <i
+                            class="bi bi-shield-lock-fill text-gray-400 group-focus-within:text-blue-500 transition-colors duration-300"
+                        ></i>
+                    </div>
+                    <TextInput
+                        id="password_confirmation"
+                        v-model="form.password_confirmation"
+                        :type="showConfirmPassword ? 'text' : 'password'"
+                        class="mt-1 block w-full bg-gray-100/50 shadow-inner dark:bg-white/5 border-transparent md:border-gray-200 rounded-2xl md:rounded-lg focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 h-12 transition-all pl-12 pr-12 peer"
+                        autocomplete="new-password"
+                    />
+                    <button
+                        type="button"
+                        @click="showConfirmPassword = !showConfirmPassword"
+                        class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none"
+                    >
+                        <i
+                            :class="showConfirmPassword ? 'bi bi-eye-slash-fill' : 'bi bi-eye-fill'"
+                        ></i>
+                    </button>
+                </div>
 
                 <InputError :message="form.errors.password_confirmation" class="mt-2" />
             </div>
 
             <div class="flex items-center gap-4">
+                <!-- [UPDATE: TOMBOL SIMPAN KATA SANDI] -->
+                <!-- Fungsi: Tombol dengan teks deskriptif dan ikon ceklis -->
                 <PrimaryButton
                     :disabled="form.processing"
-                    class="w-full md:w-auto flex justify-center rounded-full md:rounded-lg h-12 md:h-10 text-sm bg-gradient-to-r from-blue-600 to-indigo-600 border-none shadow-[0_8px_20px_-6px_rgba(79,70,229,0.5)] text-white hover:from-blue-500 hover:to-indigo-500 active:scale-95 transition-all"
-                    >Save</PrimaryButton
+                    class="w-full md:w-auto flex justify-center items-center gap-2 rounded-full md:rounded-lg h-12 md:h-10 text-sm font-bold tracking-wide bg-gradient-to-r from-blue-600 to-indigo-600 border-none shadow-[0_8px_20px_-6px_rgba(79,70,229,0.5)] text-white hover:from-blue-500 hover:to-indigo-500 active:scale-95 transition-all"
                 >
+                    <i class="bi bi-key-fill text-lg leading-none"></i>
+                    Perbarui Kata Sandi
+                </PrimaryButton>
 
                 <Transition
                     enter-active-class="transition ease-in-out"
