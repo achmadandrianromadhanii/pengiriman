@@ -6,7 +6,10 @@ import path from "path";
 export default defineConfig({
     plugins: [
         laravel({
-            input: ["resources/css/app.css", "resources/js/app.js"],
+            // [UPDATE: SINGLE ENTRY POINT]
+            // Fungsi: Hanya mendaftarkan satu entry point (app.js) karena app.css sudah di-import di dalamnya
+            // Cara Kerja: Vite secara otomatis memproses CSS yang di-import oleh JS, menghindari duplikat preload
+            input: ["resources/js/app.js"],
             refresh: true,
         }),
         vue({
