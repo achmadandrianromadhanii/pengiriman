@@ -2,7 +2,10 @@
     import AuthLayout from '@/Layouts/AuthLayout.vue';
     import { Head, useForm, router } from '@inertiajs/vue3';
     import { onBeforeUnmount, ref, watch } from 'vue';
-    import Swal from 'sweetalert2';
+    // [UPDATE: LAZY-LOAD SWEETALERT VIA SHARED LIB]
+    // Fungsi: fireToast dari lib/alert.js lazy-load SweetAlert2 (~50KB) saat dipanggil.
+    // Hasil: Form login muncul instan di HP Android, tanpa menunggu library berat.
+    import { fireToast } from '@/lib/alert';
 
     defineOptions({ layout: AuthLayout });
 
@@ -22,24 +25,11 @@
 
     let redirectTimer = null;
 
-    function toast(icon, title, timer = 2200) {
+    function toast(icon, title) {
         const key = `${icon}:${title}`;
         if (lastToast.value === key) return;
         lastToast.value = key;
-
-        Swal.fire({
-            toast: true,
-            position: 'top-end',
-            icon,
-            title,
-            showConfirmButton: false,
-            timer,
-            timerProgressBar: true,
-            didOpen: (el) => {
-                el.addEventListener('mouseenter', Swal.stopTimer);
-                el.addEventListener('mouseleave', Swal.resumeTimer);
-            },
-        });
+        fireToast(icon, title);
     }
 
     function isGmail(email) {
@@ -76,7 +66,7 @@
         () => props.loginSuccess,
         (ok) => {
             if (!ok) return;
-            toast('success', 'Login berhasil! Mengalihkan ke Dashboard...', 1500);
+            toast('success', 'Login berhasil! Mengalihkan ke Dashboard...');
             redirectTimer = setTimeout(() => {
                 router.visit(route('dashboard'), { replace: true });
             }, 1500);

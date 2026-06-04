@@ -2,12 +2,21 @@
     import AppLayout from '@/Layouts/AppLayout.vue';
     import StatCard from '@/Components/StatCard.vue';
     import SkeletonLoader from '@/Components/SkeletonLoader.vue';
-    import ApexAreaChart from '@/Components/ApexAreaChart.vue';
-    import ApexRadialBar from '@/Components/ApexRadialBar.vue';
-    import ApexDonutChart from '@/Components/ApexDonutChart.vue';
-    import ApexBarChart from '@/Components/ApexBarChart.vue';
-    import { computed, onMounted, onUnmounted, ref } from 'vue';
+
+    // [UPDATE: LAZY-LOAD CHART COMPONENTS]
+    // Fungsi: Menunda pemuatan library ApexCharts (~450KB!) hingga komponen benar-benar dirender.
+    // Alasan: Jika dimuat langsung (static import), browser HP Android harus mengunduh + mengurai
+    //         ~450KB JavaScript SEBELUM Dashboard bisa tampil = lag parah + patah-patah.
+    // Cara Kerja: defineAsyncComponent membuat Vue hanya memuat file JS chart saat elemen
+    //             <ApexAreaChart> dsb benar-benar muncul di layar (visible).
+    // Hasil: Dashboard tampil instan (kartu statistik langsung muncul), chart menyusul 0.5-1 detik kemudian.
+    import { defineAsyncComponent, computed, onMounted, onUnmounted, ref } from 'vue';
     import { Head, router } from '@inertiajs/vue3';
+
+    const ApexAreaChart = defineAsyncComponent(() => import('@/Components/ApexAreaChart.vue'));
+    const ApexRadialBar = defineAsyncComponent(() => import('@/Components/ApexRadialBar.vue'));
+    const ApexDonutChart = defineAsyncComponent(() => import('@/Components/ApexDonutChart.vue'));
+    const ApexBarChart = defineAsyncComponent(() => import('@/Components/ApexBarChart.vue'));
 
     defineOptions({ layout: AppLayout });
 
@@ -40,7 +49,7 @@
         window.requestAnimationFrame(step);
     }
 
-    onMounted(() => {
+    onMounted(async () => {
         mounted.value = true;
 
         // Mulai animasi angka pelan 2-3 detik
@@ -48,6 +57,13 @@
         animateValue(animKirim, Number(props.stats.totalPengiriman || 0), 2200);
         animateValue(animSuccess, Number(props.stats.successRate || 0), 2600);
         animateValue(animKendala, Number(props.stats.paketBermasalah || 0), 2000);
+
+        // [UPDATE: LAZY-LOAD ECHO HANYA DI DASHBOARD]
+        // Fungsi: Echo + Pusher (~100KB) hanya di-download setelah Dashboard sudah tampil.
+        // Cara Kerja: initEcho() menunggu dynamic import selesai, lalu baru subscribe channel.
+        // Hasil: Dashboard muncul duluan (cepat), baru kemudian real-time menyusul di background.
+        const { initEcho } = await import('@/echo');
+        await initEcho();
 
         if (window.Echo) {
             window.Echo.channel('dashboard').listen('DashboardUpdated', (e) => {

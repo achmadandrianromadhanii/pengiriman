@@ -11,13 +11,19 @@
     <!-- UPDATE: Menambahkan Favicon baru yang besar dan HD dengan deklarasi Sizes -->
     <link rel="icon" type="image/png" sizes="192x192" href="/favicon.png">
     <link rel="apple-touch-icon" sizes="180x180" href="/favicon.png">
-    <!-- UPDATE: Mengimpor font Outfit untuk typography logo -->
-    <!-- Font Preconnect untuk Performa Lighthouse 100% -->
+    <!-- [UPDATE: FONT LOADING NON-BLOCKING] -->
+    <!-- Fungsi: Memuat Google Fonts tanpa memblokir render halaman. -->
+    <!-- Alasan: Sebelumnya browser HP Android harus menunggu SEMUA font (4 family) -->
+    <!--         ter-download sebelum menampilkan apapun = layar putih lama. -->
+    <!-- Cara Kerja: media="print" membuat browser tidak menganggap ini penting saat render. -->
+    <!--            onload="this.media='all'" mengaktifkan font setelah halaman sudah tampil. -->
+    <!-- Hasil: Halaman tampil INSTAN dengan font fallback, lalu font cantik menyusul ~0.5 detik. -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
-    
-    <!-- UPDATE: Font tambahan HANYA untuk mobile -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet"></noscript>
+
+    <!-- Font tambahan HANYA untuk mobile -->
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" media="(max-width: 767px)" onload="this.onload=null;this.rel='stylesheet'">
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" media="(max-width: 767px)"></noscript>
 

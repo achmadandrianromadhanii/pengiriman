@@ -37,7 +37,9 @@
             aria-hidden="true"
         />
 
-        <main class="relative z-10 min-h-screen flex items-center justify-center px-4 py-0 md:py-12">
+        <main
+            class="relative z-10 min-h-screen flex items-center justify-center px-4 py-0 md:py-12"
+        >
             <div class="w-full max-w-md">
                 <slot />
             </div>

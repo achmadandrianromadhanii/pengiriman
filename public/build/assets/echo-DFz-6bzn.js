@@ -1,0 +1,2 @@
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/pusher-xWf2iK2A.js","assets/vendor-echo-Dm4hPwRR.js"])))=>i.map(i=>d[i]);
+import{_ as t}from"./vendor-charts-CvATyPRr.js";let o=!1;async function n(){if(o||window.Echo)return;o=!0;const[{default:r},{default:i}]=await Promise.all([t(()=>import("./vendor-echo-Dm4hPwRR.js").then(e=>e.e),[]),t(()=>import("./pusher-xWf2iK2A.js").then(e=>e.p),__vite__mapDeps([0,1]))]);window.Pusher=i,window.Echo=new r({broadcaster:"pusher",key:"3fd6e620d13b8c94ba30",cluster:"ap1",forceTLS:!0})}export{n as initEcho};

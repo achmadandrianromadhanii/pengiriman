@@ -1,7 +1,12 @@
 <script setup>
     import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
     import { router, usePage } from '@inertiajs/vue3';
-    import Swal from 'sweetalert2';
+    // [UPDATE: LAZY-LOAD SWEETALERT DI NAVBAR]
+    // Fungsi: Menghapus import statis SweetAlert2 (~50KB) dari Navbar.
+    // Alasan: Navbar dimuat di SETIAP halaman (karena ada di AppLayout).
+    //         Import statis SweetAlert di sini = ~50KB ditambahkan ke SETIAP halaman.
+    // Cara Kerja: Hanya import saat user benar-benar klik tombol Logout.
+    // Hasil: Semua halaman (Dashboard, Pengiriman, Laporan, dll) lebih ringan ~50KB.
 
     const page = usePage();
     const user = computed(() => page.props.auth?.user);
@@ -57,21 +62,10 @@
 
     function setDarkMode(val) {
         darkMode.value = !!val;
-
-        // Langkah 1: Suntikkan kelas transisi ke seluruh DOM
-        // Fungsi: Memberi tahu browser bahwa semua warna harus beranimasi halus
         document.documentElement.classList.add('theme-transition');
-
-        // Langkah 2: Tunggu 1 frame agar browser sempat menghitung layout
-        // Cara Kerja: requestAnimationFrame memastikan kelas transisi sudah
-        //             terpasang di rendering pipeline sebelum warna berubah
         requestAnimationFrame(() => {
-            // Toggle tema utama (dark ↔ light)
             document.documentElement.classList.toggle('dark', darkMode.value);
             localStorage.setItem('darkMode', darkMode.value ? 'true' : 'false');
-
-            // Langkah 3: Cabut kelas transisi setelah animasi selesai (350ms)
-            // Fungsi: Mengembalikan performa UI ke kondisi normal (tanpa beban transisi)
             setTimeout(() => {
                 document.documentElement.classList.remove('theme-transition');
             }, 350);
@@ -124,6 +118,7 @@
 
     async function confirmLogout() {
         closeDropdown();
+        const Swal = (await import('sweetalert2')).default;
 
         const res = await Swal.fire({
             icon: 'warning',
