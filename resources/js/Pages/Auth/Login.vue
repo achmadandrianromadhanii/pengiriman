@@ -264,8 +264,7 @@
             <!-- Cara Kerja: Memadukan tiga warna gradasi yang diblur (blur-[100px]) dan diposisikan absolut agar menempel di belakang elemen lain tanpa menggeser layout. -->
             <div
                 class="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden z-0 bg-gradient-to-tr from-indigo-100 via-purple-50 to-blue-50 dark:from-indigo-950 dark:via-purple-900 dark:to-slate-900"
-            >
-            </div>
+            ></div>
 
             <!-- Logo SoftSend -->
             <img
