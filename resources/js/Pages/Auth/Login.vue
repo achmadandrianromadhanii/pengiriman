@@ -257,7 +257,7 @@
         <!-- Fungsi Utama: Layout terpisah khusus untuk layar ponsel dengan pendekatan desain Ultra-Glassmorphism dan Aurora Mesh Gradient. -->
         <!-- Optimasi: Murni menggunakan utility CSS Tailwind, mempertahankan performa LCP, CLS, INP mutlak stabil 100% Hijau. -->
         <div
-            class="md:hidden flex flex-col items-center justify-center w-full login-card-anim pt-10 pb-8 relative overflow-hidden min-h-screen"
+            class="md:hidden flex flex-col items-center justify-center w-full login-card-anim relative overflow-hidden h-[100dvh]"
         >
             <!-- [UPDATE: ATMOSFER VISUAL & BACKGROUND MESH GRADIENT] -->
             <!-- Fungsi: Memberikan depth 3D yang dramatis pada latar belakang dengan efek Aurora Glow. -->
@@ -266,11 +266,10 @@
                 class="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden z-0 bg-gradient-to-tr from-indigo-100 via-purple-50 to-blue-50 dark:from-indigo-950 dark:via-purple-900 dark:to-slate-900"
             ></div>
 
-            <!-- Logo SoftSend -->
             <img
                 src="/images/logo-softsend-hd.png"
                 alt="SoftSend Premium Logo"
-                class="w-64 h-auto object-contain drop-shadow-[0_15px_25px_rgba(0,0,0,0.15)] mb-8 relative z-10 hover:scale-105 transition-transform duration-500"
+                class="w-56 h-auto object-contain mb-6 relative z-10"
                 fetchpriority="high"
             />
 
@@ -392,7 +391,7 @@
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input v-model="form.remember" type="checkbox" class="sr-only peer" />
                             <div
-                                class="w-11 h-6 bg-slate-200 dark:bg-slate-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300/30 dark:peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary shadow-inner"
+                                class="w-11 h-6 bg-slate-200 dark:bg-slate-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300/30 dark:peer-focus:ring-indigo-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-transform peer-checked:bg-primary shadow-inner"
                             ></div>
                             <span
                                 class="ml-3 text-sm font-semibold text-slate-600 dark:text-slate-400 select-none"
@@ -407,7 +406,7 @@
                     <div class="pt-6">
                         <button
                             type="submit"
-                            class="group w-full flex items-center justify-center gap-2 py-4 rounded-2xl text-white font-bold text-base tracking-wide bg-gradient-to-r from-blue-600 to-violet-600 shadow-[0_10px_30px_-10px_rgba(79,70,229,0.6)] hover:shadow-[0_10px_40px_-10px_rgba(79,70,229,0.8)] active:shadow-[0_4px_10px_-5px_rgba(79,70,229,0.5)] transform active:scale-95 transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed"
+                            class="group w-full flex items-center justify-center gap-2 py-4 rounded-2xl text-white font-bold text-base tracking-wide bg-gradient-to-r from-blue-600 to-violet-600 shadow-md active:shadow-sm transform active:scale-95 transition-transform duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
                             :disabled="form.processing"
                         >
                             <i
