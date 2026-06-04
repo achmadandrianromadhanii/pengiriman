@@ -18,7 +18,7 @@
     });
 
     const mounted = ref(false);
-    
+
     // Animasi Angka (Ringan 60FPS)
     const animPendapatan = ref(0);
     const animKirim = ref(0);
@@ -42,7 +42,7 @@
 
     onMounted(() => {
         mounted.value = true;
-        
+
         // Mulai animasi angka pelan 2-3 detik
         animateValue(animPendapatan, Number(props.stats.totalPendapatan || 0), 2500);
         animateValue(animKirim, Number(props.stats.totalPengiriman || 0), 2200);
@@ -440,7 +440,7 @@
             <!-- Fungsi: Overlapping, shadow melayang, font berbeda, animasi fade-up perlahan -->
             <!-- Ditambahkan: translate-y-10 opacity-0 animate-[fade-up_1s_ease-out_forwards] -->
             <div
-                class="bg-white dark:bg-card-dark rounded-[1.5rem] p-5 shadow-xl shadow-gray-200/50 dark:shadow-black/30 transform opacity-0 animate-[fade-up_1s_ease-out_forwards]"
+                class="bg-white dark:bg-card-dark rounded-[1.5rem] p-5 shadow-xl shadow-gray-200/50 dark:shadow-black/30 transform animate-slide-up"
             >
                 <div class="flex items-center justify-between mb-2">
                     <div class="flex items-center gap-2">
@@ -482,11 +482,7 @@
                     class="font-serif font-black text-gray-900 dark:text-white text-3xl tracking-tighter mt-1"
                 >
                     Rp
-                    {{
-                        new Intl.NumberFormat('id-ID').format(
-                            Math.round(animPendapatan)
-                        )
-                    }}
+                    {{ new Intl.NumberFormat('id-ID').format(Math.round(animPendapatan)) }}
                 </div>
             </div>
 
@@ -494,7 +490,7 @@
             <!-- Fungsi: Animasi fade-up bertahap per kotak agar smooth dan ringan -->
             <div class="grid grid-cols-2 gap-3">
                 <div
-                    class="col-span-2 bg-[#F0F4FF] dark:bg-indigo-900/20 rounded-[1.5rem] p-5 shadow-sm flex items-center justify-between opacity-0 animate-[fade-up_1s_ease-out_forwards]"
+                    class="col-span-2 bg-[#F0F4FF] dark:bg-indigo-900/20 rounded-[1.5rem] p-5 shadow-sm flex items-center justify-between animate-slide-up"
                     style="animation-delay: 150ms"
                 >
                     <div class="flex items-center gap-3">
@@ -509,18 +505,16 @@
                             >
                                 Total Kirim
                             </div>
-                            <div class="font-mono font-black text-indigo-900 dark:text-white text-3xl">
-                                {{
-                                    new Intl.NumberFormat('id-ID').format(
-                                        Math.round(animKirim)
-                                    )
-                                }}
+                            <div
+                                class="font-mono font-black text-indigo-900 dark:text-white text-3xl"
+                            >
+                                {{ new Intl.NumberFormat('id-ID').format(Math.round(animKirim)) }}
                             </div>
                         </div>
                     </div>
                 </div>
                 <div
-                    class="col-span-1 bg-emerald-50 dark:bg-emerald-900/20 rounded-[1.5rem] p-4 shadow-sm flex flex-col items-center justify-center text-center opacity-0 animate-[fade-up_1s_ease-out_forwards]"
+                    class="col-span-1 bg-emerald-50 dark:bg-emerald-900/20 rounded-[1.5rem] p-4 shadow-sm flex flex-col items-center justify-center text-center animate-slide-up"
                     style="animation-delay: 300ms"
                 >
                     <div
@@ -533,12 +527,14 @@
                     >
                         Success<br />Rate
                     </div>
-                    <div class="font-sans font-black text-emerald-900 dark:text-white text-2xl mt-1">
+                    <div
+                        class="font-sans font-black text-emerald-900 dark:text-white text-2xl mt-1"
+                    >
                         {{ Number(animSuccess).toFixed(1) }}%
                     </div>
                 </div>
                 <div
-                    class="col-span-1 bg-red-50 dark:bg-red-900/20 rounded-[1.5rem] p-4 shadow-sm flex flex-col items-center justify-center text-center opacity-0 animate-[fade-up_1s_ease-out_forwards]"
+                    class="col-span-1 bg-red-50 dark:bg-red-900/20 rounded-[1.5rem] p-4 shadow-sm flex flex-col items-center justify-center text-center animate-slide-up"
                     style="animation-delay: 450ms"
                 >
                     <div
@@ -552,11 +548,7 @@
                         Paket<br />Kendala
                     </div>
                     <div class="font-heading font-black text-red-900 dark:text-white text-2xl mt-1">
-                        {{
-                            new Intl.NumberFormat('id-ID').format(
-                                Math.round(animKendala)
-                            )
-                        }}
+                        {{ new Intl.NumberFormat('id-ID').format(Math.round(animKendala)) }}
                     </div>
                 </div>
             </div>
