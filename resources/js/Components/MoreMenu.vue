@@ -41,8 +41,8 @@
         <!-- Halaman Full Screen Menu (hanya di mobile) -->
         <!-- [UPDATE: GLASSMORPHISM & TYPOGRAPHY] -->
         <div
-            v-if="show"
-            class="fixed inset-0 z-[70] bg-slate-50/90 dark:bg-slate-900/90 backdrop-blur-2xl flex flex-col transition-colors duration-300 md:hidden"
+            v-show="show"
+            class="fixed inset-0 z-[70] bg-slate-50 dark:bg-slate-900 flex flex-col md:hidden"
         >
             <!-- Fungsi: Modern Header (Gaya iOS) - Teks besar rata kiri, tombol Silang di kanan -->
             <div class="flex items-center justify-between px-6 pt-10 pb-4 bg-transparent">
@@ -69,7 +69,7 @@
                     class="block outline-none"
                 >
                     <div
-                        class="flex items-center gap-4 p-5 rounded-[1.75rem] bg-white/80 dark:bg-card-dark/80 backdrop-blur-md shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-white/50 dark:border-gray-800 active:scale-[0.96] transition-all duration-300"
+                        class="flex items-center gap-4 p-5 rounded-[1.75rem] bg-white dark:bg-card-dark shadow-sm border border-slate-200 dark:border-gray-800 active:scale-[0.96] transition-transform duration-200"
                     >
                         <!-- Avatar -->
                         <img
@@ -125,7 +125,7 @@
                         <Link
                             :href="route('laporan.index')"
                             @click="emit('close')"
-                            class="flex flex-col items-center justify-center p-5 rounded-[1.5rem] bg-white/80 dark:bg-card-dark/80 backdrop-blur-md shadow-[0_8px_30px_-10px_rgba(0,0,0,0.06)] border border-white/50 dark:border-gray-800 active:scale-[0.94] transition-all duration-300 outline-none"
+                            class="flex flex-col items-center justify-center p-5 rounded-[1.5rem] bg-white dark:bg-card-dark shadow-sm border border-slate-200 dark:border-gray-800 active:scale-[0.94] transition-transform duration-200 outline-none"
                         >
                             <div
                                 class="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-900/30 text-primary flex items-center justify-center mb-3"
@@ -165,7 +165,7 @@
                         Akun & Sistem
                     </h3>
                     <div
-                        class="bg-white/80 dark:bg-card-dark/80 backdrop-blur-md rounded-[1.5rem] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] border border-white/50 dark:border-gray-800 overflow-hidden"
+                        class="bg-white dark:bg-card-dark rounded-[1.5rem] shadow-sm border border-slate-200 dark:border-gray-800 overflow-hidden"
                     >
                         <!-- Profil -->
                         <Link

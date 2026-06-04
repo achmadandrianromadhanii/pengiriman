@@ -193,7 +193,7 @@
 <template>
     <!-- sticky + z-50: navbar selalu di atas konten -->
     <header
-        class="sticky top-0 z-50 h-14 flex items-center justify-between px-4 md:px-5 border-b border-gray-200/50 dark:border-white/10 shadow-sm bg-white/80 dark:bg-black/50 backdrop-blur-md transition-all duration-[400ms] ease-spring"
+        class="sticky top-0 z-50 h-14 flex items-center justify-between px-4 md:px-5 border-b border-gray-200/50 dark:border-white/10 shadow-sm bg-white dark:bg-card-dark md:bg-white/80 md:dark:bg-black/50 md:backdrop-blur-md transition-all duration-[400ms] ease-spring"
     >
         <!-- Fungsi: Logo Perusahaan (Mobile) -->
         <!-- Cara kerja: Menggunakan h-9 yang dikombinasikan dengan scale-[1.6] origin-left agar logo membesar melampaui batas tinggi navbar tanpa merusak struktur layout h-14. Translate-x digunakan untuk merapikan posisi tepi. -->

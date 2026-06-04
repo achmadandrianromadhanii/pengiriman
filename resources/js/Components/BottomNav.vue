@@ -34,7 +34,7 @@
         <!-- Bottom Navigation Bar Khusus Mobile -->
         <!-- Fungsi: Desain V15+ (Glassmorphism Transparan warna asli/primary). Animasi judul muncul di atas icon. -->
         <div
-            class="md:hidden fixed bottom-4 left-4 right-4 z-[60] bg-primary/90 backdrop-blur-2xl border border-primary-light/30 shadow-[0_8px_32px_rgba(30,58,138,0.5)] rounded-[24px] transition-all duration-300"
+            class="md:hidden fixed bottom-4 left-4 right-4 z-[60] bg-primary border border-primary-light/30 shadow-xl rounded-[24px]"
         >
             <div class="flex items-center justify-around h-[54px] px-2">
                 <!-- Home -->
