@@ -55,7 +55,6 @@ $envOverrides = [
     'APP_STORAGE_PATH' => $storagePath,
     'VIEW_COMPILED_PATH' => "$storagePath/framework/views",
     'LOG_CHANNEL' => 'stderr',
-    'APP_DEBUG' => 'true',
     'APP_SERVICES_CACHE' => "$cachePath/services.php",
     'APP_PACKAGES_CACHE' => "$cachePath/packages.php",
     'APP_CONFIG_CACHE' => "$cachePath/config.php",
