@@ -18,8 +18,37 @@
     });
 
     const mounted = ref(false);
+    
+    // Animasi Angka (Ringan 60FPS)
+    const animPendapatan = ref(0);
+    const animKirim = ref(0);
+    const animSuccess = ref(0);
+    const animKendala = ref(0);
+
+    function animateValue(refObj, end, duration) {
+        let startTimestamp = null;
+        const step = (timestamp) => {
+            if (!startTimestamp) startTimestamp = timestamp;
+            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+            // Ease-out perlahan di akhir (cubic/quart)
+            const ease = 1 - Math.pow(1 - progress, 4);
+            refObj.value = ease * end;
+            if (progress < 1) {
+                window.requestAnimationFrame(step);
+            }
+        };
+        window.requestAnimationFrame(step);
+    }
+
     onMounted(() => {
         mounted.value = true;
+        
+        // Mulai animasi angka pelan 2-3 detik
+        animateValue(animPendapatan, Number(props.stats.totalPendapatan || 0), 2500);
+        animateValue(animKirim, Number(props.stats.totalPengiriman || 0), 2200);
+        animateValue(animSuccess, Number(props.stats.successRate || 0), 2600);
+        animateValue(animKendala, Number(props.stats.paketBermasalah || 0), 2000);
+
         if (window.Echo) {
             window.Echo.channel('dashboard').listen('DashboardUpdated', (e) => {
                 router.reload({
@@ -408,9 +437,10 @@
         <!-- Kontainer Utama (Overlapping Header) -->
         <div class="px-4 -mt-20 relative z-20 flex flex-col gap-5">
             <!-- 2. Kartu Pendapatan (Melayang) -->
-            <!-- Fungsi: Overlapping, shadow melayang, font black membesar -->
+            <!-- Fungsi: Overlapping, shadow melayang, font berbeda, animasi fade-up perlahan -->
+            <!-- Ditambahkan: translate-y-10 opacity-0 animate-[fade-up_1s_ease-out_forwards] -->
             <div
-                class="bg-white dark:bg-card-dark rounded-[1.5rem] p-5 shadow-xl shadow-gray-200/50 dark:shadow-black/30"
+                class="bg-white dark:bg-card-dark rounded-[1.5rem] p-5 shadow-xl shadow-gray-200/50 dark:shadow-black/30 transform opacity-0 animate-[fade-up_1s_ease-out_forwards]"
             >
                 <div class="flex items-center justify-between mb-2">
                     <div class="flex items-center gap-2">
@@ -449,22 +479,23 @@
                     </div>
                 </div>
                 <div
-                    class="font-black text-gray-900 dark:text-white text-3xl tracking-tighter mt-1"
+                    class="font-serif font-black text-gray-900 dark:text-white text-3xl tracking-tighter mt-1"
                 >
                     Rp
                     {{
                         new Intl.NumberFormat('id-ID').format(
-                            Math.round(stats.totalPendapatan || 0),
+                            Math.round(animPendapatan)
                         )
                     }}
                 </div>
             </div>
 
             <!-- 3. Metrik Bento Grid -->
-            <!-- Fungsi: Layout 100% dan 50:50 yang thumb-friendly tanpa border murahan -->
+            <!-- Fungsi: Animasi fade-up bertahap per kotak agar smooth dan ringan -->
             <div class="grid grid-cols-2 gap-3">
                 <div
-                    class="col-span-2 bg-[#F0F4FF] dark:bg-indigo-900/20 rounded-[1.5rem] p-5 shadow-sm flex items-center justify-between"
+                    class="col-span-2 bg-[#F0F4FF] dark:bg-indigo-900/20 rounded-[1.5rem] p-5 shadow-sm flex items-center justify-between opacity-0 animate-[fade-up_1s_ease-out_forwards]"
+                    style="animation-delay: 150ms"
                 >
                     <div class="flex items-center gap-3">
                         <div
@@ -478,10 +509,10 @@
                             >
                                 Total Kirim
                             </div>
-                            <div class="font-black text-indigo-900 dark:text-white text-2xl">
+                            <div class="font-mono font-black text-indigo-900 dark:text-white text-3xl">
                                 {{
                                     new Intl.NumberFormat('id-ID').format(
-                                        Math.round(stats.totalPengiriman || 0),
+                                        Math.round(animKirim)
                                     )
                                 }}
                             </div>
@@ -489,7 +520,8 @@
                     </div>
                 </div>
                 <div
-                    class="col-span-1 bg-emerald-50 dark:bg-emerald-900/20 rounded-[1.5rem] p-4 shadow-sm flex flex-col items-center justify-center text-center"
+                    class="col-span-1 bg-emerald-50 dark:bg-emerald-900/20 rounded-[1.5rem] p-4 shadow-sm flex flex-col items-center justify-center text-center opacity-0 animate-[fade-up_1s_ease-out_forwards]"
+                    style="animation-delay: 300ms"
                 >
                     <div
                         class="w-10 h-10 rounded-full bg-white dark:bg-emerald-800/40 shadow-sm flex items-center justify-center text-emerald-500 mb-2"
@@ -501,12 +533,13 @@
                     >
                         Success<br />Rate
                     </div>
-                    <div class="font-black text-emerald-900 dark:text-white text-xl">
-                        {{ Number(stats.successRate || 0).toFixed(1) }}%
+                    <div class="font-sans font-black text-emerald-900 dark:text-white text-2xl mt-1">
+                        {{ Number(animSuccess).toFixed(1) }}%
                     </div>
                 </div>
                 <div
-                    class="col-span-1 bg-red-50 dark:bg-red-900/20 rounded-[1.5rem] p-4 shadow-sm flex flex-col items-center justify-center text-center"
+                    class="col-span-1 bg-red-50 dark:bg-red-900/20 rounded-[1.5rem] p-4 shadow-sm flex flex-col items-center justify-center text-center opacity-0 animate-[fade-up_1s_ease-out_forwards]"
+                    style="animation-delay: 450ms"
                 >
                     <div
                         class="w-10 h-10 rounded-full bg-white dark:bg-red-800/40 shadow-sm flex items-center justify-center text-red-500 mb-2"
@@ -518,10 +551,10 @@
                     >
                         Paket<br />Kendala
                     </div>
-                    <div class="font-black text-red-900 dark:text-white text-xl">
+                    <div class="font-heading font-black text-red-900 dark:text-white text-2xl mt-1">
                         {{
                             new Intl.NumberFormat('id-ID').format(
-                                Math.round(stats.paketBermasalah || 0),
+                                Math.round(animKendala)
                             )
                         }}
                     </div>
