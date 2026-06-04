@@ -263,14 +263,8 @@
             <!-- Fungsi: Memberikan depth 3D yang dramatis pada latar belakang dengan efek Aurora Glow. -->
             <!-- Cara Kerja: Memadukan tiga warna gradasi yang diblur (blur-[100px]) dan diposisikan absolut agar menempel di belakang elemen lain tanpa menggeser layout. -->
             <div
-                class="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden z-0"
+                class="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden z-0 bg-gradient-to-tr from-indigo-100 via-purple-50 to-blue-50 dark:from-indigo-950 dark:via-purple-900 dark:to-slate-900"
             >
-                <div
-                    class="absolute top-[-10%] left-[-10%] w-[120%] h-[120%] bg-gradient-to-tr from-indigo-500/20 via-purple-500/10 to-blue-500/20 blur-[100px] opacity-70"
-                ></div>
-                <div
-                    class="absolute top-[20%] left-[50%] -translate-x-1/2 w-64 h-64 bg-primary/20 rounded-full blur-[80px]"
-                ></div>
             </div>
 
             <!-- Logo SoftSend -->
@@ -281,11 +275,10 @@
                 fetchpriority="high"
             />
 
-            <!-- [UPDATE: KARTU LOGIN ULTRA-GLASSMORPHISM] -->
-            <!-- Fungsi: Wadah form transparan nan elegan ala aplikasi finansial premium. -->
-            <!-- Cara Kerja: Menggunakan backdrop-blur-2xl untuk efek kaca, border tipis untuk pantulan, dan floating shadow yang luas namun halus. -->
+            <!-- [UPDATE: KARTU LOGIN SOLID (Kinerja Tinggi Khusus Mobile)] -->
+            <!-- Fungsi: Wadah form solid untuk performa 60FPS tanpa drop frame pada Android saat mengetik. -->
             <div
-                class="w-full max-w-[92%] mx-auto bg-white/70 dark:bg-slate-900/70 backdrop-blur-2xl rounded-[2.5rem] p-8 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.4)] border border-white/50 dark:border-slate-700/50 relative z-20"
+                class="w-full max-w-[92%] mx-auto bg-white dark:bg-card-dark rounded-[2.5rem] p-8 shadow-xl dark:shadow-none border border-slate-100 dark:border-slate-800 relative z-20"
             >
                 <!-- [UPDATE: TIPOGRAFI PREMIUM (TEXT GRADIENT)] -->
                 <div class="text-center mb-8">
@@ -311,8 +304,7 @@
                                 id="email_mobile"
                                 autocomplete="username"
                                 placeholder=" "
-                                required
-                                class="block w-full pl-12 pr-4 py-4 text-sm font-bold text-slate-900 dark:text-white bg-slate-50/80 dark:bg-slate-800/80 border-transparent rounded-2xl focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:ring-4 focus:ring-indigo-500/15 focus:border-transparent peer transition-all duration-300 shadow-inner dark:shadow-none"
+                                class="block w-full pl-12 pr-4 py-4 text-sm font-bold text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800 border-transparent rounded-2xl focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:ring-4 focus:ring-indigo-500/15 focus:border-transparent peer transition-colors duration-200 shadow-inner dark:shadow-none"
                             />
 
                             <!-- Icon Input -->
@@ -355,8 +347,7 @@
                                 id="password_mobile"
                                 autocomplete="current-password"
                                 placeholder=" "
-                                required
-                                class="block w-full pl-12 pr-12 py-4 text-sm font-bold text-slate-900 dark:text-white bg-slate-50/80 dark:bg-slate-800/80 border-transparent rounded-2xl focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:ring-4 focus:ring-indigo-500/15 focus:border-transparent peer transition-all duration-300 shadow-inner dark:shadow-none"
+                                class="block w-full pl-12 pr-12 py-4 text-sm font-bold text-slate-900 dark:text-white bg-slate-50 dark:bg-slate-800 border-transparent rounded-2xl focus:outline-none focus:bg-white dark:focus:bg-slate-900 focus:ring-4 focus:ring-indigo-500/15 focus:border-transparent peer transition-colors duration-200 shadow-inner dark:shadow-none"
                             />
 
                             <!-- Icon Input -->
