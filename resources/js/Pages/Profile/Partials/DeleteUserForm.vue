@@ -66,7 +66,7 @@
         <!-- Fungsi: Desain tombol bahaya yang agresif namun tetap premium -->
         <DangerButton
             @click="confirmUserDeletion"
-            class="w-full md:w-auto flex justify-center items-center gap-2 rounded-full md:rounded-lg h-12 md:h-10 text-sm bg-red-50 dark:bg-red-500/10 text-red-600 font-bold border border-red-100 dark:border-red-500/20 hover:bg-red-600 hover:text-white transition-all active:scale-95"
+            class="w-full md:w-auto flex justify-center items-center gap-2 rounded-full md:rounded-lg h-12 md:h-10 text-sm bg-red-50 dark:bg-red-500/10 text-red-600 font-bold border border-red-100 dark:border-red-500/20 hover:bg-red-600 hover:text-white transition active:scale-95"
         >
             <i class="bi bi-trash3-fill"></i> Hapus Akun Permanen
         </DangerButton>
@@ -108,7 +108,7 @@
                             ref="passwordInput"
                             v-model="form.password"
                             :type="showModalPassword ? 'text' : 'password'"
-                            class="mt-1 block w-full bg-gray-100/50 shadow-inner dark:bg-white/5 border-transparent md:border-gray-200 rounded-2xl md:rounded-lg focus:bg-white focus:border-red-500 focus:ring-4 focus:ring-red-500/20 h-12 transition-all pl-12 pr-12 peer"
+                            class="mt-1 block w-full bg-gray-100/50 shadow-inner dark:bg-white/5 border-transparent md:border-gray-200 rounded-2xl md:rounded-lg focus:bg-white focus:border-red-500 focus:ring-4 focus:ring-red-500/20 h-12 transition pl-12 pr-12 peer"
                             placeholder="Masukkan kata sandi..."
                             @keyup.enter="deleteUser"
                         />
@@ -140,7 +140,7 @@
                     </SecondaryButton>
 
                     <DangerButton
-                        class="w-full md:w-auto flex justify-center items-center gap-2 rounded-full h-11 px-6 text-sm bg-gradient-to-r from-red-600 to-red-700 text-white shadow-[0_8px_20px_-6px_rgba(220,38,38,0.5)] hover:from-red-500 hover:to-red-600 active:scale-95 transition-all border-none"
+                        class="w-full md:w-auto flex justify-center items-center gap-2 rounded-full h-11 px-6 text-sm bg-gradient-to-r from-red-600 to-red-700 text-white shadow-[0_8px_20px_-6px_rgba(220,38,38,0.5)] hover:from-red-500 hover:to-red-600 active:scale-95 transition border-none"
                         :class="{ 'opacity-25': form.processing }"
                         :disabled="form.processing"
                         @click="deleteUser"

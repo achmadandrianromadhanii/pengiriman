@@ -78,7 +78,7 @@
                         ref="currentPasswordInput"
                         v-model="form.current_password"
                         :type="showCurrentPassword ? 'text' : 'password'"
-                        class="mt-1 block w-full bg-gray-100/50 shadow-inner dark:bg-white/5 border-transparent md:border-gray-200 rounded-2xl md:rounded-lg focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 h-12 transition-all pl-12 pr-12 peer"
+                        class="mt-1 block w-full bg-gray-100/50 shadow-inner dark:bg-white/5 border-transparent md:border-gray-200 rounded-2xl md:rounded-lg focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 h-12 transition pl-12 pr-12 peer"
                         autocomplete="current-password"
                     />
                     <button
@@ -117,7 +117,7 @@
                         ref="passwordInput"
                         v-model="form.password"
                         :type="showNewPassword ? 'text' : 'password'"
-                        class="mt-1 block w-full bg-gray-100/50 shadow-inner dark:bg-white/5 border-transparent md:border-gray-200 rounded-2xl md:rounded-lg focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 h-12 transition-all pl-12 pr-12 peer"
+                        class="mt-1 block w-full bg-gray-100/50 shadow-inner dark:bg-white/5 border-transparent md:border-gray-200 rounded-2xl md:rounded-lg focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 h-12 transition pl-12 pr-12 peer"
                         autocomplete="new-password"
                     />
                     <button
@@ -153,7 +153,7 @@
                         id="password_confirmation"
                         v-model="form.password_confirmation"
                         :type="showConfirmPassword ? 'text' : 'password'"
-                        class="mt-1 block w-full bg-gray-100/50 shadow-inner dark:bg-white/5 border-transparent md:border-gray-200 rounded-2xl md:rounded-lg focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 h-12 transition-all pl-12 pr-12 peer"
+                        class="mt-1 block w-full bg-gray-100/50 shadow-inner dark:bg-white/5 border-transparent md:border-gray-200 rounded-2xl md:rounded-lg focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 h-12 transition pl-12 pr-12 peer"
                         autocomplete="new-password"
                     />
                     <button
@@ -175,7 +175,7 @@
                 <!-- Fungsi: Tombol dengan teks deskriptif dan ikon ceklis -->
                 <PrimaryButton
                     :disabled="form.processing"
-                    class="w-full md:w-auto flex justify-center items-center gap-2 rounded-full md:rounded-lg h-12 md:h-10 text-sm font-bold tracking-wide bg-gradient-to-r from-blue-600 to-indigo-600 border-none shadow-[0_8px_20px_-6px_rgba(79,70,229,0.5)] text-white hover:from-blue-500 hover:to-indigo-500 active:scale-95 transition-all"
+                    class="w-full md:w-auto flex justify-center items-center gap-2 rounded-full md:rounded-lg h-12 md:h-10 text-sm font-bold tracking-wide bg-gradient-to-r from-blue-600 to-indigo-600 border-none shadow-[0_8px_20px_-6px_rgba(79,70,229,0.5)] text-white hover:from-blue-500 hover:to-indigo-500 active:scale-95 transition"
                 >
                     <i class="bi bi-key-fill text-lg leading-none"></i>
                     Perbarui Kata Sandi

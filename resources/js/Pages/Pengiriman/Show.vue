@@ -723,7 +723,7 @@
                     <!-- Ditambahkan @click="copyResi" dan efek interaktif agar terasa seperti native app -->
                     <div
                         @click="copyResi"
-                        class="flex items-center gap-2.5 bg-white/20 px-3.5 py-1.5 rounded-full backdrop-blur-md cursor-pointer hover:bg-white/30 active:scale-95 transition-all"
+                        class="flex items-center gap-2.5 bg-white/20 px-3.5 py-1.5 rounded-full md:backdrop-blur-md cursor-pointer hover:bg-white/30 active:scale-95 transition"
                     >
                         <span class="text-[13px] font-extrabold tracking-widest">{{
                             pengiriman.nomor_resi
@@ -927,7 +927,7 @@
                     class="mt-5 bg-gray-50 dark:bg-gray-800/30 rounded-2xl group text-sm overflow-hidden"
                 >
                     <summary
-                        class="cursor-pointer px-4 py-3.5 font-semibold text-gray-700 dark:text-gray-300 select-none list-none flex justify-between items-center border border-gray-100 dark:border-gray-700/50 rounded-2xl group-open:rounded-b-none group-open:border-b-0 transition-all"
+                        class="cursor-pointer px-4 py-3.5 font-semibold text-gray-700 dark:text-gray-300 select-none list-none flex justify-between items-center border border-gray-100 dark:border-gray-700/50 rounded-2xl group-open:rounded-b-none group-open:border-b-0 transition"
                     >
                         <span class="flex items-center gap-2"
                             ><i class="bi bi-box-seam text-primary"></i> Data Barang ({{

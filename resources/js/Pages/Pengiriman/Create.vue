@@ -1152,7 +1152,7 @@
                                 v-for="t in tarifList"
                                 :key="t.jenis_layanan"
                                 type="button"
-                                class="text-left p-4 rounded-2xl border transition-all duration-150 hover:-translate-y-1 hover:shadow-lg"
+                                class="text-left p-4 rounded-2xl border transition duration-150 hover:-translate-y-1 hover:shadow-lg"
                                 :class="
                                     layananTerpilih === t.jenis_layanan
                                         ? 'border-primary bg-indigo-50 dark:bg-[rgba(99,102,241,0.15)]'
@@ -1420,7 +1420,7 @@
                         class="w-full bg-gray-200 dark:bg-gray-700 h-1.5 rounded-full overflow-hidden"
                     >
                         <div
-                            class="bg-primary h-full transition-all duration-300 ease-out"
+                            class="bg-primary h-full transition duration-300 ease-out"
                             :style="{ width: step * 25 + '%' }"
                         ></div>
                     </div>
@@ -1441,7 +1441,7 @@
                                 <input
                                     v-model="pengirim.nama"
                                     type="text"
-                                    class="w-full bg-slate-50 dark:bg-gray-800/50 border-none rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary/30 transition-all"
+                                    class="w-full bg-slate-50 dark:bg-gray-800/50 border-none rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary/30 transition"
                                     placeholder="Masukkan nama..."
                                 />
                             </div>
@@ -1456,7 +1456,7 @@
                                     :disabled="!pengirim.nama"
                                     type="text"
                                     inputmode="numeric"
-                                    class="w-full bg-slate-50 dark:bg-gray-800/50 border-none rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary/30 transition-all disabled:opacity-50"
+                                    class="w-full bg-slate-50 dark:bg-gray-800/50 border-none rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary/30 transition disabled:opacity-50"
                                     placeholder="08..."
                                 />
 
@@ -1483,7 +1483,7 @@
                                     v-model="pengirim.alamat"
                                     :disabled="!pengirim.hp"
                                     rows="3"
-                                    class="w-full bg-slate-50 dark:bg-gray-800/50 border-none rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary/30 transition-all disabled:opacity-50"
+                                    class="w-full bg-slate-50 dark:bg-gray-800/50 border-none rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary/30 transition disabled:opacity-50"
                                     placeholder="Jalan..."
                                 ></textarea>
 
@@ -1517,7 +1517,7 @@
                                         @focus="showPengirimDropdown = true"
                                         @blur="hidePengirimDropdown"
                                         type="text"
-                                        class="w-full bg-slate-50 dark:bg-gray-800/50 border-none rounded-xl pl-10 pr-4 py-3 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary/30 transition-all disabled:opacity-50"
+                                        class="w-full bg-slate-50 dark:bg-gray-800/50 border-none rounded-xl pl-10 pr-4 py-3 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary/30 transition disabled:opacity-50"
                                         placeholder="Ketik nama kota..."
                                     />
                                     <i
@@ -1534,7 +1534,7 @@
                                             pengirim.alamat &&
                                             pengirim.alamat.trim().length > 0
                                         "
-                                        class="absolute z-50 w-full mt-2 max-h-56 overflow-y-auto bg-white/95 dark:bg-gray-800/95 backdrop-blur-md rounded-2xl shadow-2xl shadow-gray-300/50 dark:shadow-black/50 border border-gray-100 dark:border-gray-700"
+                                        class="absolute z-50 w-full mt-2 max-h-56 overflow-y-auto bg-white/95 dark:bg-gray-800/95 md:backdrop-blur-md rounded-2xl shadow-2xl shadow-gray-300/50 dark:shadow-black/50 border border-gray-100 dark:border-gray-700"
                                     >
                                         <li
                                             v-for="k in kotaPengirimFiltered"
@@ -1587,7 +1587,7 @@
                                 <input
                                     v-model="penerima.nama"
                                     type="text"
-                                    class="w-full bg-slate-50 dark:bg-gray-800/50 border-none rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary/30 transition-all"
+                                    class="w-full bg-slate-50 dark:bg-gray-800/50 border-none rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary/30 transition"
                                     placeholder="Masukkan nama..."
                                 />
                             </div>
@@ -1602,7 +1602,7 @@
                                     :disabled="!penerima.nama"
                                     type="text"
                                     inputmode="numeric"
-                                    class="w-full bg-slate-50 dark:bg-gray-800/50 border-none rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary/30 transition-all disabled:opacity-50"
+                                    class="w-full bg-slate-50 dark:bg-gray-800/50 border-none rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary/30 transition disabled:opacity-50"
                                     placeholder="08..."
                                 />
 
@@ -1628,7 +1628,7 @@
                                     v-model="penerima.alamat"
                                     :disabled="!penerima.hp"
                                     rows="3"
-                                    class="w-full bg-slate-50 dark:bg-gray-800/50 border-none rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary/30 transition-all disabled:opacity-50"
+                                    class="w-full bg-slate-50 dark:bg-gray-800/50 border-none rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary/30 transition disabled:opacity-50"
                                     placeholder="Jalan..."
                                 ></textarea>
 
@@ -1661,7 +1661,7 @@
                                         @focus="showPenerimaDropdown = true"
                                         @blur="hidePenerimaDropdown"
                                         type="text"
-                                        class="w-full bg-slate-50 dark:bg-gray-800/50 border-none rounded-xl pl-10 pr-4 py-3 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary/30 transition-all disabled:opacity-50"
+                                        class="w-full bg-slate-50 dark:bg-gray-800/50 border-none rounded-xl pl-10 pr-4 py-3 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary/30 transition disabled:opacity-50"
                                         placeholder="Ketik nama kota..."
                                     />
                                     <i
@@ -1677,7 +1677,7 @@
                                             penerima.alamat &&
                                             penerima.alamat.trim().length > 0
                                         "
-                                        class="absolute z-50 w-full mt-2 max-h-56 overflow-y-auto bg-white/95 dark:bg-gray-800/95 backdrop-blur-md rounded-2xl shadow-2xl shadow-gray-300/50 dark:shadow-black/50 border border-gray-100 dark:border-gray-700"
+                                        class="absolute z-50 w-full mt-2 max-h-56 overflow-y-auto bg-white/95 dark:bg-gray-800/95 md:backdrop-blur-md rounded-2xl shadow-2xl shadow-gray-300/50 dark:shadow-black/50 border border-gray-100 dark:border-gray-700"
                                     >
                                         <li
                                             v-for="k in kotaPenerimaFiltered"
@@ -1853,7 +1853,7 @@
                             <!-- Fungsi: Tombol dengan efek menyusut active:scale-[0.98] dan latar transparan saat disentuh -->
                             <button
                                 type="button"
-                                class="w-full py-4 border-2 border-dashed border-primary/40 hover:border-primary/60 text-primary font-bold rounded-xl active:bg-primary/5 active:scale-[0.98] transition-all flex justify-center items-center gap-2 text-sm"
+                                class="w-full py-4 border-2 border-dashed border-primary/40 hover:border-primary/60 text-primary font-bold rounded-xl active:bg-primary/5 active:scale-[0.98] transition flex justify-center items-center gap-2 text-sm"
                                 @click="addBarang"
                             >
                                 <i class="bi bi-plus-lg"></i> Tambah Barang Lagi
@@ -1963,7 +1963,7 @@
                                     <label
                                         v-for="t in tarifList"
                                         :key="t.jenis_layanan"
-                                        class="block w-full text-left p-4 rounded-[1.25rem] border-2 transition-all duration-300 active:scale-[0.98] cursor-pointer relative overflow-hidden"
+                                        class="block w-full text-left p-4 rounded-[1.25rem] border-2 transition duration-300 active:scale-[0.98] cursor-pointer relative overflow-hidden"
                                         :class="
                                             layananTerpilih === t.jenis_layanan
                                                 ? 'border-primary bg-primary/5 shadow-lg shadow-primary/20'
@@ -1979,7 +1979,7 @@
 
                                         <!-- Active Indicator Badge -->
                                         <div
-                                            class="absolute top-0 right-0 w-10 h-10 transition-all duration-300 flex justify-center items-center rounded-bl-[1.25rem]"
+                                            class="absolute top-0 right-0 w-10 h-10 transition duration-300 flex justify-center items-center rounded-bl-[1.25rem]"
                                             :class="
                                                 layananTerpilih === t.jenis_layanan
                                                     ? 'bg-primary text-white scale-100'
@@ -2144,7 +2144,7 @@
 
                                     <!-- Sliding active background indicator -->
                                     <div
-                                        class="absolute top-1.5 bottom-1.5 w-[calc(33.333%-4px)] bg-white rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.08)] transition-all duration-300 ease-out z-0"
+                                        class="absolute top-1.5 bottom-1.5 w-[calc(33.333%-4px)] bg-white rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.08)] transition duration-300 ease-out z-0"
                                         :class="{
                                             'left-1.5': metodePembayaran === 'dibayar_pengirim',
                                             'left-[calc(33.333%+1px)]':

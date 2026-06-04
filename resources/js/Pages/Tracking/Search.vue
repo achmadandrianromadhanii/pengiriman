@@ -54,7 +54,7 @@
             <button
                 @click="router.visit('/')"
                 type="button"
-                class="inline-flex items-center gap-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 px-4 py-2 rounded-xl shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:scale-105 transition-all duration-200 font-medium text-sm"
+                class="inline-flex items-center gap-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 px-4 py-2 rounded-xl shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:scale-105 transition duration-200 font-medium text-sm"
             >
                 <i class="bi bi-arrow-left text-base"></i>
                 <span>Kembali</span>
@@ -134,7 +134,7 @@
             <!-- Teks Hero -->
             <div class="text-center mb-8 animate-fade-in text-white">
                 <div
-                    class="inline-flex items-center justify-center h-14 w-14 rounded-2xl bg-white/20 backdrop-blur-sm text-white mb-3 shadow-inner"
+                    class="inline-flex items-center justify-center h-14 w-14 rounded-2xl bg-white/20 md:backdrop-blur-sm text-white mb-3 shadow-inner"
                 >
                     <i class="bi bi-search text-2xl drop-shadow-md"></i>
                 </div>
@@ -156,7 +156,7 @@
                         <input
                             v-model="resi"
                             type="text"
-                            class="w-full mt-1.5 px-4 py-3.5 bg-gray-50/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-2xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-base font-semibold"
+                            class="w-full mt-1.5 px-4 py-3.5 bg-gray-50/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-2xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition text-base font-semibold"
                             placeholder="contoh: SS-250131-0001"
                             autocomplete="off"
                         />
@@ -165,7 +165,7 @@
                     <!-- Tombol Lacak Lebar Penuh dengan Ikon Search -->
                     <button
                         type="submit"
-                        class="w-full bg-primary hover:bg-primary-hover text-white rounded-2xl py-3.5 font-bold text-[15px] flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-md shadow-primary/20"
+                        class="w-full bg-primary hover:bg-primary-hover text-white rounded-2xl py-3.5 font-bold text-[15px] flex items-center justify-center gap-2 transition active:scale-[0.98] shadow-md shadow-primary/20"
                     >
                         <i class="bi bi-search stroke-2"></i>
                         <span>Lacak Sekarang</span>

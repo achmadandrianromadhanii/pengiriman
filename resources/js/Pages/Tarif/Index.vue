@@ -335,7 +335,7 @@
                 <div
                     v-for="(item, idx) in hasil"
                     :key="item.jenis_layanan"
-                    class="rounded-xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-card-dark p-4 shadow-sm hover:shadow-md transition-all duration-200 animate-slide-up"
+                    class="rounded-xl border border-gray-100 dark:border-gray-800 bg-white dark:bg-card-dark p-4 shadow-sm hover:shadow-md transition duration-200 animate-slide-up"
                     :style="{ animationDelay: `${idx * 100}ms` }"
                 >
                     <div class="flex items-start justify-between gap-2 mb-3">
@@ -432,7 +432,7 @@
                     </div>
 
                     <button
-                        class="btn-primary w-full mt-4 justify-center py-2 text-sm shadow-[0_4px_10px_rgba(99,102,241,0.3)] hover:shadow-[0_6px_15px_rgba(99,102,241,0.4)] transition-all"
+                        class="btn-primary w-full mt-4 justify-center py-2 text-sm shadow-[0_4px_10px_rgba(99,102,241,0.3)] hover:shadow-[0_6px_15px_rgba(99,102,241,0.4)] transition"
                         type="button"
                         @click="pilihTarif(item)"
                     >
@@ -455,7 +455,7 @@
         <div class="bg-primary px-5 pt-10 pb-24 rounded-b-[2.5rem] shadow-lg relative z-10">
             <div class="flex items-center gap-3 text-white">
                 <div
-                    class="h-12 w-12 rounded-[1.25rem] bg-white/20 backdrop-blur-sm text-white flex items-center justify-center shadow-inner"
+                    class="h-12 w-12 rounded-[1.25rem] bg-white/20 md:backdrop-blur-sm text-white flex items-center justify-center shadow-inner"
                 >
                     <i class="bi bi-calculator-fill text-2xl drop-shadow-sm"></i>
                 </div>

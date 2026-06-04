@@ -39,9 +39,9 @@
         <!-- Navbar -->
         <nav
             :class="[
-                'fixed top-0 w-full z-50 transition-all duration-300',
+                'fixed top-0 w-full z-50 transition duration-300',
                 isScrolled
-                    ? 'bg-white/90 dark:bg-[#0E1117]/90 backdrop-blur-xl shadow-sm border-b border-gray-100 dark:border-gray-800/60'
+                    ? 'bg-white/90 dark:bg-[#0E1117]/90 md:backdrop-blur-xl shadow-sm border-b border-gray-100 dark:border-gray-800/60'
                     : 'bg-transparent py-4',
             ]"
         >
@@ -134,13 +134,13 @@
             >
                 <Link
                     :href="route('login')"
-                    class="px-8 py-4 bg-primary text-white font-bold rounded-2xl shadow-lg shadow-primary/30 hover:shadow-primary/50 hover:-translate-y-1 transition-all duration-300 text-center"
+                    class="px-8 py-4 bg-primary text-white font-bold rounded-2xl shadow-lg shadow-primary/30 hover:shadow-primary/50 hover:-translate-y-1 transition duration-300 text-center"
                 >
                     Mulai Sekarang <i class="bi bi-arrow-right ml-1"></i>
                 </Link>
                 <Link
                     :href="route('tracking.public')"
-                    class="px-8 py-4 bg-white dark:bg-slate-800 text-slate-800 dark:text-white font-bold rounded-2xl shadow-lg shadow-slate-200/50 dark:shadow-none border border-slate-200 dark:border-slate-700 hover:border-primary/50 hover:-translate-y-1 transition-all duration-300 text-center"
+                    class="px-8 py-4 bg-white dark:bg-slate-800 text-slate-800 dark:text-white font-bold rounded-2xl shadow-lg shadow-slate-200/50 dark:shadow-none border border-slate-200 dark:border-slate-700 hover:border-primary/50 hover:-translate-y-1 transition duration-300 text-center"
                 >
                     <i class="bi bi-box-seam mr-1 text-primary"></i> Lacak Resi
                 </Link>
@@ -157,7 +157,7 @@
                 ></div>
 
                 <div
-                    class="rounded-3xl border border-slate-200/60 dark:border-slate-700/50 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm shadow-2xl p-2 md:p-4"
+                    class="rounded-3xl border border-slate-200/60 dark:border-slate-700/50 bg-white/50 dark:bg-slate-900/50 md:backdrop-blur-sm shadow-2xl p-2 md:p-4"
                 >
                     <div
                         class="rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-950 aspect-[16/9] flex items-center justify-center border border-slate-200/80 dark:border-slate-800 relative"
@@ -191,7 +191,7 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <!-- Feature 1 -->
                 <div
-                    class="p-8 rounded-[2.5rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/60 shadow-lg shadow-slate-200/20 dark:shadow-none hover:shadow-2xl hover:shadow-primary/10 transition-all duration-300 group hover:-translate-y-2"
+                    class="p-8 rounded-[2.5rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/60 shadow-lg shadow-slate-200/20 dark:shadow-none hover:shadow-2xl hover:shadow-primary/10 transition duration-300 group hover:-translate-y-2"
                 >
                     <div
                         class="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/20 to-indigo-500/20 flex items-center justify-center text-primary text-3xl mb-6 group-hover:scale-110 transition-transform"
@@ -209,7 +209,7 @@
 
                 <!-- Feature 2 -->
                 <div
-                    class="p-8 rounded-[2.5rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/60 shadow-lg shadow-slate-200/20 dark:shadow-none hover:shadow-2xl hover:shadow-indigo-500/10 transition-all duration-300 group hover:-translate-y-2"
+                    class="p-8 rounded-[2.5rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/60 shadow-lg shadow-slate-200/20 dark:shadow-none hover:shadow-2xl hover:shadow-indigo-500/10 transition duration-300 group hover:-translate-y-2"
                 >
                     <div
                         class="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center text-indigo-500 text-3xl mb-6 group-hover:scale-110 transition-transform"
@@ -227,7 +227,7 @@
 
                 <!-- Feature 3 -->
                 <div
-                    class="p-8 rounded-[2.5rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/60 shadow-lg shadow-slate-200/20 dark:shadow-none hover:shadow-2xl hover:shadow-emerald-500/10 transition-all duration-300 group hover:-translate-y-2"
+                    class="p-8 rounded-[2.5rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/60 shadow-lg shadow-slate-200/20 dark:shadow-none hover:shadow-2xl hover:shadow-emerald-500/10 transition duration-300 group hover:-translate-y-2"
                 >
                     <div
                         class="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 flex items-center justify-center text-emerald-500 text-3xl mb-6 group-hover:scale-110 transition-transform"
@@ -321,7 +321,7 @@
 
 <style scoped>
     .btn-primary {
-        @apply inline-flex items-center justify-center px-5 py-2.5 bg-primary text-white text-sm font-bold rounded-xl shadow-md shadow-primary/30 hover:bg-primary/90 hover:-translate-y-0.5 transition-all focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-offset-slate-900;
+        @apply inline-flex items-center justify-center px-5 py-2.5 bg-primary text-white text-sm font-bold rounded-xl shadow-md shadow-primary/30 hover:bg-primary/90 hover:-translate-y-0.5 transition focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-offset-slate-900;
     }
 
     .animate-fade-in-up {

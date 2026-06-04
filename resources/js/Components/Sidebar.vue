@@ -105,7 +105,7 @@
             <button
                 type="button"
                 @click="emit('toggle-collapse')"
-                class="absolute -right-4 top-9 z-50 flex h-8 w-8 items-center justify-center rounded-full bg-white dark:bg-sidebar-dark text-primary shadow-[0_4px_12px_rgba(0,0,0,0.1)] border border-gray-100 dark:border-gray-800 hover:scale-105 hover:bg-gray-50 dark:hover:bg-gray-800/80 transition-all duration-300 focus:outline-none cursor-pointer ring-[3px] ring-white dark:ring-sidebar-dark"
+                class="absolute -right-4 top-9 z-50 flex h-8 w-8 items-center justify-center rounded-full bg-white dark:bg-sidebar-dark text-primary shadow-[0_4px_12px_rgba(0,0,0,0.1)] border border-gray-100 dark:border-gray-800 hover:scale-105 hover:bg-gray-50 dark:hover:bg-gray-800/80 transition duration-300 focus:outline-none cursor-pointer ring-[3px] ring-white dark:ring-sidebar-dark"
                 aria-label="Toggle Sidebar"
             >
                 <i
@@ -119,12 +119,12 @@
                 <!-- UPDATE: Logo Baru (Desktop/Tablet) -->
                 <!-- Fungsi: Gambar PNG transparan Dibuat SANGAT BESAR dengan memangkas padding dan menggunakan scale-110 -->
                 <div
-                    class="flex flex-col items-center justify-center w-full transition-all duration-300"
+                    class="flex flex-col items-center justify-center w-full transition duration-300"
                 >
                     <img
                         src="/images/softsend-logo.png"
                         alt="SoftSend Logo"
-                        class="object-contain transition-all duration-300"
+                        class="object-contain transition duration-300"
                         :class="
                             collapsed
                                 ? 'w-16 h-16 mt-2'
@@ -137,7 +137,7 @@
             <!-- Menu -->
             <div class="px-3 flex-1 overflow-y-auto pb-20 scroll-smooth">
                 <div
-                    class="px-3 pt-2 pb-2 text-xs font-bold tracking-widest text-gray-400 dark:text-gray-500 transition-all duration-200"
+                    class="px-3 pt-2 pb-2 text-xs font-bold tracking-widest text-gray-400 dark:text-gray-500 transition duration-200"
                     :class="collapsed ? 'opacity-0 h-0 overflow-hidden' : 'opacity-100'"
                 >
                     MENU
@@ -149,7 +149,7 @@
                         <button
                             type="button"
                             @click="toggleMenu(item.label)"
-                            class="w-full group flex items-center justify-between rounded-xl px-3 py-2.5 transition-all duration-150"
+                            class="w-full group flex items-center justify-between rounded-xl px-3 py-2.5 transition duration-150"
                             :class="[
                                 isActive(item)
                                     ? 'bg-indigo-50 dark:bg-[rgba(99,102,241,0.15)] text-primary font-semibold border-l-[3px] border-primary'
@@ -168,7 +168,7 @@
                                     ]"
                                 ></i>
                                 <span
-                                    class="text-sm transition-all duration-200 whitespace-nowrap"
+                                    class="text-sm transition duration-200 whitespace-nowrap"
                                     :class="labelClass"
                                 >
                                     {{ item.label }}
@@ -188,7 +188,7 @@
                         <!-- Sub Menu Desktop -->
                         <div
                             v-show="!collapsed"
-                            class="grid transition-all duration-300 ease-in-out"
+                            class="grid transition duration-300 ease-in-out"
                             :class="
                                 openMenus.includes(item.label)
                                     ? 'grid-rows-[1fr] opacity-100'
@@ -201,11 +201,11 @@
                                         v-for="sub in item.subItems"
                                         :key="sub.label"
                                         :href="sub.href()"
-                                        class="group/sub flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all duration-150 text-gray-600 dark:text-gray-300 hover:text-primary hover:bg-indigo-50/50 dark:hover:bg-white/5"
+                                        class="group/sub flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition duration-150 text-gray-600 dark:text-gray-300 hover:text-primary hover:bg-indigo-50/50 dark:hover:bg-white/5"
                                     >
                                         <!-- Ikon Bulat (O) yang HD, Tajam & Lebih Besar -->
                                         <i
-                                            class="bi bi-circle text-[10px] font-bold opacity-50 group-hover/sub:opacity-100 group-hover/sub:text-primary transition-all"
+                                            class="bi bi-circle text-[10px] font-bold opacity-50 group-hover/sub:opacity-100 group-hover/sub:text-primary transition"
                                         ></i>
                                         <span class="whitespace-nowrap">{{ sub.label }}</span>
                                     </Link>

@@ -142,7 +142,7 @@
                         <Link
                             :href="route('settings.index')"
                             @click="emit('close')"
-                            class="flex flex-col items-center justify-center p-5 rounded-[1.5rem] bg-white/80 dark:bg-card-dark/80 backdrop-blur-md shadow-[0_8px_30px_-10px_rgba(0,0,0,0.06)] border border-white/50 dark:border-gray-800 active:scale-[0.94] transition-all duration-300 outline-none"
+                            class="flex flex-col items-center justify-center p-5 rounded-[1.5rem] bg-white/80 dark:bg-card-dark/80 md:backdrop-blur-md shadow-[0_8px_30px_-10px_rgba(0,0,0,0.06)] border border-white/50 dark:border-gray-800 active:scale-[0.94] transition duration-300 outline-none"
                         >
                             <div
                                 class="w-12 h-12 rounded-2xl bg-purple-50 dark:bg-purple-900/30 text-secondary flex items-center justify-center mb-3"
@@ -210,7 +210,7 @@
                         method="post"
                         as="button"
                         @click="emit('close')"
-                        class="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-red-50/50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 text-red-600 dark:text-red-400 font-bold active:scale-[0.97] active:shadow-[0_4px_20px_rgba(239,68,68,0.15)] transition-all duration-300 outline-none"
+                        class="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-red-50/50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 text-red-600 dark:text-red-400 font-bold active:scale-[0.97] active:shadow-[0_4px_20px_rgba(239,68,68,0.15)] transition duration-300 outline-none"
                     >
                         <i class="bi bi-power text-lg drop-shadow-sm"></i>
                         Keluar dari Akun

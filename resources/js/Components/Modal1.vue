@@ -27,11 +27,11 @@
 <template>
     <teleport to="body">
         <div v-if="show" class="fixed inset-0 z-[60]">
-            <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="close"></div>
+            <div class="absolute inset-0 bg-black/40 md:backdrop-blur-sm" @click="close"></div>
 
             <div class="absolute inset-0 flex items-center justify-center p-4">
                 <div
-                    class="bg-white dark:bg-card-dark rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-700/50 overflow-hidden w-full transition-all duration-200"
+                    class="bg-white dark:bg-card-dark rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-700/50 overflow-hidden w-full transition duration-200"
                     :class="panelClass"
                     style="transform: translateY(0)"
                 >

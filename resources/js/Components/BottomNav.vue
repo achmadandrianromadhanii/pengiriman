@@ -40,7 +40,7 @@
                 <!-- Home -->
                 <Link
                     :href="route('dashboard')"
-                    class="relative flex flex-col items-center justify-center h-[54px] w-16 transition-all duration-500 ease-out"
+                    class="relative flex flex-col items-center justify-center h-[54px] w-16 transition duration-500 ease-out"
                     :class="
                         currentRoute === 'dashboard'
                             ? 'text-white'
@@ -49,7 +49,7 @@
                 >
                     <!-- Teks muncul di atas icon saat aktif -->
                     <span
-                        class="absolute font-bold tracking-wider transition-all duration-500 ease-out"
+                        class="absolute font-bold tracking-wider transition duration-500 ease-out"
                         :class="
                             currentRoute === 'dashboard'
                                 ? 'opacity-100 text-[10px] -translate-y-[12px]'
@@ -59,7 +59,7 @@
                     >
                     <!-- Icon bergeser ke bawah saat aktif -->
                     <i
-                        class="leading-none transition-all duration-500 ease-out"
+                        class="leading-none transition duration-500 ease-out"
                         :class="[
                             currentRoute === 'dashboard'
                                 ? 'bi bi-house-door-fill text-[18px] translate-y-[7px]'
@@ -68,7 +68,7 @@
                     ></i>
                     <!-- Dot indikator di bawah -->
                     <div
-                        class="absolute bottom-1 w-1 h-1 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)] transition-all duration-500"
+                        class="absolute bottom-1 w-1 h-1 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)] transition duration-500"
                         :class="
                             currentRoute === 'dashboard'
                                 ? 'opacity-100 scale-100'
@@ -80,7 +80,7 @@
                 <!-- Kirim -->
                 <Link
                     :href="route('pengiriman.index')"
-                    class="relative flex flex-col items-center justify-center h-[54px] w-16 transition-all duration-500 ease-out"
+                    class="relative flex flex-col items-center justify-center h-[54px] w-16 transition duration-500 ease-out"
                     :class="
                         currentRoute === 'pengiriman'
                             ? 'text-white'
@@ -88,7 +88,7 @@
                     "
                 >
                     <span
-                        class="absolute font-bold tracking-wider transition-all duration-500 ease-out"
+                        class="absolute font-bold tracking-wider transition duration-500 ease-out"
                         :class="
                             currentRoute === 'pengiriman'
                                 ? 'opacity-100 text-[10px] -translate-y-[12px]'
@@ -97,7 +97,7 @@
                         >Kirim</span
                     >
                     <i
-                        class="leading-none transition-all duration-500 ease-out"
+                        class="leading-none transition duration-500 ease-out"
                         :class="[
                             currentRoute === 'pengiriman'
                                 ? 'bi bi-box-seam-fill text-[18px] translate-y-[7px]'
@@ -105,7 +105,7 @@
                         ]"
                     ></i>
                     <div
-                        class="absolute bottom-1 w-1 h-1 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)] transition-all duration-500"
+                        class="absolute bottom-1 w-1 h-1 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)] transition duration-500"
                         :class="
                             currentRoute === 'pengiriman'
                                 ? 'opacity-100 scale-100'
@@ -117,7 +117,7 @@
                 <!-- Track -->
                 <Link
                     :href="route('tracking.search')"
-                    class="relative flex flex-col items-center justify-center h-[54px] w-16 transition-all duration-500 ease-out"
+                    class="relative flex flex-col items-center justify-center h-[54px] w-16 transition duration-500 ease-out"
                     :class="
                         currentRoute === 'tracking'
                             ? 'text-white'
@@ -125,7 +125,7 @@
                     "
                 >
                     <span
-                        class="absolute font-bold tracking-wider transition-all duration-500 ease-out"
+                        class="absolute font-bold tracking-wider transition duration-500 ease-out"
                         :class="
                             currentRoute === 'tracking'
                                 ? 'opacity-100 text-[10px] -translate-y-[12px]'
@@ -134,7 +134,7 @@
                         >Track</span
                     >
                     <i
-                        class="leading-none transition-all duration-500 ease-out"
+                        class="leading-none transition duration-500 ease-out"
                         :class="[
                             currentRoute === 'tracking'
                                 ? 'bi bi-geo-alt-fill text-[18px] translate-y-[7px]'
@@ -142,7 +142,7 @@
                         ]"
                     ></i>
                     <div
-                        class="absolute bottom-1 w-1 h-1 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)] transition-all duration-500"
+                        class="absolute bottom-1 w-1 h-1 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)] transition duration-500"
                         :class="
                             currentRoute === 'tracking'
                                 ? 'opacity-100 scale-100'
@@ -154,7 +154,7 @@
                 <!-- Tarif -->
                 <Link
                     :href="route('tarif.index')"
-                    class="relative flex flex-col items-center justify-center h-[54px] w-16 transition-all duration-500 ease-out"
+                    class="relative flex flex-col items-center justify-center h-[54px] w-16 transition duration-500 ease-out"
                     :class="
                         currentRoute === 'tarif'
                             ? 'text-white'
@@ -162,7 +162,7 @@
                     "
                 >
                     <span
-                        class="absolute font-bold tracking-wider transition-all duration-500 ease-out"
+                        class="absolute font-bold tracking-wider transition duration-500 ease-out"
                         :class="
                             currentRoute === 'tarif'
                                 ? 'opacity-100 text-[10px] -translate-y-[12px]'
@@ -171,7 +171,7 @@
                         >Tarif</span
                     >
                     <i
-                        class="leading-none transition-all duration-500 ease-out"
+                        class="leading-none transition duration-500 ease-out"
                         :class="[
                             currentRoute === 'tarif'
                                 ? 'bi bi-calculator-fill text-[18px] translate-y-[7px]'
@@ -179,7 +179,7 @@
                         ]"
                     ></i>
                     <div
-                        class="absolute bottom-1 w-1 h-1 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)] transition-all duration-500"
+                        class="absolute bottom-1 w-1 h-1 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)] transition duration-500"
                         :class="
                             currentRoute === 'tarif' ? 'opacity-100 scale-100' : 'opacity-0 scale-0'
                         "
@@ -190,11 +190,11 @@
                 <button
                     @click="showMoreMenu = true"
                     type="button"
-                    class="relative flex flex-col items-center justify-center h-[54px] w-16 transition-all duration-500 ease-out"
+                    class="relative flex flex-col items-center justify-center h-[54px] w-16 transition duration-500 ease-out"
                     :class="showMoreMenu ? 'text-white' : 'text-blue-200/60 hover:text-white'"
                 >
                     <span
-                        class="absolute font-bold tracking-wider transition-all duration-500 ease-out"
+                        class="absolute font-bold tracking-wider transition duration-500 ease-out"
                         :class="
                             showMoreMenu
                                 ? 'opacity-100 text-[10px] -translate-y-[12px]'
@@ -203,7 +203,7 @@
                         >Menu</span
                     >
                     <i
-                        class="leading-none transition-all duration-500 ease-out"
+                        class="leading-none transition duration-500 ease-out"
                         :class="[
                             showMoreMenu
                                 ? 'bi bi-grid-fill text-[18px] translate-y-[7px]'
@@ -211,7 +211,7 @@
                         ]"
                     ></i>
                     <div
-                        class="absolute bottom-1 w-1 h-1 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)] transition-all duration-500"
+                        class="absolute bottom-1 w-1 h-1 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)] transition duration-500"
                         :class="showMoreMenu ? 'opacity-100 scale-100' : 'opacity-0 scale-0'"
                     ></div>
                 </button>

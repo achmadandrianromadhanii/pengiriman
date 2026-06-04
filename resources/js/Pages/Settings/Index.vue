@@ -395,12 +395,12 @@
 
             <!-- [UPDATE: TAB MELAYANG (STICKY GLASSMORPHISM)] -->
             <!-- Fungsi: Segmented Control Navigation Mobile (Tab) yang tetap melayang di atas saat di-scroll -->
-            <!-- Cara Kerja: Menggunakan 'sticky top-4 z-40' dan 'backdrop-blur-xl bg-white/70' untuk efek kaca tembus pandang yang premium dan hemat ruang di HP -->
+            <!-- Cara Kerja: Menggunakan 'sticky top-4 z-40' dan 'md:backdrop-blur-xl bg-white/70' untuk efek kaca tembus pandang yang premium dan hemat ruang di HP -->
             <div
-                class="mt-4 sticky top-4 z-40 inline-flex backdrop-blur-xl bg-white/70 dark:bg-black/70 rounded-full p-1 gap-1 w-full md:w-auto shadow-sm border border-slate-200/50 dark:border-slate-800/60 transition-all"
+                class="mt-4 sticky top-4 z-40 inline-flex md:backdrop-blur-xl bg-white/70 dark:bg-black/70 rounded-full p-1 gap-1 w-full md:w-auto shadow-sm border border-slate-200/50 dark:border-slate-800/60 transition"
             >
                 <button
-                    class="flex-1 md:flex-none px-4 py-2 rounded-full text-sm font-bold transition-all duration-300"
+                    class="flex-1 md:flex-none px-4 py-2 rounded-full text-sm font-bold transition duration-300"
                     :class="
                         tab === 'kota'
                             ? 'bg-white dark:bg-card-dark text-primary shadow-[0_4px_10px_-2px_rgba(0,0,0,0.1)]'
@@ -413,7 +413,7 @@
                 </button>
 
                 <button
-                    class="flex-1 md:flex-none px-4 py-2 rounded-full text-sm font-bold transition-all duration-300"
+                    class="flex-1 md:flex-none px-4 py-2 rounded-full text-sm font-bold transition duration-300"
                     :class="
                         tab === 'tarif'
                             ? 'bg-white dark:bg-card-dark text-primary shadow-[0_4px_10px_-2px_rgba(0,0,0,0.1)]'
@@ -446,7 +446,7 @@
                     <!-- Fungsi: Tombol aksi utama (CTA) untuk menambah data kota baru. -->
                     <!-- Cara Kerja: Diperbesar dan diberi efek gradasi serta shadow glowing agar sangat menonjol di mata pengguna. -->
                     <button
-                        class="px-5 py-2.5 text-sm font-black bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full shadow-[0_8px_20px_-6px_rgba(79,70,229,0.5)] transition-all hover:from-blue-500 hover:to-indigo-500 active:scale-95 flex items-center gap-2"
+                        class="px-5 py-2.5 text-sm font-black bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full shadow-[0_8px_20px_-6px_rgba(79,70,229,0.5)] transition hover:from-blue-500 hover:to-indigo-500 active:scale-95 flex items-center gap-2"
                         type="button"
                         @click="openKotaCreate"
                     >
@@ -472,7 +472,7 @@
                         </div>
                         <input
                             v-model="kotaSearch"
-                            class="input-field pl-10 bg-slate-100 dark:bg-slate-800/50 border-none rounded-full md:rounded-lg shadow-none focus:ring-2 focus:ring-primary/20 h-11 w-full text-sm font-medium transition-all"
+                            class="input-field pl-10 bg-slate-100 dark:bg-slate-800/50 border-none rounded-full md:rounded-lg shadow-none focus:ring-2 focus:ring-primary/20 h-11 w-full text-sm font-medium transition"
                             type="text"
                             placeholder="Ketik nama kota, provinsi..."
                         />
@@ -492,7 +492,7 @@
                     <div class="flex items-center gap-2">
                         <!-- Tombol Unduh Template Kecil -->
                         <button
-                            class="flex-shrink-0 h-11 w-11 flex items-center justify-center bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full md:rounded-lg transition-all hover:bg-blue-100 shadow-sm"
+                            class="flex-shrink-0 h-11 w-11 flex items-center justify-center bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full md:rounded-lg transition hover:bg-blue-100 shadow-sm"
                             type="button"
                             @click="downloadTemplate"
                             title="Unduh Template CSV"
@@ -509,7 +509,7 @@
                                 @change="previewImport"
                             />
                             <div
-                                class="flex items-center justify-between w-full h-full px-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-full md:rounded-lg group-hover:border-primary transition-all shadow-sm"
+                                class="flex items-center justify-between w-full h-full px-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 rounded-full md:rounded-lg group-hover:border-primary transition shadow-sm"
                             >
                                 <span class="text-xs font-bold text-slate-500 truncate mr-2">
                                     {{ importFile ? importFile.name : 'Pilih File CSV/Excel' }}
@@ -520,7 +520,7 @@
 
                         <!-- Tombol Simpan -->
                         <button
-                            class="flex-shrink-0 h-11 px-4 text-xs font-black bg-primary text-white rounded-full md:rounded-lg shadow-[0_4px_12px_-2px_rgba(79,70,229,0.4)] transition-all hover:bg-blue-700 active:scale-95"
+                            class="flex-shrink-0 h-11 px-4 text-xs font-black bg-primary text-white rounded-full md:rounded-lg shadow-[0_4px_12px_-2px_rgba(79,70,229,0.4)] transition hover:bg-blue-700 active:scale-95"
                             type="button"
                             :disabled="importing"
                             @click="doImport"
@@ -665,7 +665,7 @@
                     <div
                         v-for="k in kotaFiltered"
                         :key="'mob-' + k.id"
-                        class="p-5 rounded-[1.5rem] bg-white dark:bg-card-dark shadow-[0_8px_30px_-10px_rgba(0,0,0,0.06)] active:scale-[0.98] transition-all duration-300 border border-slate-100 dark:border-slate-800 relative"
+                        class="p-5 rounded-[1.5rem] bg-white dark:bg-card-dark shadow-[0_8px_30px_-10px_rgba(0,0,0,0.06)] active:scale-[0.98] transition duration-300 border border-slate-100 dark:border-slate-800 relative"
                     >
                         <!-- Header Kartu -->
                         <div class="flex items-start justify-between mb-4">
@@ -725,7 +725,7 @@
                             <div class="flex items-center gap-2">
                                 <!-- Tombol Edit: Ikon Bulat -->
                                 <button
-                                    class="h-9 w-9 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition-all shadow-sm"
+                                    class="h-9 w-9 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition shadow-sm"
                                     type="button"
                                     @click="openKotaEdit(k)"
                                     title="Edit Kota"
@@ -734,7 +734,7 @@
                                 </button>
                                 <!-- Tombol Hapus: Ikon Bulat -->
                                 <button
-                                    class="h-9 w-9 flex items-center justify-center rounded-full bg-red-50 dark:bg-red-900/30 text-red-500 hover:bg-red-100 transition-all shadow-sm"
+                                    class="h-9 w-9 flex items-center justify-center rounded-full bg-red-50 dark:bg-red-900/30 text-red-500 hover:bg-red-100 transition shadow-sm"
                                     type="button"
                                     @click="deleteKota(k)"
                                     title="Hapus Kota"
@@ -860,7 +860,7 @@
 
                 <!-- [UPDATE: HERO BUTTON TAMBAH TARIF] -->
                 <button
-                    class="px-5 py-2.5 text-sm font-black bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full shadow-[0_8px_20px_-6px_rgba(79,70,229,0.5)] transition-all hover:from-blue-500 hover:to-indigo-500 active:scale-95 flex items-center gap-2"
+                    class="px-5 py-2.5 text-sm font-black bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full shadow-[0_8px_20px_-6px_rgba(79,70,229,0.5)] transition hover:from-blue-500 hover:to-indigo-500 active:scale-95 flex items-center gap-2"
                     type="button"
                     @click="openTarifCreate"
                 >
@@ -885,7 +885,7 @@
                             :key="opt"
                             @click="layananFilter = opt"
                             type="button"
-                            class="snap-start flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-bold transition-all border"
+                            class="snap-start flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-bold transition border"
                             :class="
                                 layananFilter === opt
                                     ? 'bg-slate-800 text-white border-slate-800 dark:bg-white dark:text-black dark:border-white shadow-md'
@@ -924,7 +924,7 @@
                         <input
                             v-model="searchTarif"
                             type="text"
-                            class="input-field pl-10 bg-slate-100 dark:bg-slate-800/50 border-none rounded-full md:rounded-lg shadow-none focus:ring-2 focus:ring-primary/20 h-11 w-full text-sm font-medium transition-all"
+                            class="input-field pl-10 bg-slate-100 dark:bg-slate-800/50 border-none rounded-full md:rounded-lg shadow-none focus:ring-2 focus:ring-primary/20 h-11 w-full text-sm font-medium transition"
                             placeholder="Cari layanan, harga, estimasi..."
                         />
                     </div>
@@ -1010,7 +1010,7 @@
                     <div
                         v-for="t in tarifFiltered"
                         :key="'mob-t-' + t.id"
-                        class="rounded-[1.5rem] bg-white dark:bg-card-dark shadow-[0_8px_30px_-10px_rgba(0,0,0,0.06)] active:scale-[0.98] transition-all duration-300 border border-slate-100 dark:border-slate-800 relative overflow-hidden"
+                        class="rounded-[1.5rem] bg-white dark:bg-card-dark shadow-[0_8px_30px_-10px_rgba(0,0,0,0.06)] active:scale-[0.98] transition duration-300 border border-slate-100 dark:border-slate-800 relative overflow-hidden"
                     >
                         <div class="p-5">
                             <!-- Badge Layanan & Status -->
@@ -1095,7 +1095,7 @@
                             class="bg-slate-50 dark:bg-slate-800/40 p-3 flex justify-end gap-2 border-t border-slate-100 dark:border-slate-800"
                         >
                             <button
-                                class="h-9 w-9 flex items-center justify-center rounded-full bg-slate-200/50 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition-all shadow-sm"
+                                class="h-9 w-9 flex items-center justify-center rounded-full bg-slate-200/50 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition shadow-sm"
                                 type="button"
                                 @click="openTarifEdit(t)"
                                 title="Edit Tarif"
@@ -1103,7 +1103,7 @@
                                 <i class="bi bi-pencil-square"></i>
                             </button>
                             <button
-                                class="h-9 w-9 flex items-center justify-center rounded-full bg-red-100/50 dark:bg-red-900/30 text-red-500 hover:bg-red-100 transition-all shadow-sm"
+                                class="h-9 w-9 flex items-center justify-center rounded-full bg-red-100/50 dark:bg-red-900/30 text-red-500 hover:bg-red-100 transition shadow-sm"
                                 type="button"
                                 @click="deleteTarif(t)"
                                 title="Hapus Tarif"

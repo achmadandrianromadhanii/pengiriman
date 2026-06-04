@@ -442,7 +442,7 @@
                     v-for="p in pengiriman.data"
                     :key="'mob-' + p.id"
                     :href="route('pengiriman.show', p.id)"
-                    class="block p-4 mb-4 rounded-[1.5rem] border border-gray-100 dark:border-gray-800 bg-white dark:bg-card-dark shadow-lg shadow-gray-200/50 dark:shadow-black/30 hover:shadow-xl transition-all active:scale-[0.98]"
+                    class="block p-4 mb-4 rounded-[1.5rem] border border-gray-100 dark:border-gray-800 bg-white dark:bg-card-dark shadow-lg shadow-gray-200/50 dark:shadow-black/30 hover:shadow-xl transition active:scale-[0.98]"
                     :class="
                         p.is_terlambat
                             ? 'bg-red-50 dark:bg-red-900/10 border-red-100 dark:border-red-900/30'
@@ -571,7 +571,7 @@
                                 preserveState: true,
                             })
                         "
-                        class="w-11 h-11 flex items-center justify-center rounded-full transition-all duration-300 font-bold active:scale-95"
+                        class="w-11 h-11 flex items-center justify-center rounded-full transition duration-300 font-bold active:scale-95"
                         :class="
                             pengiriman.prev_page_url
                                 ? 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'
@@ -607,7 +607,7 @@
                                 preserveState: true,
                             })
                         "
-                        class="w-11 h-11 flex items-center justify-center rounded-full transition-all duration-300 font-bold active:scale-95"
+                        class="w-11 h-11 flex items-center justify-center rounded-full transition duration-300 font-bold active:scale-95"
                         :class="
                             pengiriman.next_page_url
                                 ? 'bg-primary text-white shadow-md shadow-primary/40 hover:bg-primary-dark'
@@ -626,7 +626,7 @@
             <!-- Backdrop Hitam Transparan -->
             <div
                 v-if="isFilterOpen"
-                class="fixed inset-0 bg-black/50 backdrop-blur-[2px] z-[80] transition-opacity duration-300"
+                class="fixed inset-0 bg-black/50 md:backdrop-blur-[2px] z-[80] transition-opacity duration-300"
                 @click="isFilterOpen = false"
             ></div>
 
@@ -707,14 +707,14 @@
                                 resetFilters();
                                 isFilterOpen = false;
                             "
-                            class="w-[35%] py-3.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-2xl font-bold text-sm hover:bg-gray-200 active:scale-95 transition-all"
+                            class="w-[35%] py-3.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-2xl font-bold text-sm hover:bg-gray-200 active:scale-95 transition"
                         >
                             Reset
                         </button>
                         <button
                             type="button"
                             @click="isFilterOpen = false"
-                            class="flex-1 py-3.5 bg-primary text-white rounded-2xl font-bold text-sm shadow-lg shadow-primary/30 hover:scale-[0.98] active:scale-95 transition-all"
+                            class="flex-1 py-3.5 bg-primary text-white rounded-2xl font-bold text-sm shadow-lg shadow-primary/30 hover:scale-[0.98] active:scale-95 transition"
                         >
                             Terapkan Filter
                         </button>
@@ -732,7 +732,7 @@
         -->
         <a
             :href="route('pengiriman.create')"
-            class="fixed bottom-[90px] right-4 z-[70] w-13 h-13 bg-primary text-white rounded-full flex items-center justify-center shadow-[0_8px_25px_rgba(45,51,107,0.4)] hover:scale-105 active:scale-95 transition-all duration-300 border border-white/20"
+            class="fixed bottom-[90px] right-4 z-[70] w-13 h-13 bg-primary text-white rounded-full flex items-center justify-center shadow-[0_8px_25px_rgba(45,51,107,0.4)] hover:scale-105 active:scale-95 transition duration-300 border border-white/20"
             style="width: 52px; height: 52px"
             title="Input Data"
         >

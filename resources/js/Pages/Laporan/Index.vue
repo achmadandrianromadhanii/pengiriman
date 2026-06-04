@@ -181,7 +181,7 @@
                 <!-- Cara Kerja: Di mobile hanya ikon bulat (Icon Button) untuk menghemat ruang vertikal, di desktop kembali jadi tombol panjang. -->
                 <button
                     type="button"
-                    class="flex justify-center items-center rounded-full md:rounded-lg bg-primary/10 md:bg-primary text-primary md:text-white shadow-none md:shadow-lg active:scale-90 transition-all w-10 h-10 md:w-auto md:h-auto md:py-2.5 md:px-4 font-bold md:font-medium"
+                    class="flex justify-center items-center rounded-full md:rounded-lg bg-primary/10 md:bg-primary text-primary md:text-white shadow-none md:shadow-lg active:scale-90 transition w-10 h-10 md:w-auto md:h-auto md:py-2.5 md:px-4 font-bold md:font-medium"
                     @click="exportPdf"
                     title="Cetak / Export PDF"
                 >
@@ -194,7 +194,7 @@
         <!-- [UPDATE: SEAMLESS FILTER CARD] -->
         <!-- Fungsi: Wadah pencarian dan filter dengan gaya Glassmorphism yang tipis dan ringan di mobile. -->
         <div
-            class="md:card md:p-5 p-4 md:rounded-xl rounded-[1.5rem] md:shadow-sm border border-slate-200/50 dark:border-slate-800/60 md:border-none backdrop-blur-md bg-white/60 dark:bg-slate-900/60 md:bg-white md:dark:bg-card-dark transition-all"
+            class="md:card md:p-5 p-4 md:rounded-xl rounded-[1.5rem] md:shadow-sm border border-slate-200/50 dark:border-slate-800/60 md:border-none md:backdrop-blur-md bg-white/60 dark:bg-slate-900/60 md:bg-white md:dark:bg-card-dark transition"
         >
             <div class="grid grid-cols-1 md:grid-cols-6 gap-3 md:gap-3">
                 <div class="md:col-span-2">
@@ -209,7 +209,7 @@
                         <input
                             v-model="form.search"
                             type="text"
-                            class="peer input-field w-full pl-10 h-12 md:h-11 bg-white md:bg-gray-50 dark:bg-slate-800 border-none md:border-gray-200 rounded-xl md:rounded-lg focus:ring-2 focus:ring-primary/20 shadow-sm md:shadow-none transition-all text-sm pr-10"
+                            class="peer input-field w-full pl-10 h-12 md:h-11 bg-white md:bg-gray-50 dark:bg-slate-800 border-none md:border-gray-200 rounded-xl md:rounded-lg focus:ring-2 focus:ring-primary/20 shadow-sm md:shadow-none transition text-sm pr-10"
                             placeholder="Resi / Nama..."
                         />
                         <div
@@ -238,7 +238,7 @@
                     <div class="relative">
                         <select
                             v-model="form.periode"
-                            class="peer input-field w-full pl-10 h-12 md:h-11 bg-white md:bg-gray-50 dark:bg-slate-800 border-none md:border-gray-200 rounded-xl md:rounded-lg focus:ring-2 focus:ring-primary/20 shadow-sm md:shadow-none transition-all text-sm appearance-none cursor-pointer"
+                            class="peer input-field w-full pl-10 h-12 md:h-11 bg-white md:bg-gray-50 dark:bg-slate-800 border-none md:border-gray-200 rounded-xl md:rounded-lg focus:ring-2 focus:ring-primary/20 shadow-sm md:shadow-none transition text-sm appearance-none cursor-pointer"
                         >
                             <option value="hari_ini">Hari Ini</option>
                             <option value="minggu_ini">Minggu Ini</option>
@@ -268,7 +268,7 @@
                     <input
                         v-model="form.dari"
                         type="date"
-                        class="input-field w-full h-12 md:h-11 px-3 bg-white md:bg-gray-50 dark:bg-slate-800 border-none md:border-gray-200 rounded-xl md:rounded-lg focus:ring-2 focus:ring-primary/20 shadow-sm md:shadow-none transition-all text-sm"
+                        class="input-field w-full h-12 md:h-11 px-3 bg-white md:bg-gray-50 dark:bg-slate-800 border-none md:border-gray-200 rounded-xl md:rounded-lg focus:ring-2 focus:ring-primary/20 shadow-sm md:shadow-none transition text-sm"
                     />
                 </div>
 
@@ -280,7 +280,7 @@
                     <input
                         v-model="form.sampai"
                         type="date"
-                        class="input-field w-full h-12 md:h-11 px-3 bg-white md:bg-gray-50 dark:bg-slate-800 border-none md:border-gray-200 rounded-xl md:rounded-lg focus:ring-2 focus:ring-primary/20 shadow-sm md:shadow-none transition-all text-sm"
+                        class="input-field w-full h-12 md:h-11 px-3 bg-white md:bg-gray-50 dark:bg-slate-800 border-none md:border-gray-200 rounded-xl md:rounded-lg focus:ring-2 focus:ring-primary/20 shadow-sm md:shadow-none transition text-sm"
                     />
                 </div>
             </div>
@@ -461,7 +461,7 @@
                             v-for="(p, idx) in pengiriman.data"
                             :key="'mob-' + p.id"
                             :href="route('pengiriman.show', p.id)"
-                            class="block p-5 rounded-[1.5rem] bg-white dark:bg-card-dark shadow-[0_8px_30px_-10px_rgba(0,0,0,0.06)] active:scale-[0.98] transition-all duration-300 border border-slate-100 dark:border-slate-800"
+                            class="block p-5 rounded-[1.5rem] bg-white dark:bg-card-dark shadow-[0_8px_30px_-10px_rgba(0,0,0,0.06)] active:scale-[0.98] transition duration-300 border border-slate-100 dark:border-slate-800"
                         >
                             <!-- Header Card: Resi & Status -->
                             <div
@@ -563,7 +563,7 @@
                         <!-- Cara Kerja: Menempel melayang (sticky) elegan dengan latar belakang blur premium. -->
                         <div
                             v-if="pengiriman.data.length > 0"
-                            class="sticky bottom-24 z-40 mt-4 p-4 px-5 rounded-[1.25rem] bg-slate-900/90 dark:bg-black/90 backdrop-blur-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] flex items-center justify-between text-white border border-slate-700/50 transition-all"
+                            class="sticky bottom-24 z-40 mt-4 p-4 px-5 rounded-[1.25rem] bg-slate-900/90 dark:bg-black/90 md:backdrop-blur-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] flex items-center justify-between text-white border border-slate-700/50 transition"
                         >
                             <div class="flex flex-col">
                                 <span

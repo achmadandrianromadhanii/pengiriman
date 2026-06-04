@@ -425,7 +425,7 @@
                 <!-- Copy Resi Button -->
                 <div
                     @click="copyResi"
-                    class="flex items-center gap-2.5 bg-white/20 px-3.5 py-1.5 rounded-full backdrop-blur-md cursor-pointer hover:bg-white/30 active:scale-95 transition-all shadow-sm"
+                    class="flex items-center gap-2.5 bg-white/20 px-3.5 py-1.5 rounded-full md:backdrop-blur-md cursor-pointer hover:bg-white/30 active:scale-95 transition shadow-sm"
                 >
                     <span class="text-[13px] font-extrabold tracking-widest">{{
                         pengiriman.nomor_resi
@@ -458,7 +458,7 @@
                         >
                     </div>
                     <div
-                        class="mt-4 text-xs font-bold text-white/90 bg-black/15 inline-block px-3 py-1.5 rounded-full backdrop-blur-sm border border-white/10 shadow-inner"
+                        class="mt-4 text-xs font-bold text-white/90 bg-black/15 inline-block px-3 py-1.5 rounded-full md:backdrop-blur-sm border border-white/10 shadow-inner"
                     >
                         Est. Tiba: {{ formatDate(pengiriman.estimasi_tiba) }}
                     </div>
@@ -523,7 +523,7 @@
 
                         <!-- Active track line -->
                         <div
-                            class="absolute top-[14px] left-[25px] h-1.5 bg-primary rounded-full z-0 transition-all duration-700 ease-out"
+                            class="absolute top-[14px] left-[25px] h-1.5 bg-primary rounded-full z-0 transition duration-700 ease-out"
                             :style="`width: ${currentIndex === 0 ? 0 : (currentIndex / (steps.length - 1)) * 100}%`"
                         ></div>
 
@@ -534,7 +534,7 @@
                         >
                             <!-- Dot -->
                             <div
-                                class="w-8 h-8 rounded-full flex items-center justify-center border-[3px] transition-all duration-300"
+                                class="w-8 h-8 rounded-full flex items-center justify-center border-[3px] transition duration-300"
                                 :class="[
                                     idx <= currentIndex
                                         ? 'bg-primary border-white dark:border-card-dark text-white shadow-md'
@@ -627,7 +627,7 @@
                     >
                         <!-- Ikon Garis Tengah presisi -left-[14.5px] -->
                         <div
-                            class="absolute -left-[14.5px] top-1 w-8 h-8 rounded-full border-[3px] border-white dark:border-card-dark flex items-center justify-center text-white transition-all duration-300"
+                            class="absolute -left-[14.5px] top-1 w-8 h-8 rounded-full border-[3px] border-white dark:border-card-dark flex items-center justify-center text-white transition duration-300"
                             :class="[
                                 meta(t.status_baru).dot,
                                 idx === 0

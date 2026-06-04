@@ -193,7 +193,7 @@
 <template>
     <!-- sticky + z-50: navbar selalu di atas konten -->
     <header
-        class="sticky top-0 z-50 h-14 flex items-center justify-between px-4 md:px-5 border-b border-gray-200/50 dark:border-white/10 shadow-sm bg-white dark:bg-card-dark md:bg-white/80 md:dark:bg-black/50 md:backdrop-blur-md transition-all duration-[400ms] ease-spring"
+        class="sticky top-0 z-50 h-14 flex items-center justify-between px-4 md:px-5 border-b border-gray-200/50 dark:border-white/10 shadow-sm bg-white dark:bg-card-dark md:bg-white/80 md:dark:bg-black/50 md:backdrop-blur-md transition duration-[400ms] ease-spring"
     >
         <!-- Fungsi: Logo Perusahaan (Mobile) -->
         <!-- Cara kerja: Menggunakan h-9 yang dikombinasikan dengan scale-[1.6] origin-left agar logo membesar melampaui batas tinggi navbar tanpa merusak struktur layout h-14. Translate-x digunakan untuk merapikan posisi tepi. -->
@@ -223,7 +223,7 @@
             <!-- Cara Kerja: Menggunakan bentuk rounded-full w-10 h-10 agar sesuai area sentuh jempol (Standard UI Touch Target) -->
             <button
                 type="button"
-                class="inline-flex items-center justify-center w-10 h-10 rounded-full text-gray-600 dark:text-gray-200 bg-gray-50 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 active:scale-95 transition-all shadow-sm"
+                class="inline-flex items-center justify-center w-10 h-10 rounded-full text-gray-600 dark:text-gray-200 bg-gray-50 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 active:scale-95 transition shadow-sm"
                 @click="toggleDark"
                 aria-label="Toggle dark mode"
             >
@@ -236,7 +236,7 @@
                 <!-- Cara Kerja: Memuat foto avatar pengguna jika ada, jika tidak otomatis menampilkan inisial. Menggantikan ikon vektor usang. -->
                 <button
                     type="button"
-                    class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gray-50 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 active:scale-95 transition-all border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden"
+                    class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gray-50 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 active:scale-95 transition border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden"
                     @click="toggleDropdown"
                     aria-label="User menu"
                     aria-haspopup="menu"
@@ -256,10 +256,10 @@
 
                 <!-- Dropdown panel: FIXED + z tinggi => anti tenggelam & bisa diklik -->
                 <transition
-                    enter-active-class="transition-all duration-[400ms] ease-spring will-change-transform"
+                    enter-active-class="transition duration-[400ms] ease-spring will-change-transform"
                     enter-from-class="opacity-0 scale-95 -translate-y-2"
                     enter-to-class="opacity-100 scale-100 translate-y-0"
-                    leave-active-class="transition-all duration-[300ms] ease-out will-change-transform"
+                    leave-active-class="transition duration-[300ms] ease-out will-change-transform"
                     leave-from-class="opacity-100 scale-100 translate-y-0"
                     leave-to-class="opacity-0 scale-95 -translate-y-2"
                 >

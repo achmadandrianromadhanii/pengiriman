@@ -94,13 +94,13 @@
 
     <!--
         KARTU LOGIN PREMIUM (V20+ GLASSMORPHISM)
-        Fungsi: Membungkus form login dengan efek kaca (backdrop-blur) yang sangat realistis dan modern.
+        Fungsi: Membungkus form login dengan efek kaca (md:backdrop-blur) yang sangat realistis dan modern.
         Performa: Menggunakan utility murni dari Tailwind (tanpa filter berat) agar LCP & GPU rendering tetap 100% stabil.
     -->
     <div class="w-full">
         <!-- DESKTOP LOGIN (HIDE ON MOBILE) -->
         <div
-            class="hidden md:block login-card-anim relative overflow-hidden rounded-[2rem] border border-white/40 dark:border-slate-700/50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)]"
+            class="hidden md:block login-card-anim relative overflow-hidden rounded-[2rem] border border-white/40 dark:border-slate-700/50 bg-white/80 dark:bg-slate-900/80 md:backdrop-blur-2xl shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)]"
         >
             <div
                 class="absolute -top-24 -right-24 w-48 h-48 bg-primary/20 rounded-full blur-3xl pointer-events-none"
@@ -139,7 +139,7 @@
                                 autocomplete="username"
                                 placeholder=" "
                                 required
-                                class="block w-full pl-12 pr-4 py-3.5 text-sm font-semibold text-slate-900 dark:text-white bg-transparent border-2 border-slate-300 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-0 focus:border-primary dark:focus:border-primary peer transition-all duration-300 shadow-sm"
+                                class="block w-full pl-12 pr-4 py-3.5 text-sm font-semibold text-slate-900 dark:text-white bg-transparent border-2 border-slate-300 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-0 focus:border-primary dark:focus:border-primary peer transition duration-300 shadow-sm"
                             />
 
                             <div
@@ -181,7 +181,7 @@
                                 autocomplete="current-password"
                                 placeholder=" "
                                 required
-                                class="block w-full pl-12 pr-12 py-3.5 text-sm font-semibold text-slate-900 dark:text-white bg-transparent border-2 border-slate-300 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-0 focus:border-primary dark:focus:border-primary peer transition-all duration-300 shadow-sm"
+                                class="block w-full pl-12 pr-12 py-3.5 text-sm font-semibold text-slate-900 dark:text-white bg-transparent border-2 border-slate-300 dark:border-slate-600 rounded-xl focus:outline-none focus:ring-0 focus:border-primary dark:focus:border-primary peer transition duration-300 shadow-sm"
                             />
 
                             <div
@@ -225,7 +225,7 @@
                             <input
                                 v-model="form.remember"
                                 type="checkbox"
-                                class="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-primary shadow-sm focus:ring-primary/50 transition-all cursor-pointer"
+                                class="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-primary shadow-sm focus:ring-primary/50 transition cursor-pointer"
                             />
                             <span class="group-hover:text-primary transition-colors duration-300"
                                 >Tetap Masuk</span
@@ -237,7 +237,7 @@
                     <div class="pt-2">
                         <button
                             type="submit"
-                            class="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-white font-bold text-sm tracking-wide bg-gradient-to-r from-primary to-indigo-600 hover:from-indigo-600 hover:to-primary shadow-lg shadow-primary/30 hover:shadow-primary/50 transform hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed"
+                            class="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-white font-bold text-sm tracking-wide bg-gradient-to-r from-primary to-indigo-600 hover:from-indigo-600 hover:to-primary shadow-lg shadow-primary/30 hover:shadow-primary/50 transform hover:-translate-y-0.5 transition duration-300 disabled:opacity-70 disabled:cursor-not-allowed"
                             :disabled="form.processing"
                         >
                             <i

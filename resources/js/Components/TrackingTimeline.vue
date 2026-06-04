@@ -142,7 +142,7 @@
                 <!-- Koordinat -left-[14.5px] memastikan titik tengah lingkaran (ukuran 32px) -->
                 <!-- sejajar persis dengan tengah garis (ukuran 3px) -->
                 <div
-                    class="absolute -left-[14.5px] top-1 w-8 h-8 rounded-full border-[3px] border-white dark:border-card-dark flex items-center justify-center text-white transition-all duration-300"
+                    class="absolute -left-[14.5px] top-1 w-8 h-8 rounded-full border-[3px] border-white dark:border-card-dark flex items-center justify-center text-white transition duration-300"
                     :class="[
                         meta(t.status_baru).dot,
                         idx === 0
