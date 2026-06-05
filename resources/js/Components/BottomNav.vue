@@ -33,8 +33,14 @@
 
         <!-- Bottom Navigation Bar Khusus Mobile -->
         <!-- Fungsi: Desain V15+ (Glassmorphism Transparan warna asli/primary). Animasi judul muncul di atas icon. -->
+        <!-- [UPDATE: GPU HINT — PERFORMA MOBILE]
+             Fungsi: will-change:transform memberitahu GPU HP untuk menyiapkan compositing layer SEBELUM animasi terjadi.
+             Cara Kerja: Tanpa ini, GPU HP "kaget" saat user tap BottomNav → alokasi layer → patah.
+                         Dengan ini, GPU sudah siap → animasi langsung mulus.
+             Hasil: Tap menu BottomNav terasa lebih responsif dan tidak patah. Visual TIDAK berubah. -->
         <div
             class="md:hidden fixed bottom-4 left-4 right-4 z-[60] bg-primary border border-primary-light/30 shadow-xl rounded-[24px]"
+            style="will-change: transform"
         >
             <div class="flex items-center justify-around h-[54px] px-2">
                 <!-- Home -->

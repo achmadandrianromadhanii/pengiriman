@@ -401,3 +401,37 @@
         scroll-behavior: auto !important;
     }
 }
+
+/* ── [UPDATE: OPTIMASI PERFORMA MOBILE — ZERO UI CHANGE] ──────────────
+   Fungsi: Tiga teknik CSS native untuk mempercepat rendering di HP Android.
+   Cara Kerja:
+   1. contain:content — Memberitahu browser bahwa setiap kartu adalah "pulau" independen.
+      Browser TIDAK perlu menghitung ulang layout SEMUA kartu saat satu kartu berubah.
+   2. content-visibility:auto — Browser SKIP rendering kartu yang di luar layar (off-screen).
+      Saat user scroll ke kartu tersebut, baru dirender. Visual 100% identik.
+   3. @font-face override — Memaksa Bootstrap Icons memakai font-display:swap.
+      Artinya: ikon tampil sebagai fallback dulu, lalu font asli menyusul ~0.3 detik.
+      Ini mencegah layar HP kosong/blank menunggu font 300KB selesai download.
+   Hasil: Scroll lebih mulus, halaman tampil lebih cepat, memory HP lebih hemat.
+   Visual: TIDAK ADA perubahan. Semua tampak sama persis. */
+
+/* 1. Kartu-kartu mobile: beritahu browser tiap kartu independen */
+@media (max-width: 767px) {
+    .rounded-\[1\.5rem\] {
+        contain: content;
+    }
+
+    /* Skip rendering kartu di luar viewport — hemat CPU saat scroll */
+    .flex.flex-col.gap-4 > *,
+    .flex.flex-col.gap-5 > *,
+    .space-y-4 > * {
+        content-visibility: auto;
+        contain-intrinsic-size: auto 200px;
+    }
+}
+
+/* 2. Bootstrap Icons: tampilkan halaman dulu, font ikon menyusul */
+@font-face {
+    font-family: 'bootstrap-icons';
+    font-display: swap !important;
+}

@@ -661,8 +661,12 @@
                     <div
                         class="flex items-center gap-1.5 bg-green-50 dark:bg-green-900/30 px-2 py-1 rounded-full border border-green-200 dark:border-green-800"
                     >
+                    <!-- [UPDATE: GANTI animate-ping → animate-pulse — PERFORMA MOBILE]
+                         Fungsi: animate-ping pakai scale(2) + opacity loop = GPU HP sibuk terus-menerus.
+                         Cara Kerja: animate-pulse hanya pakai opacity (tanpa scale) = jauh lebih ringan.
+                         Hasil: Titik hijau "Live" tetap berkedip, tapi HP tidak kewalahan. -->
                         <div
-                            class="w-1.5 h-1.5 bg-green-500 rounded-full animate-ping absolute"
+                            class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse absolute"
                         ></div>
                         <div class="w-1.5 h-1.5 bg-green-500 rounded-full relative"></div>
                         <span

@@ -160,9 +160,17 @@
     }
 
     onMounted(() => {
-        // clock
-        refreshClock();
-        clockTimer = setInterval(refreshClock, 1000);
+        // [UPDATE: SKIP CLOCK DI MOBILE — PERFORMA]
+        // Fungsi: Hanya menjalankan setInterval clock di desktop/tablet.
+        // Alasan: Di mobile, elemen jam memiliki class 'hidden sm:flex' (tidak tampil di HP).
+        //         Tapi setInterval TETAP berjalan = Vue re-render Navbar 60x/menit TANPA HASIL.
+        // Cara Kerja: Cek lebar layar. Jika >= 640px (sm breakpoint), jalankan clock.
+        //             Jika < 640px (HP), skip = menghemat 60 re-render/menit.
+        // Hasil: Main thread HP Android lebih lega, scroll lebih mulus di semua halaman.
+        if (window.innerWidth >= 640) {
+            refreshClock();
+            clockTimer = setInterval(refreshClock, 1000);
+        }
 
         // dark mode sync
         syncDomDarkClass();

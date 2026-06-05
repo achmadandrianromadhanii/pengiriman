@@ -14,7 +14,14 @@ function isDark() {
 
 // Cache — SweetAlert hanya di-download 1x, lalu disimpan di memori
 let _swal = null;
-async function getSwal() {
+// [UPDATE: EXPORT getSwal() UNTUK REUSE]
+// Fungsi: Menyediakan akses lazy-load SweetAlert2 ke semua halaman.
+// Cara Kerja: Halaman yang butuh Swal.fire() langsung tinggal panggil:
+//   const Swal = await getSwal();
+//   Swal.fire({ ... });
+// Hasil: SweetAlert2 (~80KB) HANYA di-download saat pertama kali dipanggil,
+//        bukan saat halaman dibuka. Semua halaman jadi lebih ringan di HP.
+export async function getSwal() {
     if (!_swal) {
         const mod = await import('sweetalert2');
         _swal = mod.default;
