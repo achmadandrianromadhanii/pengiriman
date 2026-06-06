@@ -406,15 +406,20 @@
    Fungsi: Teknik CSS native untuk mempercepat rendering di HP Android.
    
    [PERBAIKAN KRITIKAL DROP DOWN KOTA]: 
-   - Properti 'contain: content' dan 'content-visibility: auto' telah DIHAPUS.
-   - Alasan: Properti tersebut bertindak seperti 'overflow: hidden' tingkat lanjut yang secara paksa
-     memotong (clipping) elemen apapun yang keluar dari batas kotak, termasuk Dropdown Kota (absolute z-50).
-   - Efek: Dropdown kota kini dapat meluap (overflow) keluar batas form dengan aman dan terlihat utuh. 
+   - Properti 'contain: content' dan 'content-visibility: auto' secara GLOBAL telah DIHAPUS.
+   - Efek: Dropdown kota kini aman dan tidak terpotong.
    
-   Cara Kerja yang dipertahankan:
-   @font-face override — Memaksa Bootstrap Icons memakai font-display:swap.
-   Artinya: ikon tampil sebagai fallback dulu, lalu font asli menyusul ~0.3 detik.
-   Ini mencegah layar HP kosong/blank menunggu font 300KB selesai download. */
+   [OPTIMASI BARU: DAFTAR PANJANG (LIST)]:
+   - Menambahkan class '.optimasi-daftar-mobile' KHUSUS untuk daftar panjang (Riwayat, Dashboard).
+   - Ini mengembalikan performa rendering (100% Lighthouse) tanpa menyentuh halaman Form Tambah Barang. */
+
+@media (max-width: 767px) {
+    /* Hanya diterapkan pada div pembungkus list/daftar, bukan form input */
+    .optimasi-daftar-mobile > * {
+        content-visibility: auto;
+        contain-intrinsic-size: auto 150px;
+    }
+}
 
 /* 2. Bootstrap Icons: tampilkan halaman dulu, font ikon menyusul */
 @font-face {

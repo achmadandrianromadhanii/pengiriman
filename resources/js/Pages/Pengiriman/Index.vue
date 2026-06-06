@@ -444,7 +444,7 @@
                 />
             </div>
 
-            <div v-else>
+            <div v-else class="optimasi-daftar-mobile">
                 <!-- Loop Kartu Pengiriman -->
                 <a
                     v-for="p in pengiriman.data"

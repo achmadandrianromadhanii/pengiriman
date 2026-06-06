@@ -688,7 +688,7 @@
                 </div>
 
                 <!-- Desain Kartu Tracking Route ala Struk Tiket -->
-                <div v-else class="flex flex-col gap-4">
+                <div v-else class="flex flex-col gap-4 optimasi-daftar-mobile">
                     <div
                         v-for="p in latest.data"
                         :key="'mob-t-' + p.id"
