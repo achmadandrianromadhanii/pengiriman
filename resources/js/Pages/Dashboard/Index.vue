@@ -52,11 +52,14 @@
     onMounted(async () => {
         mounted.value = true;
 
-        // Mulai animasi angka pelan 2-3 detik
-        animateValue(animPendapatan, Number(props.stats.totalPendapatan || 0), 2500);
-        animateValue(animKirim, Number(props.stats.totalPengiriman || 0), 2200);
-        animateValue(animSuccess, Number(props.stats.successRate || 0), 2600);
-        animateValue(animKendala, Number(props.stats.paketBermasalah || 0), 2000);
+        // [UPDATE: MATIKAN ANIMASI ANGKA (REQUEST ANIMATION FRAME) UNTUK MOBILE]
+        // Fungsi: Menghilangkan perhitungan animasi angka yang berjalan 60 kali per detik.
+        // Alasan: Animasi ini membebani CPU HP secara drastis saat awal load, menyebabkan lag parah (INP merah).
+        // Hasil: Angka langsung tampil, CPU HP tidak kepanasan, dan Lighthouse LCP/INP bisa tembus 100%.
+        animPendapatan.value = Number(props.stats.totalPendapatan || 0);
+        animKirim.value = Number(props.stats.totalPengiriman || 0);
+        animSuccess.value = Number(props.stats.successRate || 0);
+        animKendala.value = Number(props.stats.paketBermasalah || 0);
 
         // [UPDATE: LAZY-LOAD ECHO HANYA DI DASHBOARD]
         // Fungsi: Echo + Pusher (~100KB) hanya di-download setelah Dashboard sudah tampil.
@@ -435,8 +438,10 @@
     <!-- ============================================================== -->
     <!-- MOBILE LAYOUT (Premium Enterprise Dashboard)                     -->
     <!-- ============================================================== -->
+    <!-- [UPDATE: MENGHAPUS ANIMASI GLOBAL (animate-fade-in)]
+         Alasan: Mengurangi beban GPU/CPU rendering satu halaman penuh saat awal load. -->
     <div
-        class="md:hidden flex flex-col relative -mx-4 -mt-6 sm:-mx-6 sm:-mt-8 pb-2 min-h-screen bg-gray-50 dark:bg-body-dark animate-fade-in"
+        class="md:hidden flex flex-col relative -mx-4 -mt-6 sm:-mx-6 sm:-mt-8 pb-2 min-h-screen bg-gray-50 dark:bg-body-dark"
     >
         <!-- 1. Header Atmosferik melengkung dengan Sapaan -->
         <div class="bg-primary px-5 pt-10 pb-28 rounded-b-[2.5rem] shadow-lg relative z-10">
@@ -453,10 +458,10 @@
         <!-- Kontainer Utama (Overlapping Header) -->
         <div class="px-4 -mt-20 relative z-20 flex flex-col gap-5">
             <!-- 2. Kartu Pendapatan (Melayang) -->
-            <!-- Fungsi: Overlapping, shadow melayang, font berbeda, animasi fade-up perlahan -->
-            <!-- Ditambahkan: translate-y-10 opacity-0 animate-[fade-up_1s_ease-out_forwards] -->
+            <!-- [UPDATE: MENGHAPUS ANIMASI SLIDE-UP UNTUK MOBILE]
+                 Alasan: Elemen ber-shadow besar yang di-animasikan transformasinya sangat berat untuk mobile. -->
             <div
-                class="bg-white dark:bg-card-dark rounded-[1.5rem] p-5 shadow-xl shadow-gray-200/50 dark:shadow-black/30 transform animate-slide-up"
+                class="bg-white dark:bg-card-dark rounded-[1.5rem] p-5 shadow-xl shadow-gray-200/50 dark:shadow-black/30"
             >
                 <div class="flex items-center justify-between mb-2">
                     <div class="flex items-center gap-2">
@@ -503,11 +508,10 @@
             </div>
 
             <!-- 3. Metrik Bento Grid -->
-            <!-- Fungsi: Animasi fade-up bertahap per kotak agar smooth dan ringan -->
+            <!-- [UPDATE: MENGHAPUS ANIMASI SLIDE-UP BANYAK ELEMEN UNTUK MOBILE] -->
             <div class="grid grid-cols-2 gap-3">
                 <div
-                    class="col-span-2 bg-[#F0F4FF] dark:bg-indigo-900/20 rounded-[1.5rem] p-5 shadow-sm flex items-center justify-between animate-slide-up"
-                    style="animation-delay: 150ms"
+                    class="col-span-2 bg-[#F0F4FF] dark:bg-indigo-900/20 rounded-[1.5rem] p-5 shadow-sm flex items-center justify-between"
                 >
                     <div class="flex items-center gap-3">
                         <div
@@ -530,8 +534,7 @@
                     </div>
                 </div>
                 <div
-                    class="col-span-1 bg-emerald-50 dark:bg-emerald-900/20 rounded-[1.5rem] p-4 shadow-sm flex flex-col items-center justify-center text-center animate-slide-up"
-                    style="animation-delay: 300ms"
+                    class="col-span-1 bg-emerald-50 dark:bg-emerald-900/20 rounded-[1.5rem] p-4 shadow-sm flex flex-col items-center justify-center text-center"
                 >
                     <div
                         class="w-10 h-10 rounded-full bg-white dark:bg-emerald-800/40 shadow-sm flex items-center justify-center text-emerald-500 mb-2"
@@ -550,8 +553,7 @@
                     </div>
                 </div>
                 <div
-                    class="col-span-1 bg-red-50 dark:bg-red-900/20 rounded-[1.5rem] p-4 shadow-sm flex flex-col items-center justify-center text-center animate-slide-up"
-                    style="animation-delay: 450ms"
+                    class="col-span-1 bg-red-50 dark:bg-red-900/20 rounded-[1.5rem] p-4 shadow-sm flex flex-col items-center justify-center text-center"
                 >
                     <div
                         class="w-10 h-10 rounded-full bg-white dark:bg-red-800/40 shadow-sm flex items-center justify-center text-red-500 mb-2"

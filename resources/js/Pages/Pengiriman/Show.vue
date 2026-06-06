@@ -716,7 +716,7 @@
         <!-- ============================================================== -->
         <!-- Fungsi: Menghadirkan antarmuka sekelas aplikasi native (Traveloka/Tokopedia).
              Menggunakan Ticket Style, Connecting Route, Receipt Style, dan Bottom Sheet Form. -->
-        <div class="md:hidden animate-fade-in pb-2">
+        <div class="md:hidden pb-2">
             <!-- 1. HERO SECTION (TICKET STYLE) -->
             <!-- Dibuat menyatu dengan warna primer agar berkesan premium -->
             <div
@@ -1029,7 +1029,7 @@
                 <!-- Panel Form (Muncul saat tombol diklik) -->
                 <div
                     v-if="showMobileUpdateForm"
-                    class="bg-white dark:bg-card-dark rounded-3xl shadow-[0_15px_50px_rgba(0,0,0,0.25)] border border-gray-100 dark:border-gray-700 p-5 mb-4 animate-fade-in-up"
+                    class="bg-white dark:bg-card-dark rounded-3xl shadow-[0_15px_50px_rgba(0,0,0,0.25)] border border-gray-100 dark:border-gray-700 p-5 mb-4"
                 >
                     <div
                         class="flex justify-between items-center mb-4 pb-3 border-b border-gray-100 dark:border-gray-800"
@@ -1090,7 +1090,7 @@
                 <button
                     v-if="!showMobileUpdateForm"
                     @click="showMobileUpdateForm = true"
-                    class="w-full bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-extrabold text-sm py-4 rounded-2xl shadow-[0_15px_30px_rgba(0,0,0,0.25)] flex justify-center items-center gap-2 active:scale-95 transition-transform animate-fade-in-up"
+                    class="w-full bg-gray-900 dark:bg-white text-white dark:text-gray-900 font-extrabold text-sm py-4 rounded-2xl shadow-[0_15px_30px_rgba(0,0,0,0.25)] flex justify-center items-center gap-2 active:scale-95 transition-transform"
                 >
                     <i class="bi bi-pencil-square text-lg"></i> Update Status Resi
                 </button>
