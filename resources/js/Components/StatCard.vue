@@ -63,28 +63,35 @@
     });
 
     // --- FUNGSI ANIMASI ANGKA (Anti-Kedut & Mulus) ---
-    // Animasi angka halus dari awal (0) sampai akhir.
-    // Saat update realtime, animasi menyambung mulus dari angka terakhir.
+    // [UPDATE: OPTIMASI TOTAL BLOCKING TIME & SPEED INDEX]
+    // Fungsi: Menjadikan perubahan angka instan di Mobile, tapi tetap beranimasi di Desktop.
+    // Alasan: Animasi 60 FPS selama 2 detik menguras CPU HP Android (Lighthouse 4x CPU Throttling).
+    //         Dengan cara ini, Desktop tetap cantik dengan animasi, sedangkan Mobile langsung tembus 100% LCP/Speed Index.
     function animateTo(target) {
         if (rafId) cancelAnimationFrame(rafId);
         const to = Number(target || 0);
-        const from = display.value; // Pada load pertama ini adalah 0. Pada update realtime ini adalah nilai lama.
 
+        // Jika layar kecil (Mobile), langsung update secara instan
+        if (typeof window !== 'undefined' && window.innerWidth < 768) {
+            display.value = to;
+            return;
+        }
+
+        // Jika Desktop/Tablet, gunakan animasi halus (requestAnimationFrame)
+        const from = display.value;
         const start = performance.now();
         const dur = Math.max(300, props.durationMs);
 
         const step = (t) => {
             const p = Math.min(1, (t - start) / dur);
-            // easeOutQuint - Kurva animasi yang sangat halus (pangkat 5).
-            // Membuat pergerakan melambat secara perlahan dan elegan di akhir, tidak kaku/berhenti mendadak.
-            const eased = 1 - Math.pow(1 - p, 5);
+            const eased = 1 - Math.pow(1 - p, 5); // easeOutQuint
             display.value = from + (to - from) * eased;
             if (p < 1) rafId = requestAnimationFrame(step);
         };
         rafId = requestAnimationFrame(step);
     }
 
-    // Watcher untuk realtime reverb: Ketika nilai dari props.value berubah, jalankan animasi angka.
+    // Watcher untuk realtime update:
     watch(
         () => props.value,
         (v) => animateTo(v),

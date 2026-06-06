@@ -17,11 +17,22 @@
         new Intl.NumberFormat('id-ID').format(Math.round(display.value)),
     );
 
+    // --- FUNGSI ANIMASI ANGKA (Anti-Kedut & Mulus) ---
+    // [UPDATE: OPTIMASI TOTAL BLOCKING TIME & SPEED INDEX]
+    // Fungsi: Menjadikan perubahan angka instan di Mobile, tapi tetap beranimasi di Desktop.
     function animateTo(target) {
         if (rafId) cancelAnimationFrame(rafId);
+        const to = Number(target || 0);
+
+        // Jika layar kecil (Mobile), langsung update secara instan
+        if (typeof window !== 'undefined' && window.innerWidth < 768) {
+            display.value = to;
+            return;
+        }
+
+        // Jika Desktop/Tablet, gunakan animasi halus (requestAnimationFrame)
         const start = performance.now();
         const from = 0;
-        const to = Number(target || 0);
         const dur = Math.max(250, props.durationMs);
 
         const step = (t) => {
