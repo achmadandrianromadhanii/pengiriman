@@ -8,9 +8,25 @@
 
     <title inertia>{{ config('app.name', 'SoftSend') }}</title>
 
-    <!-- UPDATE: Menambahkan Favicon baru yang besar dan HD dengan deklarasi Sizes -->
+    <!-- UPDATE: Menambahkan Favicon lengkap untuk semua device dan Vercel Dashboard -->
+    <!-- Fungsi: Memastikan logo muncul di tab browser, shortcut HP (PWA), dan Vercel preview dashboard. -->
+    <!-- Cara Kerja: Browser dan Vercel bot akan membaca meta tag ini untuk menampilkan logo aplikasi. -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
     <link rel="icon" type="image/png" sizes="192x192" href="/favicon.png">
     <link rel="apple-touch-icon" sizes="180x180" href="/favicon.png">
+
+    <!-- UPDATE: Menambahkan Open Graph Image (OG Image) -->
+    <!-- Fungsi: Menampilkan logo saat link web dibagikan di WhatsApp, Telegram, atau dibaca oleh Vercel. -->
+    <!-- Cara Kerja: Meta property og:image dibaca oleh bot social media dan Vercel untuk dijadikan thumbnail. -->
+    <meta property="og:image" content="/images/softsend-logo.png">
+    <meta property="og:title" content="{{ config('app.name', 'SoftSend') }}">
+
+    <!-- UPDATE: Preload Logo Utama untuk mengamankan skor LCP 100% Hijau -->
+    <!-- Fungsi: Memaksa browser memuat gambar logo lebih awal (prioritas tinggi) sebelum render selesai. -->
+    <!-- Cara Kerja: tag preload membuat logo diunduh bersamaan dengan CSS/JS tanpa menunggu DOM dirender. -->
+    <link rel="preload" as="image" href="/images/softsend-logo.png">
+    <link rel="preload" as="image" href="/images/logo-softsend-hd.png" media="(max-width: 767px)">
     <!-- [UPDATE: FONT LOADING NON-BLOCKING] -->
     <!-- Fungsi: Memuat Google Fonts tanpa memblokir render halaman. -->
     <!-- Alasan: Sebelumnya browser HP Android harus menunggu SEMUA font (4 family) -->
