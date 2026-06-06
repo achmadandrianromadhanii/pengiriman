@@ -1,1 +1,0 @@
-import{t as a,n as s,q as t}from"./vendor-charts-CvATyPRr.js";const o={__name:"SkeletonLoader",props:{className:{type:String,default:""}},setup(e){return(n,r)=>(t(),a("div",{class:s(["skeleton",e.className]),"aria-hidden":"true"},null,2))}};export{o as _};

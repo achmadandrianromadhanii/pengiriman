@@ -33,24 +33,14 @@ export default defineConfig({
         },
     },
     // [UPDATE: OPTIMASI BUILD — CODE SPLITTING]
-    // Fungsi: Memecah library JavaScript berat ke file terpisah (chunk) agar tidak
-    //         ikut ter-bundle ke dalam file JS utama (app.js).
-    // Alasan: Tanpa ini, browser HP Android harus mengunduh + mengurai SEMUA library
-    //         (~600KB total: apexcharts, sweetalert2, pusher-js, leaflet) sebelum
-    //         halaman pertama bisa tampil. Dengan code-splitting, setiap library
-    //         hanya di-download saat halaman yang membutuhkannya dibuka.
-    // Hasil: Halaman Login hanya mengunduh ~80KB (Vue + Inertia + Axios).
-    //        Dashboard menambah ~450KB (ApexCharts) di background setelah tampil.
-    //        Ini membuat First Contentful Paint dan LCP sangat cepat.
+    // Fungsi: Vite secara otomatis akan melakukan code-splitting berkat dynamic imports
+    //         di dalam Dashboard/Index.vue. Menghapus manualChunks akan membiarkan 
+    //         Vite dan Rollup mengelola dependensi (seperti Vue) dengan benar 
+    //         tanpa membuat dependensi silang yang memaksa chart di-load di seluruh halaman.
     build: {
         rollupOptions: {
             output: {
-                manualChunks: {
-                    'vendor-charts': ['apexcharts', 'vue3-apexcharts'],
-                    'vendor-swal': ['sweetalert2'],
-                    'vendor-echo': ['pusher-js', 'laravel-echo'],
-                    'vendor-map': ['leaflet'],
-                },
+                // Biarkan Vite memecah chunks secara otomatis
             },
         },
     },
