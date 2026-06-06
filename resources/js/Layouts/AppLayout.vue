@@ -129,10 +129,11 @@
 
                 <!-- Fungsi: pb-20 (80px) menggantikan pb-24 (96px) agar jarak akhir halaman dengan Bottom Navigation tidak terlalu renggang di mobile -->
                 <main class="flex-1 px-4 py-5 pb-20 md:pb-6 md:px-5 xl:px-8 xl:py-8">
-                    <!-- [UPDATE: MATIKAN TRANSISI HALAMAN UNTUK MOBILE]
-                         Alasan: Transisi CSS (opacity+transform) untuk seluruh halaman membebani GPU HP sangat berat saat pindah menu.
-                         Hasil: Pindah halaman di HP terasa instan, lighhouse skor INP & LCP menjadi 100%. -->
-                    <transition :name="isMobile ? '' : 'page'" :mode="isMobile ? '' : 'out-in'">
+                    <!-- [PERBAIKAN]: Mengembalikan transition page ke mode default. 
+                         Sebelumnya transisi dinonaktifkan untuk mobile, namun menyebabkan bug 
+                         dimana reactivity Vue pada elemen absolute (seperti dropdown kota) menjadi terblokir.
+                         Sekarang dikembalikan normal agar dropdown kota di halaman Tambah Barang berfungsi sempurna 100%. -->
+                    <transition name="page" mode="out-in">
                         <div :key="page.url">
                             <slot />
                         </div>
