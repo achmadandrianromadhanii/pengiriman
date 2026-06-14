@@ -1,0 +1,2 @@
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/pusher-KDxi5g0N.js","assets/app-D-5SdCLQ.js","assets/app-DdGVsoBo.css"])))=>i.map(i=>d[i]);
+import{et as e,t}from"./app-D-5SdCLQ.js";var n=!1;async function r(){if(n||window.Echo)return;n=!0;let[{default:r},{default:i}]=await Promise.all([t(()=>import(`./echo-CYpdswBq.js`),[]),t(()=>import(`./pusher-KDxi5g0N.js`).then(t=>e(t.default,1)),__vite__mapDeps([0,1,2]))]);window.Pusher=i,window.Echo=new r({broadcaster:`pusher`,key:`3fd6e620d13b8c94ba30`,cluster:`ap1`,forceTLS:!0})}export{r as initEcho};

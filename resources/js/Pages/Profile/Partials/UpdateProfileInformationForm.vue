@@ -23,7 +23,7 @@
     // selalu string yang valid, bukan `undefined` atau `null`.
     // Ini mencegah error/warning "Invalid prop: type check failed" di konsol Vue.
     const form = useForm({
-        name: user?.name || '',
+        nama: user?.nama || '',
         email: user?.email || '',
     });
 </script>
@@ -49,8 +49,8 @@
             <!-- Fungsi: Input form premium dengan ikon interaktif (group-focus-within) -->
             <div>
                 <InputLabel
-                    for="name"
-                    value="NAME"
+                    for="nama"
+                    value="NAMA"
                     class="text-[10px] uppercase font-extrabold tracking-widest text-slate-500 dark:text-gray-400 mb-1.5"
                 />
 
@@ -63,17 +63,17 @@
                         ></i>
                     </div>
                     <TextInput
-                        id="name"
+                        id="nama"
                         type="text"
                         class="mt-1 block w-full bg-gray-100/50 shadow-inner dark:bg-white/5 border-transparent md:border-gray-200 rounded-2xl md:rounded-lg focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 h-12 transition pl-12 pr-4 peer"
-                        v-model="form.name"
+                        v-model="form.nama"
                         required
                         autofocus
                         autocomplete="name"
                     />
                 </div>
 
-                <InputError class="mt-2" :message="form.errors.name" />
+                <InputError class="mt-2" :message="form.errors.nama" />
             </div>
 
             <!-- [UPDATE: INPUT EMAIL DENGAN IKON] -->

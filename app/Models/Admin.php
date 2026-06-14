@@ -30,6 +30,16 @@ class Admin extends Authenticatable
         'password' => 'hashed',
     ];
 
+    public function getNameAttribute(): string
+    {
+        return $this->nama;
+    }
+
+    public function setNameAttribute(string $value): void
+    {
+        $this->attributes['nama'] = $value;
+    }
+
     public function pengiriman()
     {
         return $this->hasMany(Pengiriman::class, 'admin_id');

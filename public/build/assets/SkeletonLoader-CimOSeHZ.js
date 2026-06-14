@@ -1,1 +1,0 @@
-import{g as a,n as s,o as t}from"./app-BiPGLDJ8.js";const o={__name:"SkeletonLoader",props:{className:{type:String,default:""}},setup(e){return(n,r)=>(t(),a("div",{class:s(["skeleton",e.className]),"aria-hidden":"true"},null,2))}};export{o as _};

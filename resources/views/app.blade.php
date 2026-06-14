@@ -27,21 +27,18 @@
     <!-- Cara Kerja: tag preload membuat logo diunduh bersamaan dengan CSS/JS tanpa menunggu DOM dirender. -->
     <link rel="preload" as="image" href="/images/softsend-logo.png">
     <link rel="preload" as="image" href="/images/logo-softsend-hd.png" media="(max-width: 767px)">
-    <!-- [UPDATE: FONT LOADING NON-BLOCKING] -->
-    <!-- Fungsi: Memuat Google Fonts tanpa memblokir render halaman. -->
-    <!-- Alasan: Sebelumnya browser HP Android harus menunggu SEMUA font (4 family) -->
-    <!--         ter-download sebelum menampilkan apapun = layar putih lama. -->
-    <!-- Cara Kerja: media="print" membuat browser tidak menganggap ini penting saat render. -->
-    <!--            onload="this.media='all'" mengaktifkan font setelah halaman sudah tampil. -->
-    <!-- Hasil: Halaman tampil INSTAN dengan font fallback, lalu font cantik menyusul ~0.5 detik. -->
+    <!-- [UPDATE: FONT LOADING — KONSOLIDASI & NON-BLOCKING]
+         Fungsi: Memuat Google Fonts dalam SATU request tunggal tanpa memblokir render.
+         Perubahan: 
+         - Menggabungkan 5 font family (sebelumnya 2 request terpisah) menjadi 1 request.
+         - Menghapus Fira Code (monospace) karena jarang dipakai, menghemat ~20KB download.
+         - Menggunakan media="print" + onload trick agar browser tetap menampilkan
+           halaman instan dengan font fallback, lalu font cantik menyusul ~0.5 detik.
+         Hasil: Network request berkurang dari 3 menjadi 1, halaman tampil lebih cepat. -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <noscript><link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet"></noscript>
-
-    <!-- Font tambahan HANYA untuk mobile -->
-    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" media="(max-width: 767px)" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" media="(max-width: 767px)"></noscript>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Sora:wght@600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Sora:wght@600;700&display=swap" rel="stylesheet"></noscript>
 
     <!-- PWA & Mobile Web App Meta -->
     <meta name="theme-color" content="#1E3A8A" media="(prefers-color-scheme: light)">

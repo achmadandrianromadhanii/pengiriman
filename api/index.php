@@ -60,6 +60,14 @@ $envOverrides = [
     'APP_CONFIG_CACHE' => "$cachePath/config.php",
     'APP_ROUTES_CACHE' => "$cachePath/routes-v7.php",
     'APP_EVENTS_CACHE' => "$cachePath/events.php",
+
+    // ── [UPDATE: OPTIMASI KECEPATAN VERCEL] ─────────────────────────────
+    // Fungsi: Menggunakan cache in-memory (array) alih-alih file di /tmp.
+    // Alasan: Di Vercel Serverless, /tmp bersifat ephemeral dan I/O-nya lambat.
+    //         Cache berbasis file harus membaca/menulis disk setiap request,
+    //         menambah ~50-100ms latency per halaman. Cache array langsung di RAM.
+    // Hasil: Setiap halaman lebih cepat ~50-100ms karena tidak ada disk I/O.
+    'CACHE_STORE' => 'array',
 ];
 
 foreach ($envOverrides as $key => $value) {

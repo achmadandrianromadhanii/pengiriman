@@ -48,7 +48,7 @@ export default {
                 // tetap standar Tailwind/Laravel: pakai defaultTheme sebagai fallback
                 sans: ["Plus Jakarta Sans", "Inter", ...defaultTheme.fontFamily.sans],
                 heading: ["Outfit", "Sora", ...defaultTheme.fontFamily.sans],
-                mono: ["Fira Code", ...defaultTheme.fontFamily.mono],
+                mono: [...defaultTheme.fontFamily.mono],
             },
 
             boxShadow: {

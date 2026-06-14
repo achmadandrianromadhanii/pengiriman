@@ -56,6 +56,12 @@
     });
 
     onMounted(async () => {
+        // [UPDATE: LEAFLET CSS LAZY-LOAD]
+        // Fungsi: Memuat CSS Leaflet hanya di halaman yang membutuhkan peta.
+        // Alasan: Sebelumnya leaflet.css (~15KB) dimuat di SETIAP halaman via app.css global.
+        //         Sekarang hanya dimuat saat TrackingMap di-render (halaman Tracking saja).
+        // Hasil: Semua halaman lain (Dashboard, Pengiriman, dsb) lebih ringan 15KB CSS.
+        await import('leaflet/dist/leaflet.css');
         const L = (await import('leaflet')).default;
         await nextTick();
 

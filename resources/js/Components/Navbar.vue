@@ -195,8 +195,11 @@
 
 <template>
     <!-- sticky + z-50: navbar selalu di atas konten -->
+    <!-- [UPDATE: OPTIMASI TRANSISI NAVBAR]
+         Fungsi: Mengurangi durasi transisi dari 400ms ke 200ms.
+         Alasan: 200ms lebih responsif di HP Android tanpa mengorbankan visual. -->
     <header
-        class="sticky top-0 z-50 h-14 flex items-center justify-between px-4 md:px-5 border-b border-gray-200/50 dark:border-white/10 shadow-sm bg-white dark:bg-card-dark md:bg-white/80 md:dark:bg-black/50 md:backdrop-blur-md transition duration-[400ms] ease-spring"
+        class="sticky top-0 z-50 h-14 flex items-center justify-between px-4 md:px-5 border-b border-gray-200/50 dark:border-white/10 shadow-sm bg-white dark:bg-card-dark md:bg-white/80 md:dark:bg-black/50 md:backdrop-blur-md transition duration-200 ease-spring"
     >
         <!-- Fungsi: Logo Perusahaan (Mobile) -->
         <!-- Cara kerja: Menggunakan h-9 yang dikombinasikan dengan scale-[1.6] origin-left agar logo membesar melampaui batas tinggi navbar tanpa merusak struktur layout h-14. Translate-x digunakan untuk merapikan posisi tepi. -->
