@@ -68,6 +68,15 @@ $envOverrides = [
     //         menambah ~50-100ms latency per halaman. Cache array langsung di RAM.
     // Hasil: Setiap halaman lebih cepat ~50-100ms karena tidak ada disk I/O.
     'CACHE_STORE' => 'array',
+
+    // ── [UPDATE: OPTIMASI SESSION DI VERCEL] ────────────────────────────
+    // Fungsi: Menggunakan driver session cookie di lingkungan serverless Vercel.
+    // Alasan: Secara default, driver database melakukan SELECT dan UPDATE query
+    //         setiap kali ada request masuk. Di database serverless (Neon),
+    //         ini menimbulkan latensi kumulatif (~200-400ms) untuk pembacaan/penulisan.
+    //         Dengan driver cookie, session disimpan aman & terenkripsi pada sisi client
+    //         sehingga menghemat 2 database query per request secara instan.
+    'SESSION_DRIVER' => 'cookie',
 ];
 
 foreach ($envOverrides as $key => $value) {
