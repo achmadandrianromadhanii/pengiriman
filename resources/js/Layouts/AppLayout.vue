@@ -129,42 +129,13 @@
 
                 <!-- Fungsi: pb-20 (80px) menggantikan pb-24 (96px) agar jarak akhir halaman dengan Bottom Navigation tidak terlalu renggang di mobile -->
                 <main class="flex-1 px-4 py-5 pb-20 md:pb-6 md:px-5 xl:px-8 xl:py-8">
-                    <!-- [UPDATE: TRANSISI HALAMAN DINONAKTIFKAN DI MOBILE]
-                     Fungsi: Di Mobile, halaman langsung muncul tanpa animasi opacity/transform.
-                     Alasan: Animasi transisi halaman (opacity + translateY) memaksa browser melakukan
-                             2x render: (1) fade-out halaman lama, (2) fade-in halaman baru.
-                             Di HP Android dengan CPU throttling, ini menyebabkan halaman terasa
-                             "lambat muncul" karena harus menunggu animasi selesai (~250ms).
-                     Hasil: Halaman langsung tampil instan di HP, Desktop tetap mulus beranimasi. -->
-                    <transition v-if="!isMobile" name="page" mode="out-in">
-                        <div :key="page.url">
-                            <slot />
-                        </div>
-                    </transition>
-                    <div v-else>
-                        <slot />
-                    </div>
+                    <!-- [UPDATE: TRANSISI HALAMAN DINONAKTIFKAN SECARA GLOBAL]
+                     Fungsi: Memastikan perpindahan halaman (SPA Navigation) benar-benar INSTAN 0ms.
+                     Alasan: Sebelumnya ada efek fade 'out-in' 180ms yang memberikan ilusi seolah
+                             website ini lemot. Dengan menghapusnya, klik navigasi terasa super cepat dan responsif 100%. -->
+                    <slot />
                 </main>
             </div>
         </div>
     </div>
 </template>
-
-<style scoped>
-    .page-enter-active,
-    .page-leave-active {
-        transition:
-            opacity 0.18s ease,
-            transform 0.18s ease;
-    }
-
-    .page-enter-from {
-        opacity: 0;
-        transform: translateY(6px);
-    }
-
-    .page-leave-to {
-        opacity: 0;
-        transform: translateY(-6px);
-    }
-</style>

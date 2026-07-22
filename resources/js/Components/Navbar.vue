@@ -1,6 +1,7 @@
 <script setup>
     import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
     import { router, usePage } from '@inertiajs/vue3';
+    import { Sun, Moon, Bell } from 'lucide-vue-next';
     // [UPDATE: LAZY-LOAD SWEETALERT DI NAVBAR]
     // Fungsi: Menghapus import statis SweetAlert2 (~50KB) dari Navbar.
     // Alasan: Navbar dimuat di SETIAP halaman (karena ada di AppLayout).
@@ -199,27 +200,70 @@
          Fungsi: Mengurangi durasi transisi dari 400ms ke 200ms.
          Alasan: 200ms lebih responsif di HP Android tanpa mengorbankan visual. -->
     <header
-        class="sticky top-0 z-50 h-14 flex items-center justify-between px-4 md:px-5 border-b border-gray-200/50 dark:border-white/10 shadow-sm bg-white dark:bg-card-dark md:bg-white/80 md:dark:bg-black/50 md:backdrop-blur-md transition duration-200 ease-spring"
+        class="sticky top-0 z-50 flex items-center justify-between px-4 md:px-5 border-b border-gray-200/50 dark:border-white/10 shadow-sm bg-white/90 dark:bg-[#0A0A0A]/90 md:bg-white/80 md:dark:bg-black/50 backdrop-blur-xl transition duration-200 ease-spring"
+        :class="isMobile ? 'h-[72px]' : 'h-14'"
     >
-        <!-- Fungsi: Logo Perusahaan (Mobile) -->
-        <!-- Cara kerja: Menggunakan h-9 yang dikombinasikan dengan scale-[1.6] origin-left agar logo membesar melampaui batas tinggi navbar tanpa merusak struktur layout h-14. Translate-x digunakan untuk merapikan posisi tepi. -->
-        <div
-            v-if="isMobile"
-            class="flex items-center active:scale-95 transition-transform cursor-pointer"
-        >
-            <img
-                src="/images/logo-softsend-hd.png"
-                alt="SoftSend Logo"
-                class="h-9 w-auto object-contain drop-shadow-md transform scale-[1.7] origin-left translate-x-2"
-                fetchpriority="high"
-            />
+        <!-- MOBILE VIEW (Satu Header Terpusat) -->
+        <div v-if="isMobile" class="flex items-center justify-between w-full h-[72px]">
+            <div class="flex items-center gap-3">
+                <button
+                    type="button"
+                    @click="toggleDropdown"
+                    class="relative w-10 h-10 rounded-full border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden active:scale-95 transition-transform"
+                >
+                    <img
+                        :src="
+                            user?.avatar ||
+                            `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&color=1E3A8A&background=E0E7FF`
+                        "
+                        class="w-full h-full object-cover"
+                        alt="User Avatar"
+                    />
+                </button>
+                <div class="flex flex-col justify-center">
+                    <div class="flex items-center gap-1">
+                        <img
+                            src="/images/logo-softsend-hd.png"
+                            alt="SoftSend Logo"
+                            class="h-3 w-auto opacity-80"
+                        />
+                    </div>
+                    <span
+                        class="text-[13px] font-bold text-gray-900 dark:text-white leading-tight font-heading mt-0.5"
+                        >{{ user?.name || 'User' }}</span
+                    >
+                    <span class="text-[10px] text-primary font-medium tracking-wide"
+                        >Good morning 👋</span
+                    >
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button
+                    type="button"
+                    @click="toggleDark"
+                    class="relative flex items-center justify-center w-8 h-8 rounded-full bg-gray-50 dark:bg-white/5 active:scale-95 transition-transform text-gray-600 dark:text-gray-300 shadow-sm border border-gray-100 dark:border-gray-800"
+                >
+                    <Moon v-if="darkMode" :size="16" stroke-width="2.5" />
+                    <Sun v-else :size="16" stroke-width="2.5" />
+                </button>
+                <button
+                    type="button"
+                    class="relative flex items-center justify-center w-8 h-8 rounded-full bg-gray-50 dark:bg-white/5 active:scale-95 transition-transform text-gray-600 dark:text-gray-300 shadow-sm border border-gray-100 dark:border-gray-800"
+                >
+                    <Bell :size="16" stroke-width="2.5" />
+                    <span
+                        class="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-red-500 rounded-full"
+                    ></span>
+                </button>
+            </div>
         </div>
 
         <!-- Center: empty/breadcrumb -->
-        <div class="flex-1 px-3 md:px-6"></div>
+        <div v-if="!isMobile" class="flex-1 px-3 md:px-6"></div>
 
-        <!-- Right -->
-        <div class="flex items-center gap-3">
+        <!-- Right (Desktop) -->
+        <div v-if="!isMobile" class="flex items-center gap-3">
             <div class="hidden sm:flex items-center gap-2 text-sm text-gray-500 dark:text-gray-300">
                 <i class="bi bi-clock"></i>
                 <span class="font-mono">{{ nowText }}</span>

@@ -6,6 +6,7 @@
         labels: { type: Array, required: true },
         seriesRevenue: { type: Array, required: true },
         seriesShipments: { type: Array, required: true },
+        height: { type: [String, Number], default: 350 },
     });
 
     const series = computed(() => [
@@ -23,7 +24,7 @@
 
     const chartOptions = computed(() => ({
         chart: {
-            height: 350,
+            height: props.height,
             type: 'line',
             toolbar: { show: false },
             zoom: { enabled: false },
@@ -115,6 +116,6 @@
 
 <template>
     <div class="w-full">
-        <VueApexCharts type="line" height="350" :options="chartOptions" :series="series" />
+        <VueApexCharts type="line" :height="height" :options="chartOptions" :series="series" />
     </div>
 </template>

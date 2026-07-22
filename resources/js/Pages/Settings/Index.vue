@@ -1,6 +1,6 @@
 <script setup>
     import AppLayout from '@/Layouts/AppLayout.vue';
-    import Modal from '@/Components/Modal1.vue';
+    import Modal from '@/Components/Modal.vue';
     import { Head, router, useForm } from '@inertiajs/vue3';
     import axios from 'axios';
     import { computed, ref, watch } from 'vue';

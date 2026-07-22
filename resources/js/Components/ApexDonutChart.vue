@@ -5,20 +5,16 @@
     const props = defineProps({
         labels: { type: Array, required: true },
         series: { type: Array, required: true },
+        height: { type: [String, Number], default: 350 },
     });
 
     const chartOptions = computed(() => ({
         chart: {
-            height: 350,
+            height: props.height,
             type: 'donut',
             fontFamily: 'Inter, sans-serif',
             dropShadow: {
-                enabled: true,
-                color: '#111827',
-                top: 5,
-                left: 3,
-                blur: 5,
-                opacity: 0.15,
+                enabled: false,
             },
         },
         stroke: {
@@ -69,6 +65,9 @@
         },
         legend: {
             position: 'bottom',
+            itemMargin: { horizontal: 5, vertical: 0 },
+            markers: { width: 8, height: 8 },
+            fontSize: '11px',
         },
         tooltip: {
             y: {
@@ -82,6 +81,6 @@
 
 <template>
     <div class="w-full flex justify-center">
-        <VueApexCharts type="donut" height="350" :options="chartOptions" :series="series" />
+        <VueApexCharts type="donut" :height="height" :options="chartOptions" :series="series" />
     </div>
 </template>

@@ -128,6 +128,17 @@ class DashboardController extends Controller
             // Penjelasan: Menggunakan getAttribute('total') agar aman dari error property undefined di PHPStan, karena 'total' adalah hasil query agregasi (COUNT), bukan kolom tabel asli.
             $topKotaValues = $topKota->map(fn ($k) => (int) $k->getAttribute('total'))->toArray();
 
+            // [UPDATE: PADDING DATA UNTUK SPLINE AREA CHART]
+            // Fungsi: Menambahkan titik data kosong (0) agar array selalu berjumlah 5.
+            // Alasan: Grafik tipe "Area Spline" membutuhkan minimal 2 titik untuk menggambar kurva (garis lengkung) dan area warnanya. 
+            //         Jika data di database hanya ada 1 kota (seperti saat website baru jalan), 
+            //         ApexCharts hanya akan menggambar 1 titik (dot) tanpa area fill.
+            // Cara Kerja: Looping menambahkan '-' dan 0 sampai array berjumlah persis 5.
+            while (count($topKotaLabels) < 5) {
+                $topKotaLabels[] = ''; // Label kosong agar sumbu X tetap bersih
+                $topKotaValues[] = 0;
+            }
+
             return [
                 'stats' => [
                     'totalPengiriman' => $totalPengiriman,

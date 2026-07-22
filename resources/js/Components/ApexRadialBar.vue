@@ -5,6 +5,7 @@
     const props = defineProps({
         labels: { type: Array, required: true },
         series: { type: Array, required: true }, // array of absolute numbers
+        height: { type: [String, Number], default: 350 },
     });
 
     const total = computed(() => props.series.reduce((a, b) => a + b, 0) || 1);
@@ -16,16 +17,11 @@
 
     const chartOptions = computed(() => ({
         chart: {
-            height: 350,
+            height: props.height,
             type: 'radialBar',
             fontFamily: 'Inter, sans-serif',
             dropShadow: {
-                enabled: true,
-                color: '#000',
-                top: 5,
-                left: 3,
-                blur: 5,
-                opacity: 0.1,
+                enabled: false,
             },
             animations: {
                 enabled: true,
@@ -47,11 +43,7 @@
                     size: '45%',
                     background: 'transparent',
                     dropShadow: {
-                        enabled: true,
-                        top: 0,
-                        left: 0,
-                        blur: 3,
-                        opacity: 0.1,
+                        enabled: false,
                     },
                 },
                 track: {
@@ -59,11 +51,7 @@
                     margin: 5,
                     strokeWidth: '100%',
                     dropShadow: {
-                        enabled: true,
-                        top: 0,
-                        left: 0,
-                        blur: 3,
-                        opacity: 0.05,
+                        enabled: false,
                     },
                 },
                 dataLabels: {
@@ -105,8 +93,7 @@
         labels: props.labels,
         colors: ['#10B981', '#3B82F6', '#EF4444'], // Hijau, Biru, Merah
         legend: {
-            show: true,
-            position: 'bottom',
+            show: false,
         },
         tooltip: {
             enabled: true,
@@ -127,7 +114,7 @@
     <div class="w-full flex justify-center">
         <VueApexCharts
             type="radialBar"
-            height="350"
+            :height="height"
             :options="chartOptions"
             :series="seriesPercentages"
         />
