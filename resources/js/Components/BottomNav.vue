@@ -164,7 +164,7 @@
                 <!-- [UPDATE: ACTIVE PILL REDESIGN] Home -->
                 <Link
                     :href="route('dashboard')"
-                    prefetch
+
                     aria-label="Home"
                     class="relative flex flex-col items-center justify-center gap-1 h-full w-16 transition-all duration-300 ease-out group"
                 >
@@ -190,7 +190,7 @@
                 <!-- [UPDATE: ACTIVE PILL REDESIGN] Kirim -->
                 <Link
                     :href="route('pengiriman.index')"
-                    prefetch
+
                     aria-label="Kirim paket"
                     class="relative flex flex-col items-center justify-center gap-1 h-full w-16 transition-all duration-300 ease-out group"
                 >
@@ -216,7 +216,7 @@
                 <!-- [UPDATE: ACTIVE PILL REDESIGN] Track -->
                 <Link
                     :href="route('tracking.search')"
-                    prefetch
+
                     aria-label="Tracking pengiriman"
                     class="relative flex flex-col items-center justify-center gap-1 h-full w-16 transition-all duration-300 ease-out group"
                 >
@@ -242,7 +242,7 @@
                 <!-- [UPDATE: ACTIVE PILL REDESIGN] Tarif -->
                 <Link
                     :href="route('tarif.index')"
-                    prefetch
+
                     aria-label="Cek tarif"
                     class="relative flex flex-col items-center justify-center gap-1 h-full w-16 transition-all duration-300 ease-out group"
                 >

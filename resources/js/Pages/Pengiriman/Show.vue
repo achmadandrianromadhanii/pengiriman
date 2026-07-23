@@ -2,7 +2,7 @@
     import AppLayout from '@/Layouts/AppLayout.vue';
     import TrackingTimeline from '@/Components/TrackingTimeline.vue';
     import { computed, onMounted, reactive, ref, watch } from 'vue';
-    import { Head, router, usePage } from '@inertiajs/vue3';
+    import { Head, router, usePage, Link } from '@inertiajs/vue3';
     // [UPDATE: LAZY-LOAD SWEETALERT2 — PERFORMA MOBILE]
     // Fungsi: Menghapus static import SweetAlert2 (~80KB) yang memaksa browser HP
     //         mengunduh + mengurai library ini SEBELUM halaman tampil.
@@ -375,12 +375,12 @@
             <!-- Header -->
             <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                 <div class="space-y-1">
-                    <a
+                    <Link
                         :href="route('pengiriman.index')"
                         class="text-sm text-gray-600 dark:text-gray-300 hover:text-primary inline-flex items-center gap-2"
                     >
                         <i class="bi bi-arrow-left"></i> Kembali
-                    </a>
+                    </Link>
 
                     <div class="flex flex-wrap items-center gap-3">
                         <h1
@@ -723,12 +723,12 @@
                 class="bg-primary pt-6 pb-20 px-5 rounded-b-[2.5rem] shadow-lg relative -mx-4 -mt-5"
             >
                 <div class="flex items-center justify-between text-white mb-6">
-                    <a
+                    <Link
                         :href="route('pengiriman.index')"
                         class="flex items-center gap-2 font-medium opacity-80 hover:opacity-100 transition-opacity"
                     >
                         <i class="bi bi-arrow-left text-lg"></i> Kembali
-                    </a>
+                    </Link>
                     <!-- Fungsi: Tombol salin resi instan dengan ukuran teks yang sedikit dibesarkan -->
                     <!-- Ditambahkan @click="copyResi" dan efek interaktif agar terasa seperti native app -->
                     <div

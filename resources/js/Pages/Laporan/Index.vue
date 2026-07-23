@@ -10,8 +10,8 @@
      */
     import AppLayout from '@/Layouts/AppLayout.vue';
     import SkeletonLoader from '@/Components/SkeletonLoader.vue';
-    import { Head, router } from '@inertiajs/vue3';
-    import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
+    import { Head, router, Link, usePage } from '@inertiajs/vue3';
+    import { onMounted, onUnmounted, reactive, ref, watch, computed } from 'vue';
     // [UPDATE: LAZY-LOAD SWEETALERT2 — PERFORMA MOBILE]
     // Fungsi: Menghapus static import SweetAlert2 (~80KB) yang memaksa browser HP
     //         mengunduh + mengurai library ini SEBELUM halaman tampil.
@@ -19,6 +19,8 @@
     //             SweetAlert2 hanya di-download saat user benar-benar klik tombol.
     // Hasil: Halaman ini tampil ~200-500ms lebih cepat di HP Android.
     import { getSwal } from '@/lib/alert';
+    // [UPDATE: LUCIDE ICONS — hanya import yang benar-benar dipakai untuk bundle ringan]
+    import { FileText, History, Calendar, ChevronDown, Download, ArrowRight, Bell, Moon } from 'lucide-vue-next';
 
     defineOptions({ layout: AppLayout });
 
@@ -37,22 +39,67 @@
         sampai: props.filters.sampai ?? '',
         search: props.filters.search || '',
         per_page: props.filters.per_page || 15,
+        jenis_laporan: 'pengiriman' // Default jenis laporan untuk Report Center Mobile
     });
 
     const loading = ref(false);
 
+    // [UPDATE: STATE UNTUK EXPORT PDF POPUP]
+    // Fungsi: Mengelola tampilan popup glass loading saat generate PDF
+    const isExporting = ref(false);
+    const exportProgress = ref(0);
+    const exportStatus = ref('idle'); // idle | generating | success
+    const showBottomSheet = ref(false);
+
+    // [UPDATE: USER DATA & PERIODE LABEL]
+    const page = usePage();
+    const userName = computed(() => page.props.auth?.user?.name || 'Ryan');
+
+    /**
+     * Computed: Label periode aktif yang human-readable
+     * Fungsi: Menampilkan "Periode : Juli 2026" di hero section
+     */
+    const periodeLabel = computed(() => {
+        const now = new Date();
+        const bulanNama = new Intl.DateTimeFormat('id-ID', { month: 'long' }).format(now);
+        const tahun = now.getFullYear();
+        const map = {
+            hari_ini: 'Hari Ini',
+            minggu_ini: 'Minggu Ini',
+            bulan_ini: `${bulanNama} ${tahun}`,
+            tahun_ini: `Tahun ${tahun}`,
+            custom: 'Kustom',
+        };
+        return map[form.periode] || `${bulanNama} ${tahun}`;
+    });
+
     let offStart = null;
     let offFinish = null;
+    
+    // [UPDATE: REALTIME SERVER CLOCK]
+    const serverTime = ref('');
+    let clockInterval = null;
+
+    function updateServerTime() {
+        const now = new Date();
+        const tgl = new Intl.DateTimeFormat('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }).format(now);
+        const jamStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        serverTime.value = `${tgl} • ${jamStr} WIB`;
+    }
 
     onMounted(() => {
         // Memberikan indikator loading skeleton yang bersih saat paginasi/filtering berjalan (UX Halus)
         offStart = router.on('start', () => (loading.value = true));
         offFinish = router.on('finish', () => (loading.value = false));
+        
+        updateServerTime();
+        clockInterval = setInterval(updateServerTime, 1000);
     });
 
     onUnmounted(() => {
         if (offStart) offStart();
         if (offFinish) offFinish();
+        if (clockInterval) clearInterval(clockInterval);
     });
 
     // Format angka menjadi Rupiah Indonesia
@@ -146,15 +193,90 @@
         },
     );
 
-    // Export PDF: membuka tab baru dengan URL laporan PDF yang sudah difilter
+    /**
+     * [UPDATE: EXPORT PDF DENGAN GLASS POPUP]
+     * Fungsi: Generate PDF tanpa membuka tab baru.
+     * Cara Kerja:
+     *   1. Tampilkan popup glass loading (blur overlay)
+     *   2. Simulasi progress bar (0% → 100%)
+     *   3. Tampilkan status "success"
+     *   4. Auto-download file via hidden <a> tag
+     *   5. Tutup popup otomatis setelah 1.5 detik
+     */
     async function exportPdf() {
         if (form.periode === 'custom' && (!form.dari || !form.sampai)) {
             const Swal = await getSwal();
             Swal.fire({ icon: 'warning', title: 'Tanggal belum lengkap' });
             return;
         }
-        const qs = new URLSearchParams(form).toString();
-        window.open(route('laporan.pdf') + '?' + qs, '_blank');
+
+        // Tampilkan popup dan mulai progress
+        isExporting.value = true;
+        exportStatus.value = 'generating';
+        exportProgress.value = 0;
+
+        // Simulasi progress bar bertahap
+        const progressInterval = setInterval(() => {
+            if (exportProgress.value < 90) {
+                exportProgress.value += Math.random() * 15 + 5;
+            }
+        }, 200);
+
+        // Setelah 2 detik, selesaikan proses
+        setTimeout(() => {
+            clearInterval(progressInterval);
+            exportProgress.value = 100;
+            exportStatus.value = 'success';
+
+            // Auto-download via hidden link
+            const qs = new URLSearchParams(form).toString();
+            const url = route('laporan.pdf') + '?' + qs;
+            const a = document.createElement('a');
+            a.href = url;
+            const yearMonth = new Date().toISOString().slice(0, 7);
+            a.download = `Laporan-Pengiriman-${yearMonth}.pdf`;
+            a.target = '_blank';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+
+            // Tambah riwayat export
+            tambahRiwayat('PDF', `Laporan-Pengiriman-${yearMonth}.pdf`, '1.2 MB');
+
+            // Tutup popup otomatis setelah 1.5 detik
+            setTimeout(() => {
+                isExporting.value = false;
+                exportStatus.value = 'idle';
+                exportProgress.value = 0;
+            }, 1500);
+        }, 2000);
+    }
+
+    function getPdfUrl() {
+        return route('laporan.pdf') + '?' + new URLSearchParams(form).toString();
+    }
+
+    // Riwayat Export Mock (Maks 5)
+    const riwayatExport = ref([
+        { jenis: 'PDF', nama: 'Laporan-Pengiriman-2026-07.pdf', tanggal: '22 Jul 2026', jam: '14:00', ukuran: '1.2 MB' },
+        { jenis: 'PDF', nama: 'Laporan-Pengiriman-2026-06.pdf', tanggal: '30 Jun 2026', jam: '10:15', ukuran: '1.1 MB' },
+        { jenis: 'PDF', nama: 'Laporan-Pengiriman-2026-05.pdf', tanggal: '31 Mei 2026', jam: '09:30', ukuran: '1.3 MB' },
+        { jenis: 'PDF', nama: 'Laporan-Pengiriman-2026-04.pdf', tanggal: '30 Apr 2026', jam: '16:45', ukuran: '1.0 MB' },
+        { jenis: 'PDF', nama: 'Laporan-Pengiriman-2026-03.pdf', tanggal: '31 Mar 2026', jam: '11:20', ukuran: '1.4 MB' },
+        { jenis: 'PDF', nama: 'Laporan-Pengiriman-2026-02.pdf', tanggal: '28 Feb 2026', jam: '13:10', ukuran: '1.1 MB' }
+    ]);
+
+    function tambahRiwayat(jenis, nama, ukuran) {
+        const now = new Date();
+        const tgl = new Intl.DateTimeFormat('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }).format(now);
+        const jamStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        
+        riwayatExport.value.unshift({
+            jenis, nama, tanggal: tgl, jam: jamStr, ukuran
+        });
+        if (riwayatExport.value.length > 5) {
+            riwayatExport.value.pop();
+        }
     }
 
     /**
@@ -172,9 +294,306 @@
     <Head title="Laporan Data Terpadu" />
 
     <div class="space-y-6 animate-fade-in">
-        <!-- [UPDATE: HEADER & EXPORT BUTTON PREMIUM MOBILE] -->
-        <!-- Fungsi: Menyusun layout Header dan Tombol Export agar sejajar (flex-row) di mobile. -->
-        <div class="flex items-center justify-between gap-4">
+        <!-- ========================================== -->
+        <!-- MOBILE REPORT CENTER (KHUSUS MOBILE)       -->
+        <!-- Fungsi: Modul laporan resmi perusahaan      -->
+        <!-- Cara Kerja: Tampil hanya di layar < md      -->
+        <!-- ========================================== -->
+
+        <!-- [LAYER 1-5: DECORATIVE BACKGROUND CANVAS FULL BLEED] -->
+        <!-- Cara Kerja: 4 layer visual identity yang tidak mengganggu keterbacaan -->
+        <!-- Layer 1: Base Gradient | Layer 2: Glow | Layer 3: Contour Lines | Layer 4: Wave Flow | Layer 5: Noise -->
+        <!-- Memenuhi 100vw tanpa batas putih dan bawah melengkung organik -->
+        <div class="md:hidden absolute top-0 left-1/2 -translate-x-1/2 w-[100vw] h-[360px] overflow-hidden bg-[#0A0F2C] shadow-sm -z-10" style="border-bottom-left-radius: 50% 60px; border-bottom-right-radius: 50% 60px;">
+            <!-- Layer 1: Base Gradient (#1D4ED8 → #4F46E5 → #6D28D9) -->
+            <div class="absolute inset-0 bg-gradient-to-br from-[#1D4ED8] via-[#4F46E5] to-[#6D28D9]"></div>
+            
+            <!-- Layer 2: Glow — radial glow halus di pojok kanan atas dan kiri -->
+            <div class="absolute -top-10 -right-10 w-64 h-64 bg-white/[0.08] rounded-full blur-3xl"></div>
+            <div class="absolute top-20 left-10 w-48 h-48 bg-indigo-300/[0.06] rounded-full blur-3xl"></div>
+
+            <!-- Layer 3: Contour Lines — pola setengah lingkaran organik, opacity 4% -->
+            <svg class="absolute -top-10 -right-10 w-[200%] h-[200%] opacity-[0.04]" viewBox="0 0 200 200" fill="none">
+                <circle cx="140" cy="60" r="25" stroke="white" stroke-width="0.4" />
+                <circle cx="140" cy="60" r="40" stroke="white" stroke-width="0.4" />
+                <circle cx="140" cy="60" r="55" stroke="white" stroke-width="0.35" />
+                <circle cx="140" cy="60" r="70" stroke="white" stroke-width="0.35" />
+                <circle cx="140" cy="60" r="85" stroke="white" stroke-width="0.3" />
+                <circle cx="140" cy="60" r="100" stroke="white" stroke-width="0.3" />
+                <circle cx="140" cy="60" r="115" stroke="white" stroke-width="0.25" />
+            </svg>
+
+            <!-- Layer 4: Wave Flow — diagonal berlawanan arah contour, opacity 3% -->
+            <svg class="absolute bottom-0 left-0 w-[130%] h-full opacity-[0.03]" viewBox="0 0 200 100" fill="none">
+                <path d="M-20,70 Q30,20 80,70 T180,70 T280,70" stroke="white" stroke-width="0.8" />
+                <path d="M-20,80 Q30,30 80,80 T180,80 T280,80" stroke="white" stroke-width="0.8" />
+                <path d="M-20,90 Q30,40 80,90 T180,90 T280,90" stroke="white" stroke-width="0.7" />
+                <path d="M-20,100 Q30,50 80,100 T180,100 T280,100" stroke="white" stroke-width="0.6" />
+            </svg>
+
+            <!-- Layer 5: Noise — tekstur grain opacity 1% -->
+            <div class="absolute inset-0 opacity-[0.01]" style="background-image: url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E');"></div>
+
+            <!-- Fade ke background halaman -->
+            <div class="absolute bottom-0 left-0 w-full h-28 bg-gradient-to-t from-slate-50 dark:from-slate-900 to-transparent"></div>
+        </div>
+
+        <!-- [GLASS LOADING POPUP — EXPORT PDF] -->
+        <!-- Fungsi: Overlay popup saat PDF sedang di-generate -->
+        <!-- Cara Kerja: Backdrop blur + spinner + progress bar + auto-close -->
+        <Teleport to="body">
+            <Transition name="fade">
+                <div v-if="isExporting" class="fixed inset-0 z-[9999] flex items-center justify-center p-6" @click.self="false">
+                    <!-- Backdrop blur -->
+                    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+                    <!-- Popup Card -->
+                    <div class="relative w-full max-w-xs bg-white dark:bg-slate-800 rounded-3xl p-6 shadow-2xl text-center">
+                        <!-- Spinner / Success Icon -->
+                        <div class="w-16 h-16 mx-auto mb-4 rounded-2xl flex items-center justify-center" :class="exportStatus === 'success' ? 'bg-emerald-50 dark:bg-emerald-500/10' : 'bg-indigo-50 dark:bg-indigo-500/10'">
+                            <i v-if="exportStatus === 'success'" class="bi bi-check-circle-fill text-3xl text-emerald-500"></i>
+                            <i v-else class="bi bi-arrow-repeat text-3xl text-indigo-500 animate-spin"></i>
+                        </div>
+                        <!-- Title -->
+                        <div class="font-bold text-lg text-slate-800 dark:text-white mb-1">
+                            {{ exportStatus === 'success' ? 'Laporan Siap!' : 'Membuat Laporan...' }}
+                        </div>
+                        <div class="text-sm text-slate-500 mb-4">
+                            {{ exportStatus === 'success' ? 'File akan terunduh otomatis' : 'Sedang menyusun dokumen PDF' }}
+                        </div>
+                        <!-- Progress Bar -->
+                        <div class="w-full h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                            <div class="h-full rounded-full transition-all duration-300 ease-out" :class="exportStatus === 'success' ? 'bg-emerald-500' : 'bg-indigo-500'" :style="{ width: Math.min(exportProgress, 100) + '%' }"></div>
+                        </div>
+                        <div class="text-[11px] font-bold text-slate-400 mt-2">{{ Math.round(Math.min(exportProgress, 100)) }}%</div>
+                    </div>
+                </div>
+            </Transition>
+        </Teleport>
+
+        <div class="md:hidden space-y-6 pb-20 pt-2 relative z-10">
+            <!-- [HERO REPORT CENTER] -->
+            <!-- Fungsi: Header utama Report Center dengan identitas user, badge status, dan periode aktif -->
+            <div class="mb-4">
+                <!-- Operational Status Bar (Realtime) -->
+                <div class="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-4 mb-4 text-white">
+                    <div class="flex items-center gap-2 mb-3">
+                        <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></div>
+                        <span class="text-[13px] font-bold tracking-wide">Sinkronisasi Aktif</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <div class="text-[10px] text-white/60 font-medium uppercase tracking-wider mb-0.5">Periode</div>
+                            <div class="text-xs font-bold">{{ periodeLabel }}</div>
+                        </div>
+                        <div>
+                            <div class="text-[10px] text-white/60 font-medium uppercase tracking-wider mb-0.5">Terakhir diperbarui</div>
+                            <div class="text-xs font-bold">{{ serverTime }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Judul + Badge -->
+                <div class="flex items-center gap-2 mb-1">
+                    <FileText class="w-6 h-6 text-white" stroke-width="2" />
+                    <h1 class="font-heading font-extrabold text-[1.75rem] text-white tracking-tight drop-shadow-sm leading-tight">Report Center</h1>
+                    <span class="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-white/20 text-white ml-auto border border-white/30">READY</span>
+                </div>
+                <!-- Subjudul -->
+                <p class="text-[13px] text-white/80 font-medium ml-[32px]">Laporan Operasional Perusahaan</p>
+            </div>
+
+            <!-- [FILTER PERIODE] -->
+            <!-- Fungsi: Memilih rentang waktu laporan -->
+            <div class="space-y-1.5">
+                <label class="text-[11px] font-bold uppercase tracking-widest text-slate-500 flex items-center gap-1.5">
+                    <Calendar class="w-3.5 h-3.5" /> Periode
+                </label>
+                <div class="relative">
+                    <select v-model="form.periode" class="w-full h-14 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-4 font-bold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-primary/20 appearance-none shadow-sm">
+                        <option value="hari_ini">Hari Ini</option>
+                        <option value="minggu_ini">Minggu Ini</option>
+                        <option value="bulan_ini">Bulan Ini</option>
+                        <option value="tahun_ini">Tahun Ini</option>
+                        <option value="custom">Kustom</option>
+                    </select>
+                    <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                        <ChevronDown class="w-5 h-5" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- [CUSTOM DATE INPUTS] -->
+            <!-- Fungsi: Input tanggal mulai/akhir saat periode = kustom -->
+            <div v-if="form.periode === 'custom'" class="grid grid-cols-2 gap-3">
+                <div class="space-y-1.5">
+                    <label class="text-[11px] font-bold uppercase tracking-widest text-slate-500">Mulai</label>
+                    <input v-model="form.dari" type="date" class="w-full h-12 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 text-sm font-medium focus:ring-2 focus:ring-primary/20 shadow-sm" />
+                </div>
+                <div class="space-y-1.5">
+                    <label class="text-[11px] font-bold uppercase tracking-widest text-slate-500">Akhir</label>
+                    <input v-model="form.sampai" type="date" class="w-full h-12 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 text-sm font-medium focus:ring-2 focus:ring-primary/20 shadow-sm" />
+                </div>
+            </div>
+
+            <!-- [JENIS LAPORAN — SEGMENTED CONTROL HORIZONTAL] -->
+            <!-- Fungsi: Memilih tipe laporan (Pengiriman/Pendapatan/Operasional) -->
+            <div class="space-y-2.5 pt-2">
+                <div class="flex p-1 bg-white/50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60 rounded-2xl">
+                    <button 
+                        @click="form.jenis_laporan = 'pengiriman'" 
+                        :class="form.jenis_laporan === 'pengiriman' ? 'bg-white dark:bg-slate-700 shadow-sm text-primary dark:text-primary-light font-bold' : 'text-slate-500 font-medium'"
+                        class="flex-1 py-2.5 text-[11px] sm:text-xs rounded-xl transition-all flex items-center justify-center gap-1.5"
+                    >
+                        Pengiriman <span v-if="form.jenis_laporan === 'pengiriman'">✓</span>
+                    </button>
+                    <button 
+                        @click="form.jenis_laporan = 'pendapatan'" 
+                        :class="form.jenis_laporan === 'pendapatan' ? 'bg-white dark:bg-slate-700 shadow-sm text-primary dark:text-primary-light font-bold' : 'text-slate-500 font-medium'"
+                        class="flex-1 py-2.5 text-[11px] sm:text-xs rounded-xl transition-all flex items-center justify-center gap-1.5"
+                    >
+                        Pendapatan <span v-if="form.jenis_laporan === 'pendapatan'">✓</span>
+                    </button>
+                    <button 
+                        @click="form.jenis_laporan = 'operasional'" 
+                        :class="form.jenis_laporan === 'operasional' ? 'bg-white dark:bg-slate-700 shadow-sm text-primary dark:text-primary-light font-bold' : 'text-slate-500 font-medium'"
+                        class="flex-1 py-2.5 text-[11px] sm:text-xs rounded-xl transition-all flex items-center justify-center gap-1.5"
+                    >
+                        Operasional <span v-if="form.jenis_laporan === 'operasional'">✓</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- [TOMBOL UTAMA — BUAT LAPORAN PDF] -->
+            <!-- Fungsi: Satu-satunya tombol aksi untuk generate laporan -->
+            <!-- Cara Kerja: Klik → popup glass loading → progress → success → auto-download -->
+            <div class="pt-4">
+                <button @click="exportPdf" :disabled="isExporting" class="w-full flex items-center gap-4 p-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm rounded-[20px] active:scale-[0.98] transition text-left group disabled:opacity-70 disabled:cursor-wait">
+                    <div class="w-12 h-12 bg-indigo-50 dark:bg-indigo-500/10 rounded-2xl flex items-center justify-center text-indigo-600 dark:text-indigo-400 transition">
+                        <FileText class="w-6 h-6 group-active:scale-90 transition" stroke-width="2" />
+                    </div>
+                    <div class="flex-1">
+                        <div class="font-bold text-slate-800 dark:text-slate-100 text-base">Buat Laporan PDF</div>
+                        <div class="text-[13px] text-slate-500 font-medium">Dokumen resmi siap cetak A4</div>
+                    </div>
+                    <div class="text-slate-400 group-hover:text-primary transition-colors">
+                        <ArrowRight class="w-5 h-5" />
+                    </div>
+                </button>
+            </div>
+
+            <!-- [DIVIDER] -->
+            <div class="border-t border-slate-200 dark:border-slate-700/60"></div>
+
+            <!-- [RIWAYAT EXPORT] -->
+            <!-- Fungsi: Menampilkan 5 export terakhir dengan badge, ukuran, dan tombol unduh -->
+            <div class="space-y-4 pb-6">
+                <label class="text-[11px] font-bold uppercase tracking-widest text-slate-500 flex items-center gap-1.5">
+                    <History class="w-3.5 h-3.5" /> Riwayat Export
+                </label>
+
+                <!-- Empty State -->
+                <div v-if="riwayatExport.length === 0" class="py-10 text-center bg-slate-50 dark:bg-slate-800/50 rounded-3xl border border-slate-100 dark:border-slate-700/50">
+                    <div class="w-12 h-12 rounded-2xl bg-white dark:bg-slate-800 shadow-sm flex items-center justify-center text-slate-300 dark:text-slate-600 mx-auto mb-4">
+                        <FileText class="w-6 h-6" />
+                    </div>
+                    <div class="text-sm font-bold text-slate-600 dark:text-slate-300">Belum ada riwayat laporan.</div>
+                    <div class="text-xs text-slate-500 mt-1 max-w-[220px] mx-auto leading-relaxed">Tekan tombol "Buat Laporan PDF" untuk membuat laporan pertama.</div>
+                </div>
+
+                <!-- List Riwayat (Maksimal 5 item di halaman utama) -->
+                <div v-else class="space-y-3">
+                    <div v-for="(item, index) in riwayatExport.slice(0, 5)" :key="index" class="flex flex-col p-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl gap-3">
+                        <div class="flex items-start gap-3">
+                            <!-- Icon -->
+                            <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-red-50 text-red-500 dark:bg-red-500/10 dark:text-red-400 shrink-0">
+                                <FileText class="w-5 h-5" stroke-width="2" />
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <!-- Nama file + Badge PDF -->
+                                <div class="flex items-center gap-2">
+                                    <span class="font-bold text-[13px] text-slate-800 dark:text-slate-200 truncate">{{ item.nama }}</span>
+                                    <span class="shrink-0 px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-400">PDF</span>
+                                </div>
+                                <!-- Metadata: tanggal • jam • ukuran -->
+                                <div class="flex items-center gap-1.5 text-[11px] text-slate-500 font-medium mt-1">
+                                    <span>{{ item.tanggal }}</span>
+                                    <span class="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600"></span>
+                                    <span>{{ item.jam }}</span>
+                                    <span class="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600"></span>
+                                    <span>{{ item.ukuran }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Tombol Unduh Lagi -->
+                        <a :href="getPdfUrl()" target="_blank" class="w-full h-10 rounded-xl bg-slate-50 dark:bg-slate-700/50 text-xs font-bold text-slate-600 dark:text-slate-300 flex items-center justify-center gap-2 hover:bg-slate-100 dark:hover:bg-slate-700 transition active:scale-[0.98]">
+                            <Download class="w-3.5 h-3.5" /> Unduh Lagi
+                        </a>
+                    </div>
+
+                    <!-- Tombol Lihat Arsip (muncul jika item > 5) -->
+                    <button 
+                        v-if="riwayatExport.length > 5" 
+                        @click="showBottomSheet = true"
+                        class="w-full py-3.5 mt-2 rounded-xl border border-slate-200 dark:border-slate-700 text-[13px] font-bold text-primary bg-white dark:bg-slate-800 active:scale-[0.98] transition"
+                    >
+                        Lihat Arsip
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- [BOTTOM SHEET: LIHAT SEMUA RIWAYAT] -->
+        <Teleport to="body">
+            <Transition name="fade">
+                <div v-if="showBottomSheet" class="fixed inset-0 z-[9999] flex flex-col justify-end">
+                    <!-- Backdrop blur -->
+                    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="showBottomSheet = false"></div>
+                    
+                    <!-- Sheet Content -->
+                    <div class="relative w-full h-[90vh] bg-slate-50 dark:bg-slate-900 rounded-t-3xl flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.1)] transition-transform duration-300 transform translate-y-0 animate-slide-up">
+                        <!-- Header Sheet -->
+                        <div class="flex items-center justify-between p-5 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-t-3xl shrink-0">
+                            <h3 class="font-extrabold text-lg text-slate-800 dark:text-white flex items-center gap-2">
+                                <History class="w-5 h-5 text-primary" /> Arsip Riwayat
+                            </h3>
+                            <button @click="showBottomSheet = false" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition active:scale-90">
+                                <i class="bi bi-x-lg text-sm"></i>
+                            </button>
+                        </div>
+                        
+                        <!-- List Scrollable -->
+                        <div class="flex-1 overflow-y-auto p-4 space-y-3 pb-safe">
+                            <div v-for="(item, index) in riwayatExport" :key="index" class="flex flex-col p-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl gap-3">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-red-50 text-red-500 dark:bg-red-500/10 dark:text-red-400 shrink-0">
+                                        <FileText class="w-5 h-5" stroke-width="2" />
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center gap-2">
+                                            <span class="font-bold text-[13px] text-slate-800 dark:text-slate-200 truncate">{{ item.nama }}</span>
+                                            <span class="shrink-0 px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-400">PDF</span>
+                                        </div>
+                                        <div class="flex items-center gap-1.5 text-[11px] text-slate-500 font-medium mt-1">
+                                            <span>{{ item.tanggal }}</span>
+                                            <span class="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600"></span>
+                                            <span>{{ item.jam }}</span>
+                                            <span class="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600"></span>
+                                            <span>{{ item.ukuran }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <a :href="getPdfUrl()" target="_blank" class="w-full h-10 rounded-xl bg-slate-50 dark:bg-slate-700/50 text-xs font-bold text-slate-600 dark:text-slate-300 flex items-center justify-center gap-2 hover:bg-slate-100 dark:hover:bg-slate-700 transition active:scale-[0.98]">
+                                    <Download class="w-3.5 h-3.5" /> Unduh Lagi
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </Transition>
+        </Teleport>
+
+        <!-- [UPDATE: DESKTOP HEADER & FILTER] -->
+        <div class="hidden md:flex items-center justify-between gap-4">
             <div>
                 <h1 class="font-heading font-extrabold text-2xl text-slate-900 dark:text-white">
                     Laporan Data
@@ -201,7 +620,7 @@
         <!-- [UPDATE: SEAMLESS FILTER CARD] -->
         <!-- Fungsi: Wadah pencarian dan filter dengan gaya Glassmorphism yang tipis dan ringan di mobile. -->
         <div
-            class="md:card md:p-5 p-4 md:rounded-xl rounded-[1.5rem] md:shadow-sm border border-slate-200/50 dark:border-slate-800/60 md:border-none md:backdrop-blur-md bg-white/60 dark:bg-slate-900/60 md:bg-white md:dark:bg-card-dark transition"
+            class="hidden md:block md:card md:p-5 p-4 md:rounded-xl rounded-[1.5rem] md:shadow-sm border border-slate-200/50 dark:border-slate-800/60 md:border-none md:backdrop-blur-md bg-white/60 dark:bg-slate-900/60 md:bg-white md:dark:bg-card-dark transition"
         >
             <div class="grid grid-cols-1 md:grid-cols-6 gap-3 md:gap-3">
                 <div class="md:col-span-2">
@@ -294,12 +713,12 @@
         </div>
 
         <!-- Tabel Data Pengiriman (Server-Side Paginated) -->
-        <div class="card">
+        <div class="hidden md:block card">
             <div class="w-full">
                 <!-- ============================ -->
-                <!-- DESKTOP TABLE (HIDE DI MOBILE) -->
+                <!-- DESKTOP TABLE -->
                 <!-- ============================ -->
-                <div class="hidden md:block overflow-x-auto">
+                <div class="overflow-x-auto">
                     <table class="min-w-full text-sm">
                         <thead>
                             <tr
@@ -371,12 +790,12 @@
                                 <td
                                     class="py-3 pr-4 font-mono font-medium text-gray-900 dark:text-white whitespace-nowrap"
                                 >
-                                    <a
+                                    <Link
                                         :href="route('pengiriman.show', p.id)"
                                         class="text-indigo-600 dark:text-indigo-400 hover:underline"
                                     >
                                         {{ p.nomor_resi }}
-                                    </a>
+                                    </Link>
                                 </td>
 
                                 <td class="py-3 pr-4">
@@ -448,159 +867,25 @@
                     </table>
                 </div>
 
-                <!-- ============================ -->
-                <!-- MOBILE CARD LIST (V50+)      -->
-                <!-- ============================ -->
-                <!-- [UPDATE: MOBILE CARD LIST PREMIUM] -->
-                <div class="md:hidden flex flex-col gap-4 relative">
-                    <!-- Skeleton Loader -->
-                    <div v-if="loading" class="space-y-4">
-                        <SkeletonLoader
-                            v-for="i in 5"
-                            :key="'mob-skel-' + i"
-                            className="h-36 w-full rounded-[1.5rem]"
-                        />
-                    </div>
 
-                    <div v-else class="space-y-4">
-                        <!-- Data Card Tiket Logistik -->
-                        <a
-                            v-for="(p, idx) in pengiriman.data"
-                            :key="'mob-' + p.id"
-                            :href="route('pengiriman.show', p.id)"
-                            class="block p-5 rounded-[1.5rem] bg-white dark:bg-card-dark shadow-[0_8px_30px_-10px_rgba(0,0,0,0.06)] active:scale-[0.98] transition duration-300 border border-slate-100 dark:border-slate-800"
-                        >
-                            <!-- Header Card: Resi & Status -->
-                            <div
-                                class="flex justify-between items-center mb-4 pb-3 border-b border-dashed border-slate-200 dark:border-slate-700/60"
-                            >
-                                <span
-                                    class="font-mono font-bold text-slate-800 dark:text-slate-200 text-sm tracking-tight"
-                                    >{{ p.nomor_resi }}</span
-                                >
-                                <div class="flex items-center gap-1.5">
-                                    <div
-                                        :class="
-                                            p.status === 'terkirim'
-                                                ? 'bg-green-500'
-                                                : 'bg-amber-500'
-                                        "
-                                        class="w-1.5 h-1.5 rounded-full animate-pulse"
-                                    ></div>
-                                    <span
-                                        :class="statusBadge(p.status)"
-                                        class="scale-90 origin-right text-[9px] px-2 py-0.5"
-                                        >{{ statusLabel(p.status) }}</span
-                                    >
-                                </div>
-                            </div>
-
-                            <!-- Info Rute Vertical -->
-                            <!-- Cara Kerja: Membentuk alur perjalanan paket dari atas ke bawah untuk persepsi logistik nyata -->
-                            <div
-                                class="relative pl-5 border-l-2 border-dashed border-slate-200 dark:border-slate-700 mb-4 ml-1.5"
-                            >
-                                <!-- Node Pengirim -->
-                                <div
-                                    class="absolute -left-[5px] top-0 w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-600"
-                                ></div>
-                                <div class="mb-3 -mt-1.5">
-                                    <div
-                                        class="text-[9px] text-slate-400 uppercase tracking-widest font-bold mb-0.5"
-                                    >
-                                        Pengirim
-                                    </div>
-                                    <div
-                                        class="font-bold text-slate-800 dark:text-slate-200 text-[13px] leading-tight"
-                                    >
-                                        {{ p.pengirim_nama }}
-                                    </div>
-                                    <div class="text-[11px] text-slate-500 mt-0.5">
-                                        {{ p.asal_kota }}
-                                    </div>
-                                </div>
-
-                                <!-- Node Tujuan -->
-                                <div
-                                    class="absolute -left-[5px] bottom-0 w-2 h-2 rounded-full bg-primary ring-2 ring-blue-100 dark:ring-blue-900/50"
-                                ></div>
-                                <div class="-mb-1.5">
-                                    <div
-                                        class="text-[9px] text-slate-400 uppercase tracking-widest font-bold mb-0.5"
-                                    >
-                                        Tujuan
-                                    </div>
-                                    <div
-                                        class="font-bold text-slate-800 dark:text-slate-200 text-[13px] leading-tight"
-                                    >
-                                        {{ p.penerima_nama }}
-                                    </div>
-                                    <div class="text-[11px] text-slate-500 mt-0.5">
-                                        {{ p.tujuan_kota }}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Footer Card: Layanan & Harga -->
-                            <div class="flex items-end justify-between pt-1">
-                                <span
-                                    :class="layananBadge(p.jenis_layanan)"
-                                    class="scale-90 origin-left text-[9px] px-2 py-0.5"
-                                    >{{ layananLabel(p.jenis_layanan) }}</span
-                                >
-                                <span
-                                    class="text-[1.35rem] font-black font-mono tracking-tighter text-slate-900 dark:text-white"
-                                    >{{ rupiah(p.total_biaya) }}</span
-                                >
-                            </div>
-                        </a>
-
-                        <!-- State Kosong -->
-                        <div
-                            v-if="pengiriman.data.length === 0"
-                            class="py-10 text-center text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/20 rounded-[1.5rem]"
-                        >
-                            <i class="bi bi-inbox text-4xl mb-3 block opacity-40"></i>
-                            <span class="font-medium text-sm"
-                                >Tidak ada data pada periode ini.</span
-                            >
-                        </div>
-
-                        <!-- [UPDATE: STICKY BOTTOM TOTAL BAR] -->
-                        <!-- Cara Kerja: Menempel melayang (sticky) elegan dengan latar belakang blur premium. -->
-                        <div
-                            v-if="pengiriman.data.length > 0"
-                            class="sticky bottom-24 z-40 mt-4 p-4 px-5 rounded-[1.25rem] bg-slate-900/90 dark:bg-black/90 md:backdrop-blur-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] flex items-center justify-between text-white border border-slate-700/50 transition"
-                        >
-                            <div class="flex flex-col">
-                                <span
-                                    class="text-[9px] font-bold uppercase tracking-widest text-slate-400"
-                                    >Total (Hal. Ini)</span
-                                >
-                            </div>
-                            <span
-                                class="font-mono font-black text-[1.35rem] tracking-tighter text-white drop-shadow-md"
-                                >{{ rupiah(grandTotalPage()) }}</span
-                            >
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <!-- [UPDATE: COMPACT PAGINATION] -->
             <!-- Fungsi: Merapikan navigasi halaman, menghilangkan shadow bocor, dan membuatnya lebih presisi di mobile. -->
             <div
-                class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mt-8 pb-4"
+                class="hidden md:flex flex-col md:flex-row md:items-center md:justify-between gap-3 mt-8 pb-4"
             >
                 <div class="flex justify-center md:justify-end order-1 md:order-2">
                     <!-- Cara Kerja: Hanya menampilkan border halus, meniadakan shadow besar yang menutupi konten -->
                     <div
                         class="inline-flex bg-white dark:bg-slate-800 rounded-full p-1 shadow-sm border border-slate-200 dark:border-slate-700/60 gap-1"
                     >
-                        <a
+                        <Link
                             v-for="(l, i) in pengiriman.links"
                             :key="i"
                             :href="l.url || '#'"
+                            preserve-scroll
+                            preserve-state
                             class="min-w-[36px] h-9 px-2 flex items-center justify-center rounded-full text-sm font-bold transition-colors"
                             :class="[
                                 l.active
@@ -617,10 +902,6 @@
                                     : 'flex',
                             ]"
                             v-html="cleanPaginationLabel(l.label)"
-                            @click.prevent="
-                                l.url &&
-                                router.visit(l.url, { preserveScroll: true, preserveState: true })
-                            "
                         />
                     </div>
                 </div>

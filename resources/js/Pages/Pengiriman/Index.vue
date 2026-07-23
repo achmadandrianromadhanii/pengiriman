@@ -2,7 +2,7 @@
     import AppLayout from '@/Layouts/AppLayout.vue';
     import SkeletonLoader from '@/Components/SkeletonLoader.vue';
     import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
-    import { Head, router, usePage } from '@inertiajs/vue3';
+    import { Head, router, usePage, Link } from '@inertiajs/vue3';
     // [UPDATE: LAZY-LOAD SWEETALERT2 — PERFORMA MOBILE]
     // Fungsi: Menghapus static import SweetAlert2 (~80KB) yang memaksa browser HP
     //         mengunduh + mengurai library ini SEBELUM halaman tampil.
@@ -212,10 +212,10 @@
                     Kelola semua data pengiriman
                 </p>
             </div>
-            <a :href="route('pengiriman.create')" class="btn-primary">
+            <Link :href="route('pengiriman.create')" class="btn-primary">
                 <i class="bi bi-plus-lg"></i>
                 Input Data
-            </a>
+            </Link>
         </div>
 
         <!-- Filter bar Desktop -->
@@ -316,10 +316,10 @@
                             >
                                 <td class="py-3 pr-4">{{ (pengiriman.from || 1) + idx }}</td>
                                 <td class="py-3 pr-4">
-                                    <a
+                                    <Link
                                         class="font-semibold text-primary hover:underline"
                                         :href="route('pengiriman.show', p.id)"
-                                        >{{ p.nomor_resi }}</a
+                                        >{{ p.nomor_resi }}</Link
                                     >
                                 </td>
                                 <td class="py-3 pr-4" :title="p.pengirim_hp">
@@ -343,10 +343,10 @@
                                     >
                                 </td>
                                 <td class="py-3 pr-2">
-                                    <a
+                                    <Link
                                         :href="route('pengiriman.show', p.id)"
                                         class="btn-secondary px-3 py-2"
-                                        ><i class="bi bi-eye"></i> Detail</a
+                                        ><i class="bi bi-eye"></i> Detail</Link
                                     >
                                 </td>
                             </tr>
@@ -446,7 +446,7 @@
 
             <div v-else class="optimasi-daftar-mobile">
                 <!-- Loop Kartu Pengiriman -->
-                <a
+                <Link
                     v-for="p in pengiriman.data"
                     :key="'mob-' + p.id"
                     :href="route('pengiriman.show', p.id)"
@@ -536,7 +536,7 @@
                             Detail <i class="bi bi-chevron-right text-[10px]"></i>
                         </div>
                     </div>
-                </a>
+                </Link>
 
                 <!-- State Kosong yang Ramah -->
                 <div
@@ -738,13 +738,13 @@
             Dikombinasikan dengan padding bawah (pb-32) pada container halaman, tombol ini tidak akan pernah menimpa Pagination meski di-scroll hingga paling bawah.
             Ukuran disempurnakan (w-13 h-13) agar sangat ergonomis bagi ibu jari.
         -->
-        <a
+        <Link
             :href="route('pengiriman.create')"
             class="fixed bottom-[90px] right-4 z-[70] w-13 h-13 bg-primary text-white rounded-full flex items-center justify-center shadow-[0_8px_25px_rgba(45,51,107,0.4)] hover:scale-105 active:scale-95 transition duration-300 border border-white/20"
             style="width: 52px; height: 52px"
             title="Input Data"
         >
             <i class="bi bi-plus-lg text-xl drop-shadow-sm"></i>
-        </a>
+        </Link>
     </div>
 </template>

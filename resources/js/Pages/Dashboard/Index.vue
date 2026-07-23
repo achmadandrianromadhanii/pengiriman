@@ -484,10 +484,13 @@
                     {{ latest.total || 0 }}
                 </div>
                 <div class="flex flex-wrap gap-2">
-                    <a
+                    <Link
                         v-for="(l, i) in latest.links"
                         :key="i"
                         :href="l.url || '#'"
+                        preserve-scroll
+                        preserve-state
+                        :only="['latest']"
                         class="px-3 py-2 rounded-xl border text-sm transition"
                         :class="
                             l.active
@@ -495,14 +498,6 @@
                                 : 'bg-white dark:bg-card-dark border-gray-200 dark:border-gray-700/60 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5'
                         "
                         v-html="cleanPaginationLabel(l.label)"
-                        @click.prevent="
-                            l.url &&
-                            router.visit(l.url, {
-                                preserveScroll: true,
-                                preserveState: true,
-                                only: ['latest'],
-                            })
-                        "
                     />
                 </div>
             </div>
@@ -743,7 +738,7 @@
             <div class="grid grid-cols-4 gap-2.5 mt-3 anim-slide-up" style="animation-delay: 100ms">
                 <Link
                     :href="route('pengiriman.index')"
-                    prefetch
+
                     aria-label="Lihat daftar pengiriman"
                     class="flex flex-col items-center justify-center py-3 bg-white dark:bg-[#111111] rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.02)] border border-gray-100 dark:border-gray-800 active:scale-90 transition-transform"
                 >
@@ -754,7 +749,7 @@
                 </Link>
                 <Link
                     :href="route('tracking.search')"
-                    prefetch
+
                     aria-label="Lacak pengiriman"
                     class="flex flex-col items-center justify-center py-3 bg-white dark:bg-[#111111] rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.02)] border border-gray-100 dark:border-gray-800 active:scale-90 transition-transform"
                 >
@@ -765,7 +760,7 @@
                 </Link>
                 <Link
                     :href="route('tarif.index')"
-                    prefetch
+
                     aria-label="Cek tarif pengiriman"
                     class="flex flex-col items-center justify-center py-3 bg-white dark:bg-[#111111] rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.02)] border border-gray-100 dark:border-gray-800 active:scale-90 transition-transform"
                 >
@@ -776,7 +771,7 @@
                 </Link>
                 <Link
                     :href="route('settings.index')"
-                    prefetch
+
                     aria-label="Pengaturan"
                     class="flex flex-col items-center justify-center py-3 bg-white dark:bg-[#111111] rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.02)] border border-gray-100 dark:border-gray-800 active:scale-90 transition-transform"
                 >

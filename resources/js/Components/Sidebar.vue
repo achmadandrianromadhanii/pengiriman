@@ -201,7 +201,7 @@
                                         v-for="sub in item.subItems"
                                         :key="sub.label"
                                         :href="sub.href()"
-                                        prefetch
+
                                         class="group/sub flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition duration-150 text-gray-600 dark:text-gray-300 hover:text-primary hover:bg-indigo-50/50 dark:hover:bg-white/5"
                                     >
                                         <!-- Ikon Bulat (O) yang HD, Tajam & Lebih Besar -->

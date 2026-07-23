@@ -311,46 +311,24 @@
          ═══════════════════════════════════════════════════════════════════ --}}
     <table class="doc-header" cellpadding="0" cellspacing="0">
         <tr>
-            <td style="width: 50%;">
-                <div class="brand-name">SuperStart</div>
-                <div class="brand-desc">Sistem Manajemen Pengiriman Barang</div>
+            <td style="width: 15%; text-align: center;">
+                <!-- Placeholder Logo -->
+                <div style="width: 50px; height: 50px; background-color: #4f46e5; color: white; line-height: 50px; font-size: 24px; font-weight: bold; border-radius: 8px; margin: 0 auto;">SS</div>
             </td>
-            <td style="width: 50%;" class="header-info">
-                <strong>LAPORAN DATA PENGIRIMAN</strong><br>
+            <td style="width: 45%;">
+                <div class="brand-name">SUPERSTART LOGISTIK</div>
+                <div class="brand-desc">Jl. Sudirman No. 45, Jakarta Pusat, DKI Jakarta<br>Telp: (021) 555-0192 | Web: www.superstart.co.id</div>
+            </td>
+            <td style="width: 40%;" class="header-info">
+                <strong>LAPORAN OPERASIONAL PERUSAHAAN</strong><br>
                 Periode: {{ periodeLabelLaporan($filters['periode']) }}<br>
+                Cabang: Jakarta Pusat<br>
+                Operator: Admin SuperStart<br>
                 Dicetak: {{ \Carbon\Carbon::parse($printedAt)->translatedFormat('d M Y, H:i') }} WIB
             </td>
         </tr>
     </table>
 
-    {{-- ═══════════════════════════════════════════════════════════════════
-         BAGIAN 2: RINGKASAN KPI (Key Performance Indicator)
-         Fungsi: Menampilkan 4 metrik utama agar pembaca langsung paham
-                 gambaran besar kondisi pengiriman pada periode yang difilter.
-         Data: Diambil dari variabel $summary yang dikirim oleh LaporanController.
-         ═══════════════════════════════════════════════════════════════════ --}}
-    @if(isset($summary))
-    <table class="kpi-table" cellpadding="0" cellspacing="0">
-        <tr>
-            <td>
-                <div class="kpi-label">Total Pengiriman</div>
-                <div class="kpi-value">{{ number_format($summary['totalPengiriman'] ?? 0) }}</div>
-            </td>
-            <td>
-                <div class="kpi-label">Total Pendapatan</div>
-                <div class="kpi-value">{{ formatRupiahLaporan($summary['totalPendapatan'] ?? 0) }}</div>
-            </td>
-            <td>
-                <div class="kpi-label">Berhasil Terkirim</div>
-                <div class="kpi-value" style="color: #059669;">{{ number_format($summary['totalTerkirim'] ?? 0) }}</div>
-            </td>
-            <td>
-                <div class="kpi-label">Gagal / Dibatalkan</div>
-                <div class="kpi-value" style="color: #dc2626;">{{ number_format($summary['totalGagalBatal'] ?? 0) }}</div>
-            </td>
-        </tr>
-    </table>
-    @endif
 
     {{-- ═══════════════════════════════════════════════════════════════════
          BAGIAN 3: KOTAK INFO FILTER (PERIODE)
@@ -461,26 +439,24 @@
          Fungsi: Menyediakan ruang resmi untuk tanda tangan pihak yang berwenang.
          Letak: Di bagian paling bawah dokumen, setelah tabel data.
          ═══════════════════════════════════════════════════════════════════ --}}
+    <div style="margin-top: 15px; font-size: 8px; color: #4b5563;">
+        <strong>Catatan:</strong> Dokumen ini merupakan laporan resmi rekapitulasi pengiriman dan pendapatan operasional perusahaan. Segala bentuk perbedaan data harus segera dilaporkan dan diverifikasi dengan pihak keuangan.
+    </div>
+
     @if (count($pengiriman) > 0)
     <table class="sig-table" cellpadding="0" cellspacing="0">
         <tr>
-            <td>
+            <td style="width: 50%;">
                 <div class="sig-title">Mengetahui,</div>
-                <div class="sig-line">&nbsp;</div>
+                <div class="sig-line" style="width: 200px; margin: 0 auto 4px auto;">&nbsp;</div>
                 <div class="sig-name">(________________________)</div>
-                <div class="muted small">Pimpinan / Manager</div>
+                <div class="muted small">Penanggung Jawab Operasional</div>
             </td>
-            <td>
+            <td style="width: 50%;">
                 <div class="sig-title">Menyetujui,</div>
-                <div class="sig-line">&nbsp;</div>
+                <div class="sig-line" style="width: 200px; margin: 0 auto 4px auto;">&nbsp;</div>
                 <div class="sig-name">(________________________)</div>
-                <div class="muted small">Kepala Operasional</div>
-            </td>
-            <td>
-                <div class="sig-title">Dibuat oleh,</div>
-                <div class="sig-line">&nbsp;</div>
-                <div class="sig-name">(________________________)</div>
-                <div class="muted small">Admin SuperStart</div>
+                <div class="muted small">Pemilik PT (Direktur)</div>
             </td>
         </tr>
     </table>

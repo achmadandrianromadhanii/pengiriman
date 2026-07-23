@@ -383,6 +383,18 @@
     animation: scaleInSoft 0.35s ease-out both;
 }
 
+/* ── [UPDATE: VUE TRANSITION — FADE] ──────────────────────────
+   Fungsi: Animasi fade-in/fade-out untuk popup glass loading di Report Center.
+   Cara Kerja: Vue <Transition name="fade"> otomatis menambahkan class ini. */
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity 0.25s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+    opacity: 0;
+}
+
 /* ── MOBILE APP STYLES (V50+) ──────────────────── */
 /* HANYA berlaku di < 768px - Desktop TIDAK terpengaruh */
 @media (max-width: 767px) {
