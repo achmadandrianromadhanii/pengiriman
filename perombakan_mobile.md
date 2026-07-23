@@ -1,61 +1,76 @@
-# ============================================================================
-# FINAL REPORT CENTER PRODUCTION POLISH
-# MOBILE REPORT ONLY
-# ============================================================================
+# =============================================================================
+# SOFTSEND MOBILE LOGIN
+# FINAL PREMIUM ENTERPRISE LOGIN V3
+# TARGET : MOBILE LOGIN PAGE ONLY
+# =============================================================================
 
-Lakukan penyempurnaan akhir terhadap halaman Report Center Mobile.
+## ROLE
 
-JANGAN mengubah Dashboard.
+Bertindak sebagai Principal Product Designer, Senior UI/UX Engineer, Mobile Performance Engineer, Enterprise UX Specialist, dan Frontend Architect.
 
-JANGAN mengubah halaman lain.
+Tugasmu adalah melakukan FINAL REDESIGN halaman Login Mobile agar memiliki kualitas setara aplikasi enterprise modern.
 
-JANGAN mengubah Backend, Database, API, maupun Business Logic.
+Fokus HANYA pada halaman Login Mobile.
 
-Fokus hanya pada Report Center Mobile.
+Jangan mengubah Dashboard.
 
-------------------------------------------------------------------------------
+Jangan mengubah halaman lain.
 
-## 1. Operational Status Bar (Ganti Area yang Dilingkari)
+Jangan mengubah Backend, Database, API, Route, maupun Business Logic.
 
-Hapus informasi user yang tampil dua kali.
+===============================================================================
 
-Jangan tampilkan kembali nama user.
+# DESIGN GOAL
 
-Ganti area tersebut menjadi Operational Status Bar.
+Halaman Login harus terasa:
 
-Isi:
+• Premium
+• Enterprise
+• Cepat
+• Ringan
+• Elegan
+• Mobile First
+• Modern
+• High End
+• Minimal namun eksklusif
 
-- Status Sinkronisasi
-- Periode Aktif
-- Waktu Update Terakhir
-- Status Sistem
+===============================================================================
 
-Contoh:
+# PERFORMANCE (WAJIB)
 
-🟢 Sinkronisasi Aktif
+Pastikan:
 
-Periode:
-Bulan Ini
+• Tidak ada lag saat Email dan Password difokuskan.
+• Keyboard muncul tanpa membuat layout bergeser.
+• Tidak ada backdrop-filter besar.
+• Shadow ringan.
+• Semua animasi memakai transform + opacity.
+• Tidak ada animasi background yang berjalan terus-menerus.
+• Tidak ada render ulang saat mengetik.
 
-Terakhir diperbarui:
+===============================================================================
 
-23 Jul 2026 • 20:31 WIB
+# HERO
 
-Data harus realtime mengikuti waktu server.
+Hero Full Bleed.
 
-Tidak menggunakan waktu browser.
+Tinggi sekitar 38% layar.
 
-------------------------------------------------------------------------------
-
-## 2. Background
-
-Perbarui Decorative Canvas.
-
-Gunakan:
+Gunakan 4 Layer:
 
 Layer 1
 
 Gradient
+
+#1E40AF
+
+↓
+
+#4F46E5
+
+↓
+
+#7C3AED
 
 Layer 2
 
@@ -63,203 +78,347 @@ Glow
 
 Layer 3
 
-Contour Pattern
+Contour Line
+
+Stroke
+
+2.8px
+
+Color
+
+#818CF8
+
+Opacity
+
+12%
 
 Layer 4
 
-Wave Pattern
+Mesh Wave
 
-Layer 5
+Stroke
 
-Noise
+2.4px
 
-Pattern dibuat lebih halus.
+Color
+
+#60A5FA
+
+Opacity
+
+10%
+
+Pattern harus saling berlawanan.
+
+Semua memenuhi sisi kiri dan kanan layar.
+
+Tidak boleh ada sisi putih.
+
+===============================================================================
+
+# LOGO
+
+Gunakan logo asli.
+
+Resolusi tinggi.
+
+PNG transparan.
+
+Ukuran:
+
+72px.
+
+Tambahkan shadow tipis.
+
+Susunan:
+
+Logo
+
+↓
+
+SoftSend
+
+↓
+
+Premium Delivery Management
+
+===============================================================================
+
+# LOGIN CARD
+
+Radius
+
+30px.
+
+Padding
+
+24px.
+
+Margin
+
+20px.
+
+Shadow ringan.
+
+Card overlap Hero sekitar 22px.
+
+===============================================================================
+
+# FORM
+
+Tambahkan label:
+
+Administrator Login
+
+Gunakan ikon Lucide:
+
+Mail
+
+LockKeyhole
+
+Eye
+
+EyeOff
+
+Input:
+
+52px.
+
+Radius
+
+16px.
+
+Border tipis.
+
+===============================================================================
+
+# REMEMBER ME
+
+Checkbox modern.
+
+Ukuran
+
+20px.
+
+Area klik besar.
+
+Pastikan fungsi "Tetap Masuk" bekerja.
+
+===============================================================================
+
+# BUTTON
+
+Gradient:
+
+#2563EB
+
+↓
+
+#6D28D9
+
+Tambahkan:
+
+ArrowRight
+
+Ripple
+
+Pressed Scale
+
+Glow tipis.
+
+Teks:
+
+Login
+
+===============================================================================
+
+# LOADING
+
+Saat Login ditekan:
+
+Button berubah menjadi Loading.
+
+Spinner.
+
+Memverifikasi akun...
+
+Popup Success.
+
+Dashboard.
+
+Tidak menggunakan toast.
+
+===============================================================================
+
+# FOOTER
+
+Powered by
+
+NOCTRYNX CORP
+
+Typography:
+
+Powered by
+
+10px
+
+Medium
+
+NOCTRYNX CORP
+
+12px
+
+SemiBold
+
+Letter Spacing
+
+0.18em
+
+===============================================================================
+
+# BOTTOM HERO
+
+Gunakan Decorative Bottom Hero.
+
+Gradient:
+
+#172554
+
+↓
+
+#1E3A8A
+
+↓
+
+#2563EB
+
+Pattern:
+
+Wave Mesh.
+
+Stroke:
+
+2.6px.
+
+Color:
+
+#60A5FA
 
 Opacity:
 
-Contour 4%
+10%.
 
-Wave 3%
+Berbeda dengan Hero atas.
 
-Noise 1%
+===============================================================================
 
-Background memenuhi 100vw.
+# MICRO INTERACTION
 
-Tidak ada warna putih di sisi kiri dan kanan.
+Fade
 
-Bentuk berupa setengah lingkaran besar dengan transisi organik.
+Slide
 
-------------------------------------------------------------------------------
+Button Ripple
 
-## 3. Jenis Laporan
+Input Focus
 
-Gunakan segmented control horizontal.
+Checkbox Animation
 
-Pengiriman | Pendapatan | Operasional
+Shake Error
 
-Tinggi sekitar 44–48px.
+Success Popup
 
-Lebar menyesuaikan layar.
+Durasi
 
-------------------------------------------------------------------------------
+150–250ms.
 
-## 4. Tombol PDF
+===============================================================================
 
-Gunakan satu tombol utama.
+# ACCEPTANCE
 
-Ikon Lucide FileText.
+✔ Hero premium.
+✔ Logo HD.
+✔ Pattern lebih tebal dan jelas.
+✔ Bottom Hero navy.
+✔ Wave Mesh berbeda dari Hero atas.
+✔ Form ringan.
+✔ Login cepat.
+✔ Tidak ada lag.
+✔ Powered by NOCTRYNX CORP.
+✔ Tidak mengubah halaman selain Login Mobile.
 
-Judul:
+Ilustrasi Target
+████████████████████████████████████████
+▓▓ HERO ▓▓
+Gradient + Glow
+Contour (ungu kebiruan)
+Mesh Wave (biru muda)
 
-Buat Laporan PDF
+               [ LOGO HD ]
 
-Subjudul:
+              SoftSend
+     Premium Delivery Management
 
-Dokumen resmi siap cetak A4
+╭────────────────────────────────────╮
+│ Administrator Login                │
+│ ✉ Email                            │
+│ 🔒 Password                    👁  │
+│ ☑ Tetap Masuk                      │
+│                                    │
+│        Login →                     │
+╰────────────────────────────────────╯
 
-Tambahkan ikon panah di kanan.
+Powered by
+NOCTRYNX CORP
 
-------------------------------------------------------------------------------
+▓▓ BOTTOM HERO ▓▓
+Navy Gradient
+Wave Mesh (berbeda dari atas)
+████████████████████████████████████████
 
-## 5. Loading
+Wireframe Baru
+████████████████████████████████████
 
-Saat tombol ditekan:
+      HERO PREMIUM
 
-- Blur background
-- Modal kecil di tengah
-- Spinner
-- Progress
-- Success
-- Auto download
+ Gradient
 
-Tidak membuka tab baru.
+ Glow
 
-Tetap berada di halaman yang sama.
+ Contour
 
-------------------------------------------------------------------------------
+ Mesh Wave
 
-## 6. Riwayat Export
+        LOGO HD
 
-Halaman utama hanya menampilkan maksimal 5 export terbaru.
+      SoftSend
 
-Jika jumlah export lebih dari 5:
+Premium Delivery Management
 
-Riwayat lama otomatis dipindahkan ke arsip.
+══════════════════════════════
 
-Pada halaman utama tampilkan:
+Administrator Login
 
-"Lihat Arsip"
+Email
 
-Saat ditekan:
+Password
 
-Buka Bottom Sheet fullscreen.
+☑ Tetap Masuk
 
-Bukan halaman baru.
+Login →
 
-Bottom Sheet memiliki scroll internal.
+══════════════════════════════
 
-Setiap item menampilkan:
+Powered by
 
-- Nama file
-- Tanggal
-- Hari
-- Bulan
-- Tahun
-- Jam
-- Ukuran file
-- Tombol Unduh Lagi
+NOCTRYNX CORP
 
-Semua data menggunakan waktu server secara realtime.
+══════════════════════════════
 
-------------------------------------------------------------------------------
+BOTTOM HERO
 
-## 7. PDF
+Navy Gradient
 
-Rombak total isi PDF.
+Wave Mesh Pattern
 
-Format:
-
-- Logo PT
-- Nama PT
-- Judul Laporan
-- Periode
-- Cabang
-- Operator
-- Tanggal Cetak
-- Ringkasan Operasional
-- Tabel Pengiriman
-- Catatan
-- Tanda Tangan Pemilik PT
-- Tanda Tangan Penanggung Jawab
-- Footer
-
-Tanpa chart.
-
-Tanpa KPI.
-
-Tanpa card.
-
-Tanpa dekorasi dashboard.
-
-Gunakan layout laporan resmi perusahaan.
-
-Format A4 Portrait.
-
-------------------------------------------------------------------------------
-
-## 8. Nama File
-
-Gunakan:
-
-Laporan-Pengiriman-YYYY-MM.pdf
-
-Singkat.
-
-Profesional.
-
-------------------------------------------------------------------------------
-
-## Acceptance Criteria
-
-✔ Area user tidak tampil dua kali.
-✔ Diganti menjadi Operational Status Bar.
-✔ Background lebih halus dan premium.
-✔ Loading tetap di halaman yang sama.
-✔ Riwayat utama maksimal 5 item.
-✔ Arsip menggunakan Bottom Sheet.
-✔ PDF dibuat ulang menjadi laporan resmi.
-✔ Dua kolom tanda tangan.
-✔ Semua waktu mengikuti server secara realtime.
-✔ Tidak ada perubahan pada halaman selain Report Center Mobile.
-
-Wireframe Target
-╔════════════════════════════════════════════╗
-║ 👤 Ryan                          🔔 🌙      ║
-╠════════════════════════════════════════════╣
-║ 🟢 Sinkronisasi Aktif                      ║
-║ Periode : Bulan Ini                        ║
-║ Update : 23 Jul 2026 • 20:31 WIB           ║
-╠════════════════════════════════════════════╣
-║ 📄 Report Center             [ READY ]     ║
-║ Laporan Operasional Perusahaan             ║
-╚════════════════════════════════════════════╝
-
-┌──────────────────────────────────────────┐
-│ 📅 Bulan Ini ▼                           │
-└──────────────────────────────────────────┘
-
-┌────────────┬────────────┬────────────┐
-│Pengiriman ✓│Pendapatan  │Operasional │
-└────────────┴────────────┴────────────┘
-
-┌──────────────────────────────────────────┐
-│ 📄 Buat Laporan PDF                  →   │
-│ Dokumen resmi siap cetak A4              │
-└──────────────────────────────────────────┘
-
-🕒 Riwayat Terbaru (maks. 5)
-
-📄 Laporan-Pengiriman-2026-07.pdf
-23 Jul 2026 • 20:31 • 1.2 MB
-
-[Lihat Arsip]
+████████████████████████████████████
