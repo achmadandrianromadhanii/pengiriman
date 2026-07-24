@@ -159,7 +159,7 @@ class LaporanController extends Controller
             'printedAt' => now(),
         ];
 
-        $filename = 'Laporan_SuperStart_'.$periode.'_'.$start->format('Ymd').'-'.$end->format('Ymd').'.pdf';
+        $filename = 'Laporan Pengiriman Barang.pdf';
 
         // UPDATE: Ekspor dikonversi menjadi mode Landscape (parameter 'L')
         // Fungsi: Mencegah tabel yang kompleks agar tidak berantakan/melipat (wrap)

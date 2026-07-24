@@ -1,0 +1,1 @@
+import{C as e,L as t,Y as n}from"./app-D1HW0Tyx.js";var r={__name:`SkeletonLoader`,props:{className:{type:String,default:``}},setup(r){return(i,a)=>(t(),e(`div`,{class:n([`skeleton`,r.className]),"aria-hidden":`true`},null,2))}};export{r as t};

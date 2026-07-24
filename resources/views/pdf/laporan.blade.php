@@ -1,238 +1,262 @@
 <!doctype html>
 <html lang="id">
-<!--
-  LAPORAN PDF SUPERSTART — FORMAT A4 LANDSCAPE (TCPDF)
-  =====================================================
-  Fungsi  : Mencetak laporan data pengiriman dalam format PDF A4 Landscape.
-  Engine  : TCPDF (bukan DomPDF). Semua CSS harus kompatibel TCPDF.
-  Fitur   : 1. Header dokumen (nama perusahaan + info cetak)
-             2. Ringkasan KPI (Total Pengiriman, Pendapatan, Terkirim, Gagal)
-             3. Kotak info periode filter
-             4. Tabel data dengan 10 kolom proporsional
-             5. Grand Total di footer tabel
-             6. Area tanda tangan pengesahan
-  Catatan : TCPDF TIDAK mendukung: position:fixed, border-radius, flexbox, grid.
-            Semua layout menggunakan <table> dengan inline style sederhana.
--->
+
 <head>
     <meta charset="utf-8">
-    <title>Laporan SuperStart</title>
+    <title>LAPORAN OPERASIONAL PENGIRIMAN</title>
     <style>
-        /* ── Reset & Base ────────────────────────────────────────── */
-        /* Fungsi: Mengatur font dasar dan warna dokumen PDF */
+        /* ── Base ───────────────────────────────────────────────── */
+        /* UPDATE: Menggunakan font resmi Inter/Source Sans 3/Noto Sans */
+        /* Fungsi: Menetapkan font stack untuk memastikan teks terlihat profesional. */
+        @page {
+            margin-top: 10mm;
+            margin-bottom: 12mm;
+            margin-left: 15mm;
+            margin-right: 15mm;
+        }
+
         body {
-            font-family: DejaVu Sans, sans-serif;
-            font-size: 9px;
-            color: #1f2937;
+            font-family: 'Inter', 'Source Sans 3', 'Noto Sans', sans-serif;
+            font-size: 10pt;
+            color: #2a2a2a;
+            /* Text: #2A2A2A */
             margin: 0;
             padding: 0;
         }
-
-        /* ── Utilitas Umum ────────────────────────────────────────── */
-        /* Fungsi: Kelas bantu untuk alignment dan styling teks */
-        .muted { color: #6b7280; }
-        .small { font-size: 8px; }
-        .bold  { font-weight: 700; }
-        .right { text-align: right; }
-        .center { text-align: center; }
-        .nowrap { white-space: nowrap; }
 
         /* ── Header Dokumen ───────────────────────────────────────── */
-        /* Fungsi: Bagian atas dokumen, berisi nama perusahaan dan info cetak */
-        .doc-header {
+        .header-container {
             width: 100%;
-            border-bottom: 2px solid #4f46e5;
-            padding-bottom: 8px;
-            margin-bottom: 14px;
+            border-bottom: 2px solid #163b7a;
+            /* Primary: #163B7A */
+            padding-bottom: 5px;
+            margin-bottom: 8px;
         }
-        .doc-header td {
-            vertical-align: middle;
-            padding: 0;
+
+        .header-logo {
+            width: 75px;
+            height: auto;
+            margin-right: 15px;
+            float: left;
         }
-        .brand-name {
-            font-size: 18px;
-            font-weight: 800;
-            color: #4f46e5;
+
+        .header-text {
+            float: left;
+            padding-top: 5px;
+        }
+
+        .company-name {
+            font-size: 16pt;
+            font-weight: bold;
+            color: #163b7a;
             margin: 0;
-            padding: 0;
-        }
-        .brand-desc {
-            font-size: 9px;
-            color: #6b7280;
-            margin: 2px 0 0 0;
-        }
-        .header-info {
-            text-align: right;
-            font-size: 9px;
-            color: #6b7280;
-        }
-        .header-info strong {
-            font-size: 11px;
-            color: #1f2937;
-        }
-
-        /* ── Ringkasan KPI ────────────────────────────────────────── */
-        /* Fungsi: 4 kotak metrik utama di atas tabel data */
-        .kpi-table {
-            width: 100%;
-            margin-bottom: 14px;
-        }
-        .kpi-table td {
-            width: 25%;
-            padding: 8px 10px;
-            border: 1px solid #e5e7eb;
-            vertical-align: top;
-            background-color: #f9fafb;
-        }
-        .kpi-label {
-            font-size: 8px;
-            color: #6b7280;
+            line-height: 1.2;
             text-transform: uppercase;
-            font-weight: 700;
-            letter-spacing: 0.3px;
-        }
-        .kpi-value {
-            font-size: 14px;
-            font-weight: 800;
-            color: #1f2937;
-            margin-top: 4px;
         }
 
-        /* ── Kotak Info Filter (Periode) ──────────────────────────── */
-        /* Fungsi: Menampilkan parameter filter yang digunakan saat cetak */
-        .meta-table {
-            width: 100%;
-            margin-bottom: 14px;
-            border: 1px solid #e5e7eb;
+        .company-tagline {
+            font-size: 10pt;
+            color: #475569;
+            margin: 3px 0 5px 0;
         }
-        .meta-table td {
-            padding: 6px 10px;
-            font-size: 9px;
+
+        .company-contact {
+            font-size: 9pt;
+            color: #475569;
+        }
+
+        .doc-type {
+            float: right;
+            padding-top: 5px;
+            text-align: right;
+            font-size: 10pt;
+            color: #475569;
+            font-weight: bold;
+        }
+
+        /* ── Judul Laporan ────────────────────────────────────────── */
+        .title-container {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .report-title {
+            font-size: 18pt;
+            /* Judul: 18pt */
+            font-weight: bold;
+            color: #163b7a;
+            margin: 0 0 5px 0;
+        }
+
+        .report-period {
+            font-size: 10pt;
+            color: #475569;
+        }
+
+        /* ── Subjudul (Section) ───────────────────────────────────── */
+        .section-title {
+            font-size: 12pt;
+            /* Subjudul: 12pt */
+            font-weight: bold;
+            color: #163b7a;
+            margin: 8px 0 4px 0;
+            text-transform: uppercase;
+            border-bottom: 1px solid #d8dee8;
+            /* Border: #D8DEE8 */
+            padding-bottom: 3px;
+        }
+
+        /* ── List/Tabel Metadata (Informasi Laporan) ──────────────── */
+        .meta-list {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .meta-list td {
+            padding: 4px 0;
+            font-size: 10pt;
             vertical-align: top;
         }
-        .meta-key {
-            font-weight: 700;
-            width: 12%;
-            color: #374151;
-        }
-        .meta-sep {
-            width: 2%;
-            color: #374151;
-        }
-        .meta-val {
-            width: 19%;
+
+        .meta-label {
+            width: 200px;
+            color: #475569;
+            font-weight: bold;
         }
 
-        /* ── Tabel Data Utama ─────────────────────────────────────── */
-        /* Fungsi: Tabel utama berisi seluruh data pengiriman yang difilter */
-        /* Cara Kerja: 10 kolom dengan lebar proporsional yang dijumlahkan = 100% */
-        /*             Ini mencegah kolom saling menindih pada kertas A4 Landscape */
+        .meta-separator {
+            width: 20px;
+            color: #475569;
+        }
+
+        .meta-value {
+            color: #2a2a2a;
+            font-weight: bold;
+        }
+
+        /* ── List/Tabel Ringkasan Operasional ─────────────────────── */
+        .summary-list {
+            width: 50%;
+            margin-bottom: 10px;
+        }
+
+        .summary-list td {
+            padding: 2px 0;
+            font-size: 10pt;
+        }
+
+        .summary-label {
+            width: 250px;
+            color: #475569;
+            font-weight: bold;
+        }
+
+        .summary-value {
+            text-align: right;
+            color: #2a2a2a;
+            font-weight: bold;
+        }
+
+        /* ── Tabel Data Pengiriman ────────────────────────────────── */
         .data-table {
             width: 100%;
             border-collapse: collapse;
+            margin-bottom: 10px;
         }
+
         .data-table th {
-            background-color: #4f46e5;
+            background-color: #163b7a;
+            /* Header Navy: #163B7A */
             color: #ffffff;
+            font-size: 10pt;
+            /* Isi tabel: 10pt */
+            font-weight: bold;
             text-align: left;
-            padding: 7px 5px;
-            font-size: 8px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-            border: 1px solid #4338ca;
+            padding: 5px 4px;
+            border: 1px solid #163b7a;
         }
+
         .data-table td {
-            padding: 6px 5px;
-            font-size: 8.5px;
+            font-size: 10pt;
+            /* Isi putih (background) */
+            color: #2a2a2a;
+            /* Text: #2A2A2A */
+            padding: 4px 4px;
+            border: 1px solid #d8dee8;
+            /* Border abu tipis: #D8DEE8 */
             vertical-align: top;
-            /* UPDATE: Garis border solid di SETIAP sel tabel */
-            /* Fungsi: Mencegah data "bocor" keluar kolom, membuat tabel tertata rapi */
-            border: 1px solid #d1d5db;
+            background-color: #ffffff;
         }
 
-        /* ── Warna Status Pengiriman di PDF ────────────────────────── */
-        /* Fungsi: Menjadikan sel sebagai blok warna murni untuk merepresentasikan status */
-        /* Cara Kerja: Warna solid terang tanpa teks agar laporan terlihat bersih */
-        .status-terkirim         { background-color: #10b981; } /* Hijau (Emerald) */
-        .status-dalam-perjalanan { background-color: #3b82f6; } /* Biru */
-        .status-diproses         { background-color: #f59e0b; } /* Kuning/Amber */
-        .status-pending          { background-color: #9ca3af; } /* Abu-abu */
-        .status-tiba-kota        { background-color: #6366f1; } /* Indigo */
-        .status-sedang-diantar   { background-color: #8b5cf6; } /* Ungu (Violet) */
-        .status-gagal            { background-color: #ef4444; } /* Merah */
-        .status-dibatalkan       { background-color: #ef4444; } /* Merah */
-
-        /* ── Baris Grand Total ────────────────────────────────────── */
-        /* Fungsi: Menampilkan total biaya dari seluruh data */
-        .grand-total td {
-            border: 1px solid #4338ca;
-            background-color: #eef2ff;
-            font-weight: 800;
-            font-size: 10px;
-            padding: 8px 5px;
-            color: #1f2937;
+        .text-center {
+            text-align: center;
         }
 
-        /* ── Footer Dokumen ───────────────────────────────────────── */
-        /* Fungsi: Catatan kaki di bagian bawah dokumen */
-        .doc-footer {
-            width: 100%;
-            margin-top: 12px;
-            border-top: 1px solid #e5e7eb;
-            padding-top: 6px;
-        }
-        .doc-footer td {
-            font-size: 8px;
-            color: #9ca3af;
-            padding: 2px 0;
-            vertical-align: middle;
+        .text-right {
+            text-align: right;
         }
 
-        /* ── Area Tanda Tangan ────────────────────────────────────── */
-        /* Fungsi: Ruang resmi untuk tanda tangan pengesahan laporan */
+        /* ── Catatan Operasional ──────────────────────────────────── */
+        .notes-box {
+            font-size: 9.5pt;
+            color: #475569;
+            margin-bottom: 15px;
+        }
+
+        /* ── Tanda Tangan ─────────────────────────────────────────── */
         .sig-table {
             width: 100%;
-            margin-top: 30px;
+            page-break-inside: avoid;
         }
+
         .sig-table td {
-            width: 33%;
-            text-align: center;
+            width: 50%;
+            font-size: 10pt;
+            color: #2a2a2a;
             vertical-align: top;
-            padding: 0 20px;
-            font-size: 9px;
         }
+
         .sig-title {
-            font-weight: 700;
-            margin-bottom: 55px;
+            margin-bottom: 40px;
         }
-        .sig-line {
-            border-bottom: 1px solid #000;
-            margin: 0 15px 4px;
-        }
+
         .sig-name {
-            font-weight: 700;
-            font-size: 9px;
+            font-weight: bold;
+            text-decoration: underline;
+        }
+
+        /* ── Footer ───────────────────────────────────────────────── */
+        .footer-table {
+            width: 100%;
+            margin-top: 10px;
+            border-top: 1px solid #d8dee8;
+            /* Border: #D8DEE8 */
+            padding-top: 5px;
+            font-size: 8pt;
+            /* Footer: 8pt */
+            color: #475569;
+        }
+
+        .page-number:before {
+            content: counter(page);
         }
     </style>
 </head>
 
 <body>
     @php
-        /**
-         * FUNGSI PEMBANTU BLADE
-         * Fungsi: Membantu memformat data agar kode HTML tetap bersih dan mudah dibaca.
-         * Letak: Didefinisikan di awal body agar bisa dipanggil di seluruh template.
-         */
-
-        // Format angka menjadi Rupiah Indonesia (contoh: 326901 -> "Rp 326.901")
-        function formatRupiahLaporan($angka) {
-            return 'Rp ' . number_format((float)$angka, 0, ',', '.');
+        // [UPDATE: FUNGSI HELPER BLADE]
+        // Fungsi: Membantu mengubah data mentah menjadi format rapi dan standar Indonesia
+        function formatRupiah($angka)
+        {
+            return 'Rp ' . number_format((float) $angka, 0, ',', '.');
         }
 
-        // Format tanggal dari "31 May 2026 20:00" menjadi "31 Mei 2026"
-        function formatTanggalLaporan($tgl) {
-            if (!$tgl) return '-';
+        function formatTanggal($tgl)
+        {
+            if (!$tgl) {
+                return '-';
+            }
             try {
                 return \Carbon\Carbon::parse($tgl)->translatedFormat('d M Y');
             } catch (\Throwable $e) {
@@ -240,243 +264,249 @@
             }
         }
 
-        // Mengubah snake_case status menjadi label yang rapi
-        // Contoh: "dalam_perjalanan" -> "Dalam Perjalanan"
-        function statusLabelLaporan($status) {
+        function statusLabel($status)
+        {
             $map = [
-                'pending'             => 'Menunggu',
-                'diproses'            => 'Diproses',
-                'dalam_perjalanan'    => 'Dalam Perjalanan',
+                'pending' => 'Menunggu',
+                'diproses' => 'Diproses',
+                'dalam_perjalanan' => 'Dalam Perjalanan',
                 'tiba_di_kota_tujuan' => 'Tiba Di Kota Tujuan',
-                'sedang_diantar'      => 'Sedang Diantar',
-                'terkirim'            => 'Terkirim',
-                'gagal'               => 'Gagal',
-                'dibatalkan'          => 'Dibatalkan',
+                'sedang_diantar' => 'Sedang Diantar',
+                'terkirim' => 'Terkirim',
+                'gagal' => 'Gagal',
+                'dibatalkan' => 'Dibatalkan',
             ];
             return $map[strtolower($status)] ?? ucwords(str_replace('_', ' ', $status));
         }
 
-        // Mengubah jenis_layanan menjadi label rapi
-        function layananLabelLaporan($layanan) {
+        function layananLabel($layanan)
+        {
             $map = [
                 'express' => 'Express',
                 'reguler' => 'Reguler',
-                'kargo'   => 'Kargo',
+                'kargo' => 'Cargo',
                 'ekonomi' => 'Ekonomi',
             ];
             return $map[strtolower($layanan)] ?? ucfirst($layanan);
         }
 
-        /**
-         * Fungsi: Mengembalikan nama kelas CSS berdasarkan status pengiriman.
-         * Cara Kerja: Setiap status dipetakan ke kelas CSS yang memiliki
-         *             warna latar dan teks berbeda agar mudah dibedakan secara visual.
-         * Letak: Digunakan di kolom STATUS pada tabel data.
-         */
-        function statusCssClass($status) {
-            $map = [
-                'terkirim'            => 'status-terkirim',
-                'dalam_perjalanan'    => 'status-dalam-perjalanan',
-                'diproses'            => 'status-diproses',
-                'pending'             => 'status-pending',
-                'tiba_di_kota_tujuan' => 'status-tiba-kota',
-                'sedang_diantar'      => 'status-sedang-diantar',
-                'gagal'               => 'status-gagal',
-                'dibatalkan'          => 'status-dibatalkan',
-            ];
-            return $map[strtolower($status)] ?? 'status-pending';
-        }
+        // [UPDATE: AGGREGATE PERHITUNGAN RINGKASAN DATA]
+        // Fungsi: Menghitung total resi, pendapatan, sukses/gagal langsung di view memory (aman krn <2000 data).
+        $pengirimanCollection = collect($pengiriman);
+        $totalResi = $pengirimanCollection->count();
+        $totalPendapatan = $pengirimanCollection->sum('total_biaya');
+        $pengirimanBerhasil = $pengirimanCollection->where('status', 'terkirim')->count();
+        $pengirimanKendala = $pengirimanCollection->whereIn('status', ['gagal', 'dibatalkan'])->count();
+        $jmlReguler = $pengirimanCollection->where('jenis_layanan', 'reguler')->count();
+        $jmlExpress = $pengirimanCollection->where('jenis_layanan', 'express')->count();
+        $jmlCargo = $pengirimanCollection->where('jenis_layanan', 'kargo')->count();
+        $jmlEkonomi = $pengirimanCollection->where('jenis_layanan', 'ekonomi')->count();
 
-        // Label periode yang lebih mudah dibaca
-        function periodeLabelLaporan($periode) {
-            $map = [
-                'hari_ini'   => 'Hari Ini',
-                'minggu_ini' => 'Minggu Ini',
-                'bulan_ini'  => 'Bulan Ini',
-                'bulan_lalu' => 'Bulan Lalu',
-                'tahun_ini'  => 'Tahun Ini',
-                'custom'     => 'Rentang Khusus',
-            ];
-            return $map[$periode] ?? ucwords(str_replace('_', ' ', $periode));
+        // [UPDATE: LOGO BASE64 GENERATOR]
+        // Fungsi: Mencegah logo gagal dirender TCPDF akibat akses local path Windows dengan mengubahnya ke string Base64 murni.
+        $logoPath = public_path('images/logo-softsend-hd.png');
+        $logoData = '';
+        if (file_exists($logoPath)) {
+            $logoData = 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath));
         }
-
-        // Menghitung grand total biaya dari seluruh data pada periode ini
-        $grandTotal = collect($pengiriman)->sum('total_biaya');
     @endphp
 
-    {{-- ═══════════════════════════════════════════════════════════════════
-         BAGIAN 1: HEADER DOKUMEN
-         Fungsi: Menampilkan identitas perusahaan dan info cetak di bagian atas.
-         Cara Kerja: Tabel 2 kolom — kiri untuk brand, kanan untuk info cetak.
-         ═══════════════════════════════════════════════════════════════════ --}}
-    <table class="doc-header" cellpadding="0" cellspacing="0">
+    <!-- ─────────────────────────────────────────────────────────────
+         HEADER DOKUMEN
+         Sesuai Wireframe: Logo, Perusahaan, Tagline, dan Dokumen Internal
+    ────────────────────────────────────────────────────────────── -->
+    <div class="header-container">
+        @if ($logoData)
+            <img src="{{ $logoData }}" class="header-logo" alt="Logo">
+        @else
+            <div
+                style="width: 75px; height: 75px; background-color: #1e293b; color: white; line-height: 75px; font-size: 24px; font-weight: bold; text-align:center; float: left; margin-right: 15px;">
+                SS</div>
+        @endif
+
+        <div class="header-text">
+            <div class="company-name">SOFTSEND LOGISTICS</div>
+            <div class="company-tagline">Premium Delivery Management</div>
+            <div class="company-contact">
+                Jl. Sudirman No. 45, Jakarta Pusat, DKI Jakarta • (021) 555-0192 • www.softsend.co.id
+            </div>
+        </div>
+
+        <div class="doc-type">
+            Dokumen Internal
+        </div>
+
+        <div style="clear: both;"></div>
+    </div>
+
+    <!-- ─────────────────────────────────────────────────────────────
+         JUDUL UTAMA LAPORAN
+    ────────────────────────────────────────────────────────────── -->
+    <div class="title-container">
+        <div class="report-title">LAPORAN OPERASIONAL PENGIRIMAN</div>
+        <div class="report-period">
+            Periode : {{ formatTanggal($filters['dari']) }} – {{ formatTanggal($filters['sampai']) }}
+        </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────────────────────────
+         INFORMASI LAPORAN (METADATA)
+    ────────────────────────────────────────────────────────────── -->
+    <div class="section-title">INFORMASI LAPORAN</div>
+    <table class="meta-list" cellpadding="0" cellspacing="0">
         <tr>
-            <td style="width: 15%; text-align: center;">
-                <!-- Placeholder Logo -->
-                <div style="width: 50px; height: 50px; background-color: #4f46e5; color: white; line-height: 50px; font-size: 24px; font-weight: bold; border-radius: 8px; margin: 0 auto;">SS</div>
-            </td>
-            <td style="width: 45%;">
-                <div class="brand-name">SUPERSTART LOGISTIK</div>
-                <div class="brand-desc">Jl. Sudirman No. 45, Jakarta Pusat, DKI Jakarta<br>Telp: (021) 555-0192 | Web: www.superstart.co.id</div>
-            </td>
-            <td style="width: 40%;" class="header-info">
-                <strong>LAPORAN OPERASIONAL PERUSAHAAN</strong><br>
-                Periode: {{ periodeLabelLaporan($filters['periode']) }}<br>
-                Cabang: Jakarta Pusat<br>
-                Operator: Admin SuperStart<br>
-                Dicetak: {{ \Carbon\Carbon::parse($printedAt)->translatedFormat('d M Y, H:i') }} WIB
-            </td>
+            <td class="meta-label">No. Dokumen</td>
+            <td class="meta-separator">:</td>
+            <td class="meta-value">SS-OPS-{{ \Carbon\Carbon::parse($printedAt)->format('Ymd') }}</td>
+        </tr>
+        <tr>
+            <td class="meta-label">Operator</td>
+            <td class="meta-separator">:</td>
+            <td class="meta-value">Super Admin</td>
+        </tr>
+        <tr>
+            <td class="meta-label">Dicetak</td>
+            <td class="meta-separator">:</td>
+            <td class="meta-value">{{ \Carbon\Carbon::parse($printedAt)->translatedFormat('l, d F Y – H:i') }} WIB</td>
+        </tr>
+        <tr>
+            <td class="meta-label">Lokasi</td>
+            <td class="meta-separator">:</td>
+            <td class="meta-value">Single Office</td>
         </tr>
     </table>
 
-
-    {{-- ═══════════════════════════════════════════════════════════════════
-         BAGIAN 3: KOTAK INFO FILTER (PERIODE)
-         Fungsi: Menampilkan parameter filter yang aktif saat laporan dicetak
-                 agar pembaca tahu rentang waktu data yang disajikan.
-         ═══════════════════════════════════════════════════════════════════ --}}
-    <table class="meta-table" cellpadding="0" cellspacing="0">
+    <!-- ─────────────────────────────────────────────────────────────
+         RINGKASAN OPERASIONAL
+    ────────────────────────────────────────────────────────────── -->
+    <div class="section-title">RINGKASAN OPERASIONAL</div>
+    <table class="summary-list" cellpadding="0" cellspacing="0">
         <tr>
-            <td class="meta-key">Periode</td>
-            <td class="meta-sep">:</td>
-            <td class="meta-val">{{ periodeLabelLaporan($filters['periode']) }}</td>
-
-            <td class="meta-key">Dari Tanggal</td>
-            <td class="meta-sep">:</td>
-            <td class="meta-val">{{ formatTanggalLaporan($filters['dari']) }}</td>
-
-            <td class="meta-key">Sampai Tanggal</td>
-            <td class="meta-sep">:</td>
-            <td class="meta-val">{{ formatTanggalLaporan($filters['sampai']) }}</td>
+            <td class="summary-label">Total Pengiriman</td>
+            <td class="summary-value">{{ number_format($totalResi, 0, ',', '.') }}</td>
+        </tr>
+        <tr>
+            <td class="summary-label">Pengiriman Berhasil</td>
+            <td class="summary-value">{{ number_format($pengirimanBerhasil, 0, ',', '.') }}</td>
+        </tr>
+        <tr>
+            <td class="summary-label">Pengiriman Kendala</td>
+            <td class="summary-value">{{ number_format($pengirimanKendala, 0, ',', '.') }}</td>
+        </tr>
+        <tr>
+            <td class="summary-label">Total Pendapatan</td>
+            <td class="summary-value">{{ formatRupiah($totalPendapatan) }}</td>
+        </tr>
+        <tr>
+            <td colspan="2" style="height: 10px;"></td>
+        </tr> <!-- Spacer -->
+        <tr>
+            <td class="summary-label">Layanan Reguler</td>
+            <td class="summary-value">{{ number_format($jmlReguler, 0, ',', '.') }}</td>
+        </tr>
+        <tr>
+            <td class="summary-label">Layanan Express</td>
+            <td class="summary-value">{{ number_format($jmlExpress, 0, ',', '.') }}</td>
+        </tr>
+        <tr>
+            <td class="summary-label">Layanan Cargo</td>
+            <td class="summary-value">{{ number_format($jmlCargo, 0, ',', '.') }}</td>
+        </tr>
+        <tr>
+            <td class="summary-label">Layanan Ekonomi</td>
+            <td class="summary-value">{{ number_format($jmlEkonomi, 0, ',', '.') }}</td>
         </tr>
     </table>
 
-    {{-- ═══════════════════════════════════════════════════════════════════
-         BAGIAN 4: TABEL DATA PENGIRIMAN
-         Fungsi: Menampilkan seluruh data pengiriman yang sudah difilter.
-         Cara Kerja: Menggunakan 10 kolom dengan lebar proporsional yang
-                     dijumlahkan menjadi tepat 100%.
-         Proporsi Kolom (A4 Landscape = lebar efektif ~269mm):
-           NO=3% | TGL=9% | RESI=14% | PENGIRIM=13% | ASAL=9%
-           PENERIMA=13% | TUJUAN=9% | LAYANAN=8% | STATUS=10% | BIAYA=12%
-         ═══════════════════════════════════════════════════════════════════ --}}
+    <!-- ─────────────────────────────────────────────────────────────
+         DATA PENGIRIMAN UTAMA
+    ────────────────────────────────────────────────────────────── -->
+    <div class="section-title">DATA PENGIRIMAN</div>
     <table class="data-table" cellpadding="0" cellspacing="0">
         <thead>
             <tr>
-                <th style="width: 3%;"  class="center">NO</th>
-                <th style="width: 9%;">TANGGAL</th>
-                <th style="width: 14%;">NOMOR RESI</th>
-                <th style="width: 13%;">PENGIRIM</th>
-                <th style="width: 9%;">ASAL</th>
-                <th style="width: 13%;">PENERIMA</th>
-                <th style="width: 9%;">TUJUAN</th>
-                <th style="width: 8%;"  class="center">LAYANAN</th>
-                <th style="width: 10%;" class="center">STATUS</th>
-                <th style="width: 12%;" class="right">TOTAL BIAYA</th>
+                <th class="text-center" style="width:4%;">No</th>
+                <th style="width:9%;">Tanggal</th>
+                <th style="width:13%;">Nomor Resi</th>
+                <th style="width:12%;">Pengirim</th>
+                <th style="width:12%;">Penerima</th>
+                <th style="width:10%;">Asal</th>
+                <th style="width:10%;">Tujuan</th>
+                <th class="text-center" style="width:9%;">Layanan</th>
+                <th class="text-center" style="width:10%;">Status</th>
+                <th class="text-right" style="width:11%;">Total Biaya</th>
             </tr>
         </thead>
         <tbody>
             @forelse ($pengiriman as $i => $p)
                 <tr>
-                    {{-- Kolom 1: Nomor urut --}}
-                    <td class="center">{{ $i + 1 }}</td>
-
-                    {{-- Kolom 2: Tanggal dibuat (format Indonesia) --}}
-                    <td class="nowrap">{{ formatTanggalLaporan($p['created_at']) }}</td>
-
-                    {{-- Kolom 3: Nomor resi (font tebal agar menonjol) --}}
-                    <td class="bold">{{ $p['nomor_resi'] }}</td>
-
-                    {{-- Kolom 4: Nama pengirim --}}
+                    <td class="text-center">{{ $i + 1 }}</td>
+                    <td>{{ formatTanggal($p['created_at']) }}</td>
+                    <td style="font-weight: bold;">{{ $p['nomor_resi'] }}</td>
                     <td>{{ $p['pengirim_nama'] }}</td>
-
-                    {{-- Kolom 5: Kota asal pengirim --}}
-                    <td class="muted">{{ $p['asal_kota'] ?? '-' }}</td>
-
-                    {{-- Kolom 6: Nama penerima --}}
                     <td>{{ $p['penerima_nama'] }}</td>
-
-                    {{-- Kolom 7: Kota tujuan penerima --}}
-                    <td class="muted">{{ $p['tujuan_kota'] ?? '-' }}</td>
-
-                    {{-- Kolom 8: Jenis layanan (Express/Reguler/Kargo/Ekonomi) --}}
-                    <td class="center">{{ layananLabelLaporan($p['jenis_layanan']) }}</td>
-
-                    {{-- Kolom 9: Status pengiriman (HANYA BLOK WARNA tanpa teks) --}}
-                    {{-- UPDATE: Sesuai instruksi, status ini cukup warna saja tanpa teks --}}
-                    <td class="{{ statusCssClass($p['status']) }}">&nbsp;</td>
-
-                    {{-- Kolom 10: Total biaya dalam format Rupiah --}}
-                    <td class="right nowrap bold">{{ formatRupiahLaporan($p['total_biaya']) }}</td>
+                    <td>{{ $p['asal_kota'] ?? '-' }}</td>
+                    <td>{{ $p['tujuan_kota'] ?? '-' }}</td>
+                    <td class="text-center">{{ layananLabel($p['jenis_layanan']) }}</td>
+                    <td class="text-center">{{ statusLabel($p['status']) }}</td>
+                    <td class="text-right">{{ formatRupiah($p['total_biaya']) }}</td>
                 </tr>
             @empty
-                {{-- Tampilan jika tidak ada data sama sekali --}}
                 <tr>
-                    <td colspan="10" class="center" style="padding: 20px; color: #9ca3af;">
-                        Tidak ada data pengiriman pada periode ini.
-                    </td>
+                    <td colspan="10" class="text-center" style="padding: 20px;">Tidak ada data pengiriman pada periode
+                        ini.</td>
                 </tr>
             @endforelse
         </tbody>
-
-        {{-- ═══════════════════════════════════════════════════════════
-             BARIS GRAND TOTAL
-             Fungsi: Menampilkan penjumlahan seluruh biaya dari data yang dicetak.
-             Letak: Di baris paling bawah tabel (tfoot).
-             ═══════════════════════════════════════════════════════════ --}}
         @if (count($pengiriman) > 0)
-        <tfoot>
-            <tr class="grand-total">
-                <td colspan="9" class="right">GRAND TOTAL ({{ count($pengiriman) }} pengiriman)</td>
-                <td class="right nowrap">{{ formatRupiahLaporan($grandTotal) }}</td>
-            </tr>
-        </tfoot>
+            <tfoot>
+                <tr>
+                    <td colspan="9" class="text-right"
+                        style="font-weight: bold; background-color: #f8fafc; padding-right: 10px;">GRAND TOTAL
+                        ({{ count($pengiriman) }} Data)</td>
+                    <td class="text-right" style="font-weight: bold; background-color: #f8fafc;">
+                        {{ formatRupiah($totalPendapatan) }}</td>
+                </tr>
+            </tfoot>
         @endif
     </table>
 
-    {{-- ═══════════════════════════════════════════════════════════════════
-         BAGIAN 5: AREA TANDA TANGAN PENGESAHAN
-         Fungsi: Menyediakan ruang resmi untuk tanda tangan pihak yang berwenang.
-         Letak: Di bagian paling bawah dokumen, setelah tabel data.
-         ═══════════════════════════════════════════════════════════════════ --}}
-    <div style="margin-top: 15px; font-size: 8px; color: #4b5563;">
-        <strong>Catatan:</strong> Dokumen ini merupakan laporan resmi rekapitulasi pengiriman dan pendapatan operasional perusahaan. Segala bentuk perbedaan data harus segera dilaporkan dan diverifikasi dengan pihak keuangan.
+    <!-- ─────────────────────────────────────────────────────────────
+         CATATAN OPERASIONAL & TANDA TANGAN
+    ────────────────────────────────────────────────────────────── -->
+    <div class="section-title">CATATAN OPERASIONAL</div>
+    <div class="notes-box">
+        Laporan ini dibuat otomatis berdasarkan data transaksi yang tersimpan pada sistem. Dokumen ini digunakan sebagai
+        arsip operasional perusahaan.
     </div>
 
-    @if (count($pengiriman) > 0)
     <table class="sig-table" cellpadding="0" cellspacing="0">
         <tr>
-            <td style="width: 50%;">
-                <div class="sig-title">Mengetahui,</div>
-                <div class="sig-line" style="width: 200px; margin: 0 auto 4px auto;">&nbsp;</div>
-                <div class="sig-name">(________________________)</div>
-                <div class="muted small">Penanggung Jawab Operasional</div>
+            <td style="text-align: left;">
+                <div class="sig-title">Disetujui Oleh:<br><strong>Pemilik Perusahaan</strong></div>
+                <div class="sig-name">(...................................................)</div>
             </td>
-            <td style="width: 50%;">
-                <div class="sig-title">Menyetujui,</div>
-                <div class="sig-line" style="width: 200px; margin: 0 auto 4px auto;">&nbsp;</div>
-                <div class="sig-name">(________________________)</div>
-                <div class="muted small">Pemilik PT (Direktur)</div>
+            <td style="text-align: right;">
+                <div class="sig-title">Diverifikasi Oleh:<br><strong>Manager Operasional</strong></div>
+                <div class="sig-name">(...................................................)</div>
             </td>
         </tr>
     </table>
-    @endif
 
-    {{-- ═══════════════════════════════════════════════════════════════════
-         BAGIAN 6: FOOTER DOKUMEN
-         Fungsi: Catatan kaki berisi informasi bahwa dokumen dicetak otomatis.
-         ═══════════════════════════════════════════════════════════════════ --}}
-    <table class="doc-footer" cellpadding="0" cellspacing="0">
+    <!-- ============================================================== -->
+    <!-- FOOTER -->
+    <!-- ============================================================== -->
+    <table class="footer-table" cellpadding="0" cellspacing="0">
         <tr>
-            <td style="width: 60%;">
-                Dokumen ini dicetak secara otomatis oleh sistem SuperStart.
-                Tidak memerlukan tanda tangan basah.
+            <td style="width: 70%;">
+                <strong>Powered by NOCTRYNX CORP</strong><br>
+                Dokumen dibuat otomatis oleh sistem.<br>
+                Tidak memerlukan tanda tangan digital.
             </td>
-            <td style="width: 40%; text-align: right;">
-                {{ \Carbon\Carbon::parse($printedAt)->translatedFormat('d F Y, H:i:s') }} WIB
+            <td style="width: 30%; text-align: right; vertical-align: bottom;">Page <span class="page-number"></span>
             </td>
         </tr>
     </table>
-
 </body>
+
 </html>

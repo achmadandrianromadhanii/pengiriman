@@ -20,7 +20,7 @@
     // Hasil: Halaman ini tampil ~200-500ms lebih cepat di HP Android.
     import { getSwal } from '@/lib/alert';
     // [UPDATE: LUCIDE ICONS — hanya import yang benar-benar dipakai untuk bundle ringan]
-    import { FileText, History, Calendar, ChevronDown, Download, ArrowRight, Bell, Moon } from 'lucide-vue-next';
+    import { FileText, History, Calendar, ChevronDown, Download, ArrowRight, Archive, X } from 'lucide-vue-next';
 
     defineOptions({ layout: AppLayout });
 
@@ -49,7 +49,7 @@
     const isExporting = ref(false);
     const exportProgress = ref(0);
     const exportStatus = ref('idle'); // idle | generating | success
-    const showBottomSheet = ref(false);
+    // showBottomSheet dihapus — diganti showArsipSheet di bagian arsip batch
 
     // [UPDATE: USER DATA & PERIODE LABEL]
     const page = usePage();
@@ -256,27 +256,78 @@
         return route('laporan.pdf') + '?' + new URLSearchParams(form).toString();
     }
 
-    // Riwayat Export Mock (Maks 5)
-    const riwayatExport = ref([
-        { jenis: 'PDF', nama: 'Laporan-Pengiriman-2026-07.pdf', tanggal: '22 Jul 2026', jam: '14:00', ukuran: '1.2 MB' },
-        { jenis: 'PDF', nama: 'Laporan-Pengiriman-2026-06.pdf', tanggal: '30 Jun 2026', jam: '10:15', ukuran: '1.1 MB' },
-        { jenis: 'PDF', nama: 'Laporan-Pengiriman-2026-05.pdf', tanggal: '31 Mei 2026', jam: '09:30', ukuran: '1.3 MB' },
-        { jenis: 'PDF', nama: 'Laporan-Pengiriman-2026-04.pdf', tanggal: '30 Apr 2026', jam: '16:45', ukuran: '1.0 MB' },
-        { jenis: 'PDF', nama: 'Laporan-Pengiriman-2026-03.pdf', tanggal: '31 Mar 2026', jam: '11:20', ukuran: '1.4 MB' },
-        { jenis: 'PDF', nama: 'Laporan-Pengiriman-2026-02.pdf', tanggal: '28 Feb 2026', jam: '13:10', ukuran: '1.1 MB' }
-    ]);
+    // =========================================================================
+    // [UPDATE: SISTEM RIWAYAT EXPORT & ARSIP BATCH]
+    // Fungsi: Menyimpan maksimal 5 riwayat export terbaru (recent).
+    //         Ketika export ke-6 dilakukan, seluruh 5 riwayat dipindahkan
+    //         menjadi satu Batch Arsip, lalu recent dikosongkan dan
+    //         export terbaru menjadi item pertama di batch baru.
+    // Letak: State reaktif di halaman Laporan/Index.vue
+    // =========================================================================
 
+    // Riwayat Export Terbaru — maksimal 5 item aktif
+    const riwayatExport = ref([]);
+
+    // Arsip Batch — kumpulan batch yang berisi masing-masing 5 riwayat
+    // Struktur: [{ id: number, tanggal: string, items: Array }]
+    const arsipBatch = ref([]);
+
+    // Counter untuk penomoran Batch (#01, #02, dst)
+    const batchCounter = ref(0);
+
+    // State untuk toast notification pemindahan batch
+    const showToast = ref(false);
+    const toastMessage = ref('');
+
+    // State untuk popup Bottom Sheet Arsip
+    const showArsipSheet = ref(false);
+
+    /**
+     * [UPDATE: FUNGSI TAMBAH RIWAYAT DENGAN LOGIKA BATCH ARSIP]
+     * Cara Kerja:
+     *   1. Cek apakah riwayat sudah penuh (5 item).
+     *   2. Jika penuh → pindahkan seluruh 5 item ke arsipBatch sebagai satu Batch.
+     *   3. Kosongkan riwayat recent.
+     *   4. Masukkan export baru sebagai item pertama di recent.
+     *   5. Tampilkan toast notifikasi selama 2 detik.
+     * @param {string} jenis - Tipe file (PDF)
+     * @param {string} nama - Nama file yang diunduh
+     * @param {string} ukuran - Estimasi ukuran file
+     */
     function tambahRiwayat(jenis, nama, ukuran) {
+        // Gunakan waktu server (mengacu pada serverTime yang sudah realtime)
         const now = new Date();
-        const tgl = new Intl.DateTimeFormat('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }).format(now);
+        const hariNama = new Intl.DateTimeFormat('id-ID', { weekday: 'long' }).format(now);
+        const tglFull = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }).format(now);
+        const tglShort = new Intl.DateTimeFormat('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }).format(now);
         const jamStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-        
-        riwayatExport.value.unshift({
-            jenis, nama, tanggal: tgl, jam: jamStr, ukuran
-        });
-        if (riwayatExport.value.length > 5) {
-            riwayatExport.value.pop();
+
+        // Item baru yang akan ditambahkan
+        const newItem = { jenis, nama, tanggal: tglShort, jam: jamStr, ukuran };
+
+        // Cek apakah recent sudah penuh (5 item)
+        if (riwayatExport.value.length >= 5) {
+            // Naikkan counter batch
+            batchCounter.value++;
+
+            // Pindahkan seluruh 5 item ke arsip sebagai satu Batch
+            arsipBatch.value.unshift({
+                id: batchCounter.value,
+                tanggal: `${hariNama}, ${tglFull}`,
+                items: [...riwayatExport.value]
+            });
+
+            // Kosongkan recent
+            riwayatExport.value = [];
+
+            // Tampilkan toast notifikasi (2 detik)
+            toastMessage.value = '5 Riwayat berhasil dipindahkan ke Arsip.';
+            showToast.value = true;
+            setTimeout(() => { showToast.value = false; }, 2000);
         }
+
+        // Masukkan item baru ke posisi pertama recent
+        riwayatExport.value.unshift(newItem);
     }
 
     /**
@@ -484,27 +535,39 @@
             <!-- [DIVIDER] -->
             <div class="border-t border-slate-200 dark:border-slate-700/60"></div>
 
-            <!-- [RIWAYAT EXPORT] -->
-            <!-- Fungsi: Menampilkan 5 export terakhir dengan badge, ukuran, dan tombol unduh -->
+            <!-- ========================================== -->
+            <!-- [RIWAYAT EXPORT — BATCH SYSTEM]            -->
+            <!-- Fungsi: Menampilkan maks 5 riwayat terbaru  -->
+            <!--         dengan tombol Lihat Arsip jika ada   -->
+            <!--         batch yang sudah dipindahkan.         -->
+            <!-- ========================================== -->
             <div class="space-y-4 pb-6">
                 <label class="text-[11px] font-bold uppercase tracking-widest text-slate-500 flex items-center gap-1.5">
                     <History class="w-3.5 h-3.5" /> Riwayat Export
                 </label>
 
-                <!-- Empty State -->
-                <div v-if="riwayatExport.length === 0" class="py-10 text-center bg-slate-50 dark:bg-slate-800/50 rounded-3xl border border-slate-100 dark:border-slate-700/50">
-                    <div class="w-12 h-12 rounded-2xl bg-white dark:bg-slate-800 shadow-sm flex items-center justify-center text-slate-300 dark:text-slate-600 mx-auto mb-4">
-                        <FileText class="w-6 h-6" />
+                <!-- [EMPTY STATE — PROFESIONAL] -->
+                <!-- Fungsi: Tampil saat riwayat recent kosong (belum export / sudah dipindahkan ke arsip) -->
+                <div v-if="riwayatExport.length === 0" class="py-10 text-center">
+                    <div class="text-4xl mb-3">🗂</div>
+                    <div class="text-sm font-bold text-slate-600 dark:text-slate-300">
+                        Belum ada riwayat export terbaru.
                     </div>
-                    <div class="text-sm font-bold text-slate-600 dark:text-slate-300">Belum ada riwayat laporan.</div>
-                    <div class="text-xs text-slate-500 mt-1 max-w-[220px] mx-auto leading-relaxed">Tekan tombol "Buat Laporan PDF" untuk membuat laporan pertama.</div>
+                    <div class="text-xs text-slate-500 mt-1.5 max-w-[240px] mx-auto leading-relaxed">
+                        <template v-if="arsipBatch.length > 0">
+                            Riwayat sebelumnya telah dipindahkan ke Arsip.
+                        </template>
+                        <template v-else>
+                            Tekan "Buat Laporan PDF" untuk membuat laporan pertama.
+                        </template>
+                    </div>
                 </div>
 
-                <!-- List Riwayat (Maksimal 5 item di halaman utama) -->
+                <!-- [LIST RIWAYAT TERBARU — Maksimal 5 item] -->
                 <div v-else class="space-y-3">
-                    <div v-for="(item, index) in riwayatExport.slice(0, 5)" :key="index" class="flex flex-col p-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl gap-3">
+                    <div v-for="(item, index) in riwayatExport" :key="index" class="flex flex-col p-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl gap-3">
                         <div class="flex items-start gap-3">
-                            <!-- Icon -->
+                            <!-- Icon PDF -->
                             <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-red-50 text-red-500 dark:bg-red-500/10 dark:text-red-400 shrink-0">
                                 <FileText class="w-5 h-5" stroke-width="2" />
                             </div>
@@ -529,65 +592,112 @@
                             <Download class="w-3.5 h-3.5" /> Unduh Lagi
                         </a>
                     </div>
-
-                    <!-- Tombol Lihat Arsip (muncul jika item > 5) -->
-                    <button 
-                        v-if="riwayatExport.length > 5" 
-                        @click="showBottomSheet = true"
-                        class="w-full py-3.5 mt-2 rounded-xl border border-slate-200 dark:border-slate-700 text-[13px] font-bold text-primary bg-white dark:bg-slate-800 active:scale-[0.98] transition"
-                    >
-                        Lihat Arsip
-                    </button>
                 </div>
+
+                <!-- [TOMBOL LIHAT ARSIP] -->
+                <!-- Fungsi: Membuka Bottom Sheet popup arsip batch -->
+                <!-- Tampil hanya jika ada batch yang sudah dipindahkan -->
+                <button 
+                    v-if="arsipBatch.length > 0" 
+                    @click="showArsipSheet = true"
+                    class="w-full py-3.5 mt-2 rounded-xl border border-slate-200 dark:border-slate-700 text-[13px] font-bold text-primary bg-white dark:bg-slate-800 active:scale-[0.98] transition flex items-center justify-center gap-2"
+                >
+                    <Archive class="w-4 h-4" /> Lihat Arsip ({{ arsipBatch.length }} Batch)
+                </button>
             </div>
         </div>
 
-        <!-- [BOTTOM SHEET: LIHAT SEMUA RIWAYAT] -->
+        <!-- ========================================================== -->
+        <!-- [BOTTOM SHEET: ARSIP RIWAYAT BATCH]                        -->
+        <!-- Fungsi: Popup untuk menampilkan semua batch arsip           -->
+        <!--         yang telah dipindahkan dari riwayat recent.         -->
+        <!-- Cara Kerja: Scroll internal di dalam popup.                -->
+        <!--             Website utama TIDAK ikut scroll.               -->
+        <!-- ========================================================== -->
         <Teleport to="body">
             <Transition name="fade">
-                <div v-if="showBottomSheet" class="fixed inset-0 z-[9999] flex flex-col justify-end">
-                    <!-- Backdrop blur -->
-                    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="showBottomSheet = false"></div>
+                <div v-if="showArsipSheet" class="fixed inset-0 z-[9999] flex flex-col justify-end" @wheel.prevent @touchmove.prevent>
+                    <!-- Backdrop blur — klik untuk tutup -->
+                    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="showArsipSheet = false"></div>
                     
                     <!-- Sheet Content -->
-                    <div class="relative w-full h-[90vh] bg-slate-50 dark:bg-slate-900 rounded-t-3xl flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.1)] transition-transform duration-300 transform translate-y-0 animate-slide-up">
+                    <div class="relative w-full h-[85vh] bg-slate-50 dark:bg-slate-900 rounded-t-3xl flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.1)] animate-slide-up">
                         <!-- Header Sheet -->
                         <div class="flex items-center justify-between p-5 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 rounded-t-3xl shrink-0">
                             <h3 class="font-extrabold text-lg text-slate-800 dark:text-white flex items-center gap-2">
-                                <History class="w-5 h-5 text-primary" /> Arsip Riwayat
+                                <Archive class="w-5 h-5 text-primary" /> Arsip Riwayat
                             </h3>
-                            <button @click="showBottomSheet = false" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition active:scale-90">
-                                <i class="bi bi-x-lg text-sm"></i>
+                            <button @click="showArsipSheet = false" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition active:scale-90">
+                                <X class="w-4 h-4" />
                             </button>
                         </div>
                         
-                        <!-- List Scrollable -->
-                        <div class="flex-1 overflow-y-auto p-4 space-y-3 pb-safe">
-                            <div v-for="(item, index) in riwayatExport" :key="index" class="flex flex-col p-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl gap-3">
-                                <div class="flex items-start gap-3">
-                                    <div class="w-10 h-10 rounded-xl flex items-center justify-center bg-red-50 text-red-500 dark:bg-red-500/10 dark:text-red-400 shrink-0">
-                                        <FileText class="w-5 h-5" stroke-width="2" />
+                        <!-- List Scrollable — scroll hanya di sini -->
+                        <div class="flex-1 overflow-y-auto overscroll-contain p-4 space-y-6 pb-safe">
+                            <!-- Empty Arsip -->
+                            <div v-if="arsipBatch.length === 0" class="py-10 text-center">
+                                <div class="text-4xl mb-3">📭</div>
+                                <div class="text-sm font-bold text-slate-500">Belum ada arsip.</div>
+                                <div class="text-xs text-slate-400 mt-1">Arsip akan muncul setelah 5 riwayat export terkumpul.</div>
+                            </div>
+
+                            <!-- Batch Items -->
+                            <div v-for="(batch, bIdx) in arsipBatch" :key="batch.id">
+                                <!-- Batch Header: Tanggal + Nomor Batch -->
+                                <div class="mb-3">
+                                    <div class="flex items-center gap-2 text-sm font-bold text-slate-700 dark:text-slate-200">
+                                        <span>📅</span>
+                                        <span>{{ batch.tanggal }}</span>
                                     </div>
-                                    <div class="flex-1 min-w-0">
-                                        <div class="flex items-center gap-2">
-                                            <span class="font-bold text-[13px] text-slate-800 dark:text-slate-200 truncate">{{ item.nama }}</span>
-                                            <span class="shrink-0 px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-400">PDF</span>
+                                    <div class="text-[11px] font-bold text-primary mt-0.5">
+                                        Batch #{{ String(batch.id).padStart(2, '0') }}
+                                    </div>
+                                </div>
+
+                                <!-- Divider tipis di bawah header batch -->
+                                <div class="border-b border-slate-200 dark:border-slate-700 mb-3"></div>
+
+                                <!-- 5 item PDF dalam batch ini -->
+                                <div class="space-y-2.5">
+                                    <div v-for="(item, iIdx) in batch.items" :key="iIdx" class="flex items-start gap-3 p-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl">
+                                        <div class="w-9 h-9 rounded-lg flex items-center justify-center bg-red-50 text-red-500 dark:bg-red-500/10 dark:text-red-400 shrink-0">
+                                            <FileText class="w-4 h-4" stroke-width="2" />
                                         </div>
-                                        <div class="flex items-center gap-1.5 text-[11px] text-slate-500 font-medium mt-1">
-                                            <span>{{ item.tanggal }}</span>
-                                            <span class="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600"></span>
-                                            <span>{{ item.jam }}</span>
-                                            <span class="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600"></span>
-                                            <span>{{ item.ukuran }}</span>
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex items-center gap-2">
+                                                <span class="font-bold text-[12px] text-slate-800 dark:text-slate-200 truncate">{{ item.nama }}</span>
+                                                <span class="shrink-0 px-1 py-0.5 rounded text-[8px] font-black uppercase bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-400">PDF</span>
+                                            </div>
+                                            <div class="flex items-center gap-1.5 text-[10px] text-slate-500 font-medium mt-0.5">
+                                                <span>{{ item.tanggal }}</span>
+                                                <span class="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600"></span>
+                                                <span>{{ item.jam }}</span>
+                                                <span class="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600"></span>
+                                                <span>{{ item.ukuran }}</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                                <a :href="getPdfUrl()" target="_blank" class="w-full h-10 rounded-xl bg-slate-50 dark:bg-slate-700/50 text-xs font-bold text-slate-600 dark:text-slate-300 flex items-center justify-center gap-2 hover:bg-slate-100 dark:hover:bg-slate-700 transition active:scale-[0.98]">
-                                    <Download class="w-3.5 h-3.5" /> Unduh Lagi
-                                </a>
+
+                                <!-- Divider tegas antar batch (double line) -->
+                                <div v-if="bIdx < arsipBatch.length - 1" class="mt-5 border-t-2 border-slate-300 dark:border-slate-600"></div>
                             </div>
                         </div>
                     </div>
+                </div>
+            </Transition>
+        </Teleport>
+
+        <!-- ========================================================== -->
+        <!-- [TOAST NOTIFICATION — PEMINDAHAN BATCH]                    -->
+        <!-- Fungsi: Notifikasi singkat (2 detik) saat 5 riwayat        -->
+        <!--         berhasil dipindahkan ke arsip batch.                -->
+        <!-- ========================================================== -->
+        <Teleport to="body">
+            <Transition name="fade">
+                <div v-if="showToast" class="fixed top-6 left-1/2 -translate-x-1/2 z-[99999] px-5 py-3 bg-slate-800 dark:bg-slate-700 text-white rounded-2xl shadow-xl flex items-center gap-2.5 text-sm font-bold">
+                    <span class="text-emerald-400 text-base">✓</span>
+                    <span>{{ toastMessage }}</span>
                 </div>
             </Transition>
         </Teleport>

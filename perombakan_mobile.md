@@ -1,424 +1,264 @@
-# =============================================================================
-# SOFTSEND MOBILE LOGIN
-# FINAL PREMIUM ENTERPRISE LOGIN V3
-# TARGET : MOBILE LOGIN PAGE ONLY
-# =============================================================================
+# FINAL REVISION — SISTEM RIWAYAT EXPORT PDF & ARSIP (MOBILE REPORT)
 
-## ROLE
+ROLE:
+Bertindak sebagai Senior UI/UX Designer dan Senior Full Stack Engineer.
 
-Bertindak sebagai Principal Product Designer, Senior UI/UX Engineer, Mobile Performance Engineer, Enterprise UX Specialist, dan Frontend Architect.
+================================================================================
+TUJUAN
+================================================================================
 
-Tugasmu adalah melakukan FINAL REDESIGN halaman Login Mobile agar memiliki kualitas setara aplikasi enterprise modern.
+Lakukan penyempurnaan sistem Riwayat Export PDF dan Arsip Export pada halaman Laporan Mobile.
 
-Fokus HANYA pada halaman Login Mobile.
+Fokus HANYA pada fitur Riwayat Export dan Arsip.
 
-Jangan mengubah Dashboard.
+DILARANG mengubah:
 
-Jangan mengubah halaman lain.
+- Dashboard
+- Login
+- Tracking
+- Pengiriman
+- Tarif
+- Menu lain
+- Database utama
+- Business Logic selain fitur arsip
 
-Jangan mengubah Backend, Database, API, Route, maupun Business Logic.
+================================================================================
+LOGIKA BARU
+================================================================================
 
-===============================================================================
+Riwayat Export hanya menyimpan maksimal 5 file PDF terbaru.
 
-# DESIGN GOAL
+Ketika pengguna melakukan export PDF ke-6:
 
-Halaman Login harus terasa:
+JANGAN menghapus satu per satu.
 
-• Premium
-• Enterprise
-• Cepat
-• Ringan
-• Elegan
-• Mobile First
-• Modern
-• High End
-• Minimal namun eksklusif
+Tetapi:
 
-===============================================================================
+1. Ambil seluruh 5 riwayat yang ada.
+2. Kelompokkan menjadi SATU Batch Arsip.
+3. Batch tersebut dipindahkan ke halaman Arsip.
+4. Riwayat Export dikosongkan.
+5. PDF hasil export terbaru menjadi riwayat pertama pada batch baru.
 
-# PERFORMANCE (WAJIB)
+Contoh:
 
-Pastikan:
+Recent
 
-• Tidak ada lag saat Email dan Password difokuskan.
-• Keyboard muncul tanpa membuat layout bergeser.
-• Tidak ada backdrop-filter besar.
-• Shadow ringan.
-• Semua animasi memakai transform + opacity.
-• Tidak ada animasi background yang berjalan terus-menerus.
-• Tidak ada render ulang saat mengetik.
-
-===============================================================================
-
-# HERO
-
-Hero Full Bleed.
-
-Tinggi sekitar 38% layar.
-
-Gunakan 4 Layer:
-
-Layer 1
-
-Gradient
-
-#1E40AF
+PDF1
+PDF2
+PDF3
+PDF4
+PDF5
 
 ↓
 
-#4F46E5
+Export lagi
 
 ↓
 
-#7C3AED
+Arsip
 
-Layer 2
+Batch 24 Juli 2026
 
-Glow
-
-Layer 3
-
-Contour Line
-
-Stroke
-
-2.8px
-
-Color
-
-#818CF8
-
-Opacity
-
-12%
-
-Layer 4
-
-Mesh Wave
-
-Stroke
-
-2.4px
-
-Color
-
-#60A5FA
-
-Opacity
-
-10%
-
-Pattern harus saling berlawanan.
-
-Semua memenuhi sisi kiri dan kanan layar.
-
-Tidak boleh ada sisi putih.
-
-===============================================================================
-
-# LOGO
-
-Gunakan logo asli.
-
-Resolusi tinggi.
-
-PNG transparan.
-
-Ukuran:
-
-72px.
-
-Tambahkan shadow tipis.
-
-Susunan:
-
-Logo
+PDF1
+PDF2
+PDF3
+PDF4
+PDF5
 
 ↓
 
-SoftSend
+Recent
 
-↓
+PDF6
 
-Premium Delivery Management
+================================================================================
+HALAMAN RIWAYAT EXPORT
+================================================================================
 
-===============================================================================
+Jika kosong tampilkan Empty State profesional:
 
-# LOGIN CARD
+🗂
 
-Radius
+Belum ada riwayat export terbaru.
 
-30px.
+Riwayat sebelumnya telah dipindahkan ke Arsip.
 
-Padding
+Jangan menampilkan card kosong.
 
-24px.
+================================================================================
+HALAMAN ARSIP
+================================================================================
 
-Margin
+Popup Arsip menggunakan Bottom Sheet.
 
-20px.
+Scroll hanya di dalam popup.
 
-Shadow ringan.
+Website utama tidak ikut scroll.
 
-Card overlap Hero sekitar 22px.
+================================================================================
+STRUKTUR ARSIP
+================================================================================
 
-===============================================================================
+Setiap Batch terdiri dari:
 
-# FORM
+──────────────────────────
 
-Tambahkan label:
+📅 Hari, Tanggal Bulan Tahun
 
-Administrator Login
+Contoh:
 
-Gunakan ikon Lucide:
+Jumat, 24 Juli 2026
 
-Mail
+Batch #01
 
-LockKeyhole
+──────────────────────────
 
-Eye
+Lalu tampilkan tepat 5 riwayat export yang dipindahkan.
 
-EyeOff
+Setelah selesai beri divider tegas.
 
-Input:
+══════════════════════════
 
-52px.
+Kemudian Batch berikutnya.
 
-Radius
+================================================================================
+DIVIDER
+================================================================================
 
-16px.
+Gunakan divider horizontal yang jelas antar batch.
 
-Border tipis.
+Jangan menggunakan card besar sebagai pemisah.
 
-===============================================================================
+================================================================================
+DATA WAKTU
+================================================================================
 
-# REMEMBER ME
+Hari
 
-Checkbox modern.
+Tanggal
 
-Ukuran
+Bulan
 
-20px.
+Tahun
 
-Area klik besar.
+Jam
 
-Pastikan fungsi "Tetap Masuk" bekerja.
+Semua wajib berasal dari data realtime server/Pusher.
 
-===============================================================================
+Tidak boleh menggunakan waktu lokal browser.
 
-# BUTTON
+================================================================================
+ANIMASI
+================================================================================
 
-Gradient:
+Saat proses pemindahan batch:
 
-#2563EB
+Tampilkan toast singkat:
 
-↓
+✓
 
-#6D28D9
+5 Riwayat berhasil dipindahkan ke Arsip.
 
-Tambahkan:
+Durasi 2 detik.
 
-ArrowRight
+================================================================================
+HASIL AKHIR
+================================================================================
 
-Ripple
+✔ Riwayat Export hanya berisi maksimal 5 data aktif.
+✔ Saat mencapai batch penuh dan ada export berikutnya, 5 data sebelumnya dipindahkan sekaligus ke Arsip.
+✔ Arsip dikelompokkan berdasarkan Batch dan tanggal.
+✔ Setiap Batch memiliki judul tanggal yang jelas.
+✔ Riwayat Export menjadi kosong setelah dipindahkan, lalu mulai mengumpulkan batch berikutnya.
+✔ Popup Arsip memiliki scroll internal sendiri.
+✔ UI tetap ringan, rapi, dan konsisten dengan desain mobile aplikasi.
 
-Pressed Scale
+┌────────────────────────────┐
 
-Glow tipis.
+ Arsip Riwayat            ✕
 
-Teks:
+──────────────────────────────
 
-Login
+📅 Jumat, 24 Juli 2026
 
-===============================================================================
+Batch #01
 
-# LOADING
+──────────────────────────────
 
-Saat Login ditekan:
+PDF
 
-Button berubah menjadi Loading.
+PDF
 
-Spinner.
+PDF
 
-Memverifikasi akun...
+PDF
 
-Popup Success.
-
-Dashboard.
-
-Tidak menggunakan toast.
-
-===============================================================================
-
-# FOOTER
-
-Powered by
-
-NOCTRYNX CORP
-
-Typography:
-
-Powered by
-
-10px
-
-Medium
-
-NOCTRYNX CORP
-
-12px
-
-SemiBold
-
-Letter Spacing
-
-0.18em
-
-===============================================================================
-
-# BOTTOM HERO
-
-Gunakan Decorative Bottom Hero.
-
-Gradient:
-
-#172554
-
-↓
-
-#1E3A8A
-
-↓
-
-#2563EB
-
-Pattern:
-
-Wave Mesh.
-
-Stroke:
-
-2.6px.
-
-Color:
-
-#60A5FA
-
-Opacity:
-
-10%.
-
-Berbeda dengan Hero atas.
-
-===============================================================================
-
-# MICRO INTERACTION
-
-Fade
-
-Slide
-
-Button Ripple
-
-Input Focus
-
-Checkbox Animation
-
-Shake Error
-
-Success Popup
-
-Durasi
-
-150–250ms.
-
-===============================================================================
-
-# ACCEPTANCE
-
-✔ Hero premium.
-✔ Logo HD.
-✔ Pattern lebih tebal dan jelas.
-✔ Bottom Hero navy.
-✔ Wave Mesh berbeda dari Hero atas.
-✔ Form ringan.
-✔ Login cepat.
-✔ Tidak ada lag.
-✔ Powered by NOCTRYNX CORP.
-✔ Tidak mengubah halaman selain Login Mobile.
-
-Ilustrasi Target
-████████████████████████████████████████
-▓▓ HERO ▓▓
-Gradient + Glow
-Contour (ungu kebiruan)
-Mesh Wave (biru muda)
-
-               [ LOGO HD ]
-
-              SoftSend
-     Premium Delivery Management
-
-╭────────────────────────────────────╮
-│ Administrator Login                │
-│ ✉ Email                            │
-│ 🔒 Password                    👁  │
-│ ☑ Tetap Masuk                      │
-│                                    │
-│        Login →                     │
-╰────────────────────────────────────╯
-
-Powered by
-NOCTRYNX CORP
-
-▓▓ BOTTOM HERO ▓▓
-Navy Gradient
-Wave Mesh (berbeda dari atas)
-████████████████████████████████████████
-
-Wireframe Baru
-████████████████████████████████████
-
-      HERO PREMIUM
-
- Gradient
-
- Glow
-
- Contour
-
- Mesh Wave
-
-        LOGO HD
-
-      SoftSend
-
-Premium Delivery Management
+PDF
 
 ══════════════════════════════
 
-Administrator Login
+📅 Sabtu, 26 Juli 2026
 
-Email
+Batch #02
 
-Password
+──────────────────────────────
 
-☑ Tetap Masuk
+PDF
 
-Login →
+PDF
 
-══════════════════════════════
+PDF
 
-Powered by
+PDF
 
-NOCTRYNX CORP
+PDF
 
-══════════════════════════════
+└────────────────────────────┘
 
-BOTTOM HERO
+Riwayat Export
 
-Navy Gradient
+────────────────────
 
-Wave Mesh Pattern
+📄 Laporan Juli
 
-████████████████████████████████████
+📄 Laporan Juli
+
+📄 Laporan Juli
+
+🗂
+
+Belum ada riwayat terbaru.
+
+Semua riwayat telah dipindahkan
+ke Arsip.
+
+Export
+
+↓
+
+Masuk Recent History
+
+↓
+
+Jumlah = 5
+
+↓
+
+Export berikutnya
+
+↓
+
+5 data dipindahkan
+
+↓
+
+Membuat Batch Baru
+
+↓
+
+Recent kosong
+
+↓
+
+Export terbaru masuk Recent
