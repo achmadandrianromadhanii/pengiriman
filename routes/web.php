@@ -31,7 +31,7 @@ Route::get('/tracking/{nomor_resi}', [TrackingController::class, 'public'])
 
 // ─── ADMIN — semua butuh auth + admin aktif ───────────────────────────
 Route::middleware(['auth', 'admin.active'])->group(function () {
-    Route::get('/', fn () => redirect()->route('dashboard'));
+    Route::get('/', fn() => redirect()->route('dashboard'));
 
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -75,6 +75,137 @@ Route::middleware(['auth', 'admin.active'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // =========================================================================
+    // MENU MOBILE / SYSTEM — DATA ASLI DARI BACKEND
+    // =========================================================================
+
+    // ── Tentang Aplikasi ─────────────────────────────────────────────────
+    // Fungsi: Mengirim metadata sistem ASLI ke halaman About.
+    // Cara Kerja: Membaca versi Laravel, PHP, PostgreSQL, Vue, Vite
+    //             secara dinamis dari runtime dan package.json.
+    Route::get('/system/about', function () {
+        $db = \Illuminate\Support\Facades\DB::getFacadeRoot();
+
+        // ── Versi PostgreSQL (query langsung ke server) ──────────────
+        $pgVersion = 'N/A';
+        try {
+            $row = $db::selectOne("SELECT current_setting('server_version') AS v");
+            $pgVersion = $row->v ?? 'N/A';
+        } catch (\Throwable $e) {
+            $pgVersion = 'N/A';
+        }
+
+        // ── Versi Vue & Vite dari package.json ───────────────────────
+        $vueVersion = '3.x';
+        $viteVersion = '8.x';
+        $pkgPath = base_path('package.json');
+        if (file_exists($pkgPath)) {
+            $pkg = json_decode(file_get_contents($pkgPath), true);
+            $deps = array_merge($pkg['dependencies'] ?? [], $pkg['devDependencies'] ?? []);
+            $vueVersion = ltrim($deps['vue'] ?? '3.x', '^~');
+            $viteVersion = ltrim($deps['vite'] ?? '8.x', '^~');
+        }
+
+        // ── Status koneksi database ──────────────────────────────────
+        $dbStatus = 'disconnected';
+        try {
+            $db::selectOne('SELECT 1');
+            $dbStatus = 'connected';
+        } catch (\Throwable $e) {
+            $dbStatus = 'error';
+        }
+
+        return Inertia\Inertia::render('System/About', [
+            'system' => [
+                'app_version'    => '5.0.0',
+                'build'          => date('Y.m') . '.Rev1',
+                'laravel'        => app()->version(),
+                'php'            => phpversion(),
+                'vue'            => $vueVersion,
+                'vite'           => $viteVersion,
+                'pgsql'          => $pgVersion,
+                'environment'    => app()->environment(),
+                'timezone'       => config('app.timezone'),
+                'storage_driver' => config('filesystems.default'),
+                'db_driver'      => config('database.default'),
+                'db_status'      => $dbStatus,
+                'server_status'  => 'online',
+            ],
+        ]);
+    })->name('system.about');
+
+    // ── Cache (frontend-only, tidak butuh data backend) ──────────────
+    // Fungsi: Halaman ini mengambil data cache dari Browser API langsung.
+    // Tidak perlu data dari server. Hanya render halaman kosong.
+    Route::get('/system/cache', function () {
+        return Inertia\Inertia::render('System/Cache');
+    })->name('system.cache');
+
+    // ── Penyimpanan Database ─────────────────────────────────────────
+    // Fungsi: Mengirim statistik database ASLI dari PostgreSQL/Neon.
+    // Cara Kerja: Query pg_database_size() untuk ukuran, COUNT untuk jumlah record.
+    Route::get('/system/storage', function () {
+        $db = \Illuminate\Support\Facades\DB::getFacadeRoot();
+
+        // ── Ukuran database asli (PostgreSQL) ────────────────────────
+        $dbSizeBytes = 0;
+        try {
+            $row = $db::selectOne("SELECT pg_database_size(current_database()) AS size");
+            $dbSizeBytes = (int) ($row->size ?? 0);
+        } catch (\Throwable $e) {
+            $dbSizeBytes = 0;
+        }
+
+        // ── Format ukuran menjadi string yang mudah dibaca ───────────
+        $formatBytes = function (int $bytes): string {
+            if ($bytes <= 0) return '0 B';
+            $units = ['B', 'KB', 'MB', 'GB'];
+            $i = 0;
+            $size = (float) $bytes;
+            while ($size >= 1024 && $i < count($units) - 1) {
+                $size /= 1024;
+                $i++;
+            }
+            return round($size, 1) . ' ' . $units[$i];
+        };
+
+        // ── Hitung jumlah record dari semua tabel utama ──────────────
+        $pengiriman = \App\Models\Pengiriman::count();
+        $pelanggan  = \App\Models\Pengiriman::distinct('pengirim_nama')->count('pengirim_nama');
+        $riwayat    = \App\Models\TrackingHistory::count();
+        $admin      = \App\Models\Admin::count();
+        $kota       = \App\Models\Kota::count();
+        $tarif      = \App\Models\Tarif::count();
+
+        // ── Lampiran: hitung dari tabel pengiriman_barang ────────────
+        $lampiran = \App\Models\PengirimanBarang::count();
+
+        // ── Total seluruh record ─────────────────────────────────────
+        $totalRecords = $pengiriman + $pelanggan + $riwayat + $admin + $kota + $tarif + $lampiran;
+
+        return Inertia\Inertia::render('System/Storage', [
+            'database'      => config('database.default') === 'pgsql' ? 'Neon PostgreSQL' : 'MySQL Database',
+            'db_size_bytes'  => $dbSizeBytes,
+            'db_size'        => $formatBytes($dbSizeBytes),
+            'pengiriman'    => $pengiriman,
+            'pelanggan'     => $pelanggan,
+            'riwayat'       => $riwayat,
+            'lampiran'      => $lampiran,
+            'admin'         => $admin,
+            'kota'          => $kota,
+            'tarif'         => $tarif,
+            'total_records' => $totalRecords,
+        ]);
+    })->name('system.storage');
+
+    Route::get('/profile/security', function () {
+        return Inertia\Inertia::render('Profile/Security');
+    })->name('security.index');
+
+    Route::get('/profile/password', function () {
+        return Inertia\Inertia::render('Profile/Password');
+    })->name('password.edit');
 
     // Kota (CRUD)
     Route::get('/kota', [KotaController::class, 'index'])->name('kota.index');

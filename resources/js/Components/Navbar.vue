@@ -241,14 +241,6 @@
             <div class="flex items-center gap-2">
                 <button
                     type="button"
-                    @click="toggleDark"
-                    class="relative flex items-center justify-center w-8 h-8 rounded-full bg-gray-50 dark:bg-white/5 active:scale-95 transition-transform text-gray-600 dark:text-gray-300 shadow-sm border border-gray-100 dark:border-gray-800"
-                >
-                    <Moon v-if="darkMode" :size="16" stroke-width="2.5" />
-                    <Sun v-else :size="16" stroke-width="2.5" />
-                </button>
-                <button
-                    type="button"
                     class="relative flex items-center justify-center w-8 h-8 rounded-full bg-gray-50 dark:bg-white/5 active:scale-95 transition-transform text-gray-600 dark:text-gray-300 shadow-sm border border-gray-100 dark:border-gray-800"
                 >
                     <Bell :size="16" stroke-width="2.5" />
@@ -269,16 +261,7 @@
                 <span class="font-mono">{{ nowText }}</span>
             </div>
 
-            <!-- Fungsi: Touch-Target Button untuk Mode Gelap -->
-            <!-- Cara Kerja: Menggunakan bentuk rounded-full w-10 h-10 agar sesuai area sentuh jempol (Standard UI Touch Target) -->
-            <button
-                type="button"
-                class="inline-flex items-center justify-center w-10 h-10 rounded-full text-gray-600 dark:text-gray-200 bg-gray-50 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 active:scale-95 transition shadow-sm"
-                @click="toggleDark"
-                aria-label="Toggle dark mode"
-            >
-                <i class="bi text-base" :class="themeIcon"></i>
-            </button>
+
 
             <!-- Avatar dropdown root -->
             <div ref="dropdownRoot" class="relative">
