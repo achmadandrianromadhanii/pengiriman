@@ -15,7 +15,7 @@ class LoginRequest extends FormRequest
     {
         return [
             'email' => ['required', 'email', 'regex:/@gmail\.com$/i'],
-            'password' => ['required', 'string', 'min:6'],
+            'password' => ['required', 'string'],
             'remember' => ['nullable', 'boolean'],
         ];
     }
@@ -27,7 +27,6 @@ class LoginRequest extends FormRequest
             'email.email' => 'Format email tidak valid.',
             'email.regex' => 'Email harus menggunakan @gmail.com',
             'password.required' => 'Password wajib diisi.',
-            'password.min' => 'Password minimal 6 karakter.',
         ];
     }
 }
