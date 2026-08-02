@@ -34,6 +34,7 @@ const isLoading = ref(true);
 const isCleaning = ref(false);
 const progress = ref(0);
 const cleaned = ref(false);
+const cleanedAmount = ref(0); // [UPDATE: CACHE] Jumlah byte yang berhasil dibersihkan
 
 // ── Total cache terhitung otomatis ───────────────────────────────────────
 const totalCache = computed(() => caches_data.value.reduce((acc, c) => acc + c.size, 0));
@@ -214,6 +215,7 @@ async function cleanCache() {
     isCleaning.value = true;
     progress.value = 0;
     cleaned.value = false;
+    const cacheBefore = totalCache.value; // [UPDATE: CACHE] Simpan ukuran sebelum bersihkan
 
     // ── Progress simulasi yang sinkron dengan aksi nyata ─────────────
     const steps = [
@@ -228,7 +230,8 @@ async function cleanCache() {
         // Step 2: Hapus localStorage (kecuali konfigurasi tema)
         async () => {
             progress.value = 35;
-            const preserve = ['darkMode', 'themeSetting'];
+            // [UPDATE] Pertahankan tema + preferensi keamanan
+            const preserve = ['darkMode', 'themeSetting', 'sec_login_notif', 'sec_auto_logout', 'sec_biometric'];
             const saved = {};
             preserve.forEach(k => {
                 const v = localStorage.getItem(k);
@@ -266,8 +269,9 @@ async function cleanCache() {
         await new Promise(r => setTimeout(r, 400));
     }
 
-    // ── Selesai: ukur ulang cache (sekarang seharusnya 0 / sangat kecil)
+    // ── Selesai: ukur ulang cache & hitung selisih yang dibersihkan ────
     await measureAllCaches();
+    cleanedAmount.value = Math.max(0, cacheBefore - totalCache.value);
     isCleaning.value = false;
     cleaned.value = true;
     setTimeout(() => { cleaned.value = false; }, 3000);
@@ -372,8 +376,10 @@ const iconMap = {
                 leave-from-class="transform translate-y-0 opacity-100"
                 leave-to-class="transform translate-y-4 opacity-0"
             >
+                <!-- [UPDATE: CACHE] Tampilkan jumlah ruang yang berhasil dibersihkan -->
                 <div v-if="cleaned" class="fixed bottom-28 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-5 py-3 rounded-full bg-emerald-500 text-white font-bold text-[13px] shadow-lg shadow-emerald-500/30 w-max whitespace-nowrap">
-                    <CheckCircle2 :size="18" stroke-width="3" /> Cache berhasil dibersihkan
+                    <CheckCircle2 :size="18" stroke-width="3" />
+                    {{ cleanedAmount > 0 ? formatBytes(cleanedAmount) + ' berhasil dibersihkan' : 'Cache berhasil dibersihkan' }}
                 </div>
             </transition>
         </main>

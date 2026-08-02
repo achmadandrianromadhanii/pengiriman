@@ -1,15 +1,15 @@
-# FINAL REVISION — MOBILE MENU (CACHE • STORAGE • ABOUT)
+# FINAL REVISION — MOBILE WEB SETTINGS (CACHE & SECURITY)
 
-ROLE
+## ROLE
 
 Bertindak sebagai:
 
-- Senior Mobile UI/UX Designer
 - Senior Laravel Engineer
-- Senior Vue Engineer
-- Senior Mobile Performance Engineer
 - Senior PostgreSQL Engineer
 - Senior PWA Engineer
+- Senior Mobile Web Engineer
+- Senior Security Engineer
+- Senior UI/UX Engineer
 
 ================================================================================
 TUJUAN
@@ -17,436 +17,268 @@ TUJUAN
 
 Fokus HANYA pada halaman:
 
-✓ Cache
-✓ Penyimpanan
-✓ Tentang Aplikasi
+- Cache
+- Keamanan
 
 JANGAN mengubah halaman lain.
 
-Dashboard tetap.
+JANGAN mengubah:
 
-Login tetap.
-
-Tracking tetap.
-
-Pengiriman tetap.
-
-Laporan tetap.
-
-Business Logic tetap.
-
-Database Schema tetap.
-
-API tetap.
+- Dashboard
+- Login
+- Laporan
+- Tracking
+- Tarif
+- Pengiriman
+- UI utama
+- Animasi yang sudah ada
 
 ================================================================================
 TARGET
 ================================================================================
 
-Semua data yang tampil HARUS berasal dari data asli sistem.
-
-Bukan dummy.
-
-Bukan angka visual.
-
-Bukan hardcode.
-
-Seluruh data harus sinkron dengan:
-
-✓ Laravel Backend
-
-✓ PostgreSQL
-
-✓ Neon Database
-
-✓ Browser Storage
-
-✓ PWA Cache
-
-✓ Service Worker
+Mengubah halaman Cache dan Keamanan dari tampilan visual menjadi modul enterprise yang menggunakan DATA ASLI secara realtime.
 
 ================================================================================
-1. HALAMAN CACHE
+1. CACHE
 ================================================================================
 
-PERTAHANKAN layout sekarang.
+Seluruh data cache HARUS berasal dari data nyata browser/PWA.
 
-Tetapi upgrade menjadi halaman diagnosa cache.
+Hitung ukuran secara realtime menggunakan sumber yang memang tersedia, seperti:
 
-Cache yang ditampilkan HARUS asli.
+- Cache Storage API (Service Worker cache)
+- LocalStorage
+- SessionStorage
+- IndexedDB
+- Browser cache yang dapat diakses aplikasi
+- Temporary offline assets
+- Manifest/PWA cache
+- Cache gambar yang dikelola aplikasi
 
-Ambil dari:
+Jangan menggunakan angka statis atau dummy.
 
-Browser Cache API
-
-Service Worker Cache
-
-LocalStorage
-
-SessionStorage
-
-IndexedDB
-
-Image Cache
-
-Temporary File
-
-PWA Cache
-
-Application Cache
-
-Total Cache
+Tampilkan total cache yang merupakan hasil penjumlahan semua sumber tersebut.
 
 ================================================================================
-RINCIAN CACHE
+2. PEMBERSIHAN CACHE
 ================================================================================
 
-Storage Cache
+Saat tombol "Bersihkan Cache" ditekan:
 
-Browser Cache
+- Tampilkan dialog konfirmasi.
+- Jalankan proses pembersihan cache nyata.
+- Bersihkan hanya cache yang aman untuk dihapus:
+  - Cache Storage
+  - IndexedDB aplikasi
+  - SessionStorage
+  - LocalStorage non-esensial
+  - Temporary image cache
+  - Offline assets
 
-Image Cache
+JANGAN menghapus:
+- Session login
+- Token autentikasi
+- Preferensi pengguna
+- Tema aplikasi
 
-API Cache
+Selama proses berjalan:
 
-Temporary Cache
-
-Session Storage
-
-Local Storage
-
-IndexedDB
-
-PWA Offline Cache
-
-Total
-
-Semua ukuran:
-
-KB
-
-MB
-
-GB
-
-secara otomatis.
+- Tampilkan popup loading.
+- Progress bar bergerak bertahap.
+- Nilai total cache berkurang secara realtime hingga selesai.
+- Setelah selesai tampilkan notifikasi sukses dengan jumlah ruang yang berhasil dibersihkan.
 
 ================================================================================
-TOTAL CACHE
+3. KEAMANAN
 ================================================================================
 
-Hitung otomatis.
+Seluruh informasi keamanan HARUS berasal dari data nyata sistem.
 
-Misal:
+Status Password:
+- Ambil dari metadata pengguna (misalnya `password_changed_at`).
+- Jika belum pernah diubah, tampilkan "Belum pernah diubah".
 
-52.8 MB
+Riwayat Login:
+- Ambil dari tabel riwayat login.
+- Tampilkan:
+  - Tanggal
+  - Jam
+  - Browser
+  - Sistem operasi
+  - IP
+  - Lokasi (jika tersedia)
 
-Jika cache bertambah maka otomatis naik.
-
-Jika dibersihkan maka otomatis turun.
-
-Realtime.
-
-================================================================================
-BERSIHKAN CACHE
-================================================================================
-
-Saat tombol ditekan:
-
-Popup konfirmasi premium.
-
-Jika Ya
-
-↓
-
-Loading Wave
-
-↓
-
-Progress
-
-↓
-
-Membersihkan:
-
-Browser Cache
-
-Image Cache
-
-PWA Cache
-
-IndexedDB
-
-Temporary Cache
-
-↓
-
-Cache selesai dibersihkan.
-
-Tanpa reload.
+Perangkat Saat Ini:
+- Deteksi otomatis:
+  - Nama perangkat
+  - Browser
+  - Sistem operasi
+  - Jenis perangkat (Desktop / Android / iPhone)
+  - Status ONLINE
 
 ================================================================================
-ANIMASI
+4. MANAJEMEN PERANGKAT
 ================================================================================
 
-PERTAHANKAN.
+Tambahkan halaman "Perangkat Terhubung".
 
-Tidak perlu ditambah.
+Daftar seluruh sesi aktif dengan informasi:
+- Nama perangkat
+- Browser
+- Sistem operasi
+- Lokasi
+- Waktu login terakhir
+- Status aktif
 
-Tetap ringan.
-
-60 FPS.
-
-================================================================================
-2. HALAMAN PENYIMPANAN
-================================================================================
-
-Ini jangan memakai data visual.
-
-HARUS asli.
-
-Ambil dari PostgreSQL.
-
-Neon Database.
+Sediakan aksi:
+- Logout perangkat tertentu
+- Logout semua perangkat (dengan konfirmasi)
 
 ================================================================================
-HEADER
+5. PENGATURAN KEAMANAN
 ================================================================================
 
-Database Engine
-
-Neon PostgreSQL
-
-Ukuran Database
-
-58.2 MB
-
-Ukuran dihitung asli.
+Tambahkan opsi:
+- Notifikasi login baru (ON/OFF)
+- Logout otomatis saat idle (ON/OFF)
+- Biometric Ready (ON/OFF jika didukung PWA)
 
 ================================================================================
-STATISTIK
+6. SINKRONISASI
 ================================================================================
 
-Jumlah Pengiriman
+Semua data HARUS sinkron secara realtime menggunakan backend aplikasi (Laravel + PostgreSQL + Broadcast/Pusher jika sudah tersedia).
 
-Jumlah Pelanggan
-
-Jumlah Riwayat
-
-Jumlah Lampiran
-
-Jumlah Admin
-
-Jumlah User
-
-Ukuran Database
-
-Ukuran File Upload
-
-Total Record
-
-Semua berasal dari query database.
+Perubahan login, logout, atau metadata keamanan harus langsung tercermin pada halaman tanpa refresh.
 
 ================================================================================
-AKSI
+7. UI/UX
 ================================================================================
 
-Sinkronkan Database
+Pertahankan desain yang sudah ada.
 
-↓
+Jangan mengubah layout utama.
 
-Melakukan sinkronisasi.
+Gunakan ikon Lucide secara konsisten.
 
-Refresh data.
-
-Tidak reload.
-
-Export Database
-
-↓
-
-Download backup SQL / PostgreSQL sesuai hak akses.
-
-Refresh Statistik
-
-↓
-
-Mengambil ulang ukuran database.
-
-================================================================================
-PENTING
-================================================================================
-
-JANGAN tampilkan tombol:
-
-"Hapus Semua Database"
-
-di Mobile.
-
-Jika memang dibutuhkan fitur tersebut, hanya tersedia pada panel Super Admin desktop dengan autentikasi ulang.
-
-================================================================================
-3. HALAMAN TENTANG APLIKASI
-================================================================================
-
-Upgrade menjadi halaman informasi sistem.
-
-================================================================================
-LOGO
-================================================================================
-
-Gunakan logo asli aplikasi.
-
-Bukan placeholder.
-
-Resolusi tinggi.
-
-HD.
-
-Jernih.
-
-================================================================================
-INFORMASI SISTEM
-================================================================================
-
-Semua data HARUS otomatis.
-
-Tidak hardcode.
-
-Ambil otomatis.
-
-Contoh:
-
-Versi Aplikasi
-
-Build Number
-
-Commit Hash (jika tersedia)
-
-Laravel Version
-
-Vue Version
-
-Vite Version
-
-PHP Version
-
-PostgreSQL Version
-
-Neon Status
-
-Environment
-
-Storage Driver
-
-Timezone
-
-Build Date
-
-Last Update
-
-Semua otomatis.
-
-Jika deploy baru
-
-↓
-
-Versi berubah otomatis.
-
-Build berubah otomatis.
-
-Tanggal berubah otomatis.
-
-================================================================================
-STATUS SERVER
-================================================================================
-
-Tambahkan card baru.
-
-Status Backend
-
-Online
-
-Database
-
-Connected
-
-API
-
-Healthy
-
-Storage
-
-Normal
-
-Realtime.
-
-================================================================================
-LUCIDE ICON
-================================================================================
-
-Gunakan icon Lucide.
-
-Jangan campur icon lain.
-
-================================================================================
-PENGEMBANG
-================================================================================
-
-PERTAHANKAN.
-
-Tidak perlu diubah.
-
-================================================================================
-DESAIN
-================================================================================
-
-Pertahankan layout sekarang.
-
-Tetapi upgrade:
-
-Spacing lebih presisi.
-
-Radius konsisten.
-
-Icon 20 px.
-
-Title 24 px.
-
-Subtitle 13 px.
-
-Body 14 px.
-
-Line Height konsisten.
-
-================================================================================
-PERFORMA
-================================================================================
-
-Tidak boleh menambah library berat.
-
-Tidak boleh lag.
-
-Tidak boleh freeze.
-
-Tidak boleh blocking render.
-
-Semua asynchronous.
+Tambahkan hanya animasi ringan pada perubahan data (angka cache, status sinkron, progres pembersihan).
 
 ================================================================================
 HASIL AKHIR
 ================================================================================
 
-Cache menggunakan data asli browser dan PWA.
+✔ Seluruh data berasal dari sumber nyata.
+✔ Tidak ada angka dummy.
+✔ Cache benar-benar dibersihkan secara aman.
+✔ Informasi keamanan sinkron dengan data pengguna dan sesi login.
+✔ Semua fitur bekerja realtime.
+✔ Tampilan tetap ringan, modern, dan konsisten dengan UI aplikasi.
 
-Penyimpanan menggunakan data asli PostgreSQL / Neon.
+Wireframe Keamanan
+┌──────────────────────────┐
 
-Tentang Aplikasi menggunakan metadata sistem secara otomatis.
+STATUS PASSWORD
 
-Semua realtime.
+Aktif
 
-Semua sinkron.
+24 Juli 2026
 
-Semua ringan.
+──────────────
 
-Semua terasa seperti aplikasi enterprise profesional.
+LOGIN TERAKHIR
+
+Hari ini
+
+14.22 WIB
+
+Chrome
+
+Windows 11
+
+──────────────
+
+PERANGKAT
+
+Samsung A55
+
+Android 15
+
+Chrome
+
+ONLINE
+
+──────────────
+
+Toggle
+
+Login Notification
+
+ON
+
+Auto Logout
+
+OFF
+
+Biometric
+
+ON
+
+──────────────
+
+Logout Semua Perangkat
+
+└──────────────────────────┘
+
+Wireframe Cache
+┌──────────────────────────┐
+
+TOTAL CACHE
+
+108.25 MB
+
+██████████████
+
+Browser
+
+48 MB
+
+███████
+
+Image
+
+32 MB
+
+█████
+
+IndexedDB
+
+20 MB
+
+███
+
+Storage
+
+8 MB
+
+──────────────
+
+[ Bersihkan Cache ]
+
+↓
+
+Popup
+
+Membersihkan...
+
+72%
+
+██████████░░
+
+↓
+
+0 KB
+
+✓ Berhasil
+
+└──────────────────────────┘

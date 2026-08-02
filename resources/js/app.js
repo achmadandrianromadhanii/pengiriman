@@ -24,9 +24,9 @@ if (
 // NProgress config (tanpa spinner)
 NProgress.configure({
     showSpinner: false,
-    speed: 400,
+    speed: 300,
     minimum: 0.1,
-    trickleSpeed: 200,
+    trickleSpeed: 100,
 });
 
 createInertiaApp({
@@ -40,7 +40,8 @@ createInertiaApp({
             .mount(el);
     },
     progress: {
-        delay: 100,
+        delay: 0, // [UPDATE: PERFORMA - Loading Bar Instan]
+        color: '#2349F5', 
         showSpinner: false,
         includeCSS: false,
     },

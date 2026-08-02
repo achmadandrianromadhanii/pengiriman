@@ -2,6 +2,18 @@
 
 namespace App\Http\Controllers;
 
+// =========================================================================
+// CONTROLLER: ProfileController — Manajemen profil admin
+// =========================================================================
+// Fungsi: Menampilkan form profil, menyimpan perubahan, dan menghapus akun.
+// Cara Kerja:
+//   - edit(): Render halaman Profile/Edit.vue dengan data user
+//   - update(): Simpan nama/email/password + [UPDATE] set password_changed_at
+//   - destroy(): Logout + hapus akun permanen
+// [UPDATE: SECURITY MODULE]
+//   - Saat password berubah, kolom password_changed_at di-update ke now().
+// =========================================================================
+
 use App\Http\Requests\ProfileUpdateRequest;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
@@ -26,12 +38,22 @@ class ProfileController extends Controller
 
     /**
      * Update the user's profile information.
+     * [UPDATE: SECURITY] Jika password berubah, set password_changed_at.
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $user = $request->user();
+        $validated = $request->validated();
 
-        $request->user()->save();
+        // ── [UPDATE: SECURITY] Deteksi apakah password diubah ────────
+        // Cara Kerja: Jika field 'password' ada di validated data,
+        // berarti user mengirim password baru → set timestamp.
+        if (!empty($validated['password'])) {
+            $user->password_changed_at = now();
+        }
+
+        $user->fill($validated);
+        $user->save();
 
         return Redirect::route('profile.edit');
     }

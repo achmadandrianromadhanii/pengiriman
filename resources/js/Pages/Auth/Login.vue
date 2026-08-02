@@ -1,51 +1,42 @@
 <!--
   ============================================================================
-  LOGIN.VUE — SOFTSEND ENTERPRISE LOGIN
+  LOGIN.VUE — SOFTSEND ENTERPRISE PREMIUM LOGIN
   ============================================================================
   Fungsi   : Halaman Login utama aplikasi SoftSend.
-  Layout   : Dua tampilan terpisah — Mobile (md:hidden) dan Desktop (hidden md:flex).
-  Performa : Semua animasi menggunakan transform/opacity (GPU accelerated).
-             Tidak ada backdrop-filter pada area besar.
-             Tidak ada animasi background yang berjalan terus-menerus.
+  Layout   : Dua tampilan — Mobile (md:hidden) dan Desktop (hidden md:flex).
+  Desktop  : Enterprise Premium Authentication Portal dengan hero semi-circle,
+             floating label, dan loading modal di tengah layar.
+  Mobile   : Premium Login dengan hero atas dan bottom hero navy.
+  Performa : GPU accelerated animations (transform/opacity only).
   ============================================================================
 -->
 <script setup>
     // ── Import Dependensi ──────────────────────────────────────────────────
-    // AuthLayout : Layout wrapper untuk halaman autentikasi (tanpa sidebar/navbar)
-    // Head       : Mengatur <title> halaman via Inertia
-    // useForm    : Helper Inertia untuk form submission dengan state management
-    // router     : Navigasi programatik Inertia (visit, replace)
     import AuthLayout from '@/Layouts/AuthLayout.vue';
     import { Head, useForm, router } from '@inertiajs/vue3';
-    import { onBeforeUnmount, ref, watch } from 'vue';
-    import { fireToast } from '@/lib/alert';
+    import { onBeforeUnmount, ref, watch, computed } from 'vue';
 
-    // ── Lucide Icons ───────────────────────────────────────────────────────
-    // Hanya import ikon yang benar-benar dipakai agar bundle tetap kecil
+    // ── Lucide Icons (hanya yang dipakai) ─────────────────────────────────
     import {
-        Mail,           // Ikon amplop untuk input email
-        LockKeyhole,    // Ikon gembok untuk input password
-        Eye,            // Ikon mata terbuka (password visible)
-        EyeOff,         // Ikon mata tertutup (password hidden)
-        Loader2,        // Spinner loading (animasi putar)
-        LogIn,          // Ikon login untuk tombol desktop
-        AlertCircle,    // Ikon peringatan error
-        ArrowRight,     // Ikon panah kanan untuk tombol mobile
-        CheckCircle2,   // Ikon centang untuk status berhasil
+        Mail,           // Input email
+        LockKeyhole,    // Input password
+        Eye,            // Password visible
+        EyeOff,         // Password hidden
+        Loader2,        // Spinner loading
+        AlertCircle,    // Error icon
+        ArrowRight,     // Tombol mobile
+        CheckCircle2,   // Centang sukses
     } from 'lucide-vue-next';
 
     // ── Layout ─────────────────────────────────────────────────────────────
-    // Menggunakan AuthLayout (tanpa sidebar/navbar) sebagai wrapper
     defineOptions({ layout: AuthLayout });
 
     // ── Props dari Backend ─────────────────────────────────────────────────
-    // loginSuccess : Boolean flag dari server setelah login berhasil
     const props = defineProps({
         loginSuccess: { type: Boolean, default: false },
     });
 
     // ── Form State (Inertia useForm) ───────────────────────────────────────
-    // Cara Kerja: useForm mengelola state form + validasi error dari server
     const form = useForm({
         email: '',
         password: '',
@@ -53,80 +44,95 @@
     });
 
     // ── Reactive State ─────────────────────────────────────────────────────
-    const showPassword = ref(false);       // Toggle visibilitas password
-    const localEmailError = ref('');       // Error validasi email lokal (sebelum kirim ke server)
-    const lastToast = ref('');             // Mencegah toast duplikat pada desktop
+    const showPassword = ref(false);
+    const localEmailError = ref('');
 
-    // [MOBILE] State khusus tampilan mobile
-    const showMobileLoading = ref(false);  // Tampilkan modal loading di mobile
-    const mobileLoginStatus = ref('loading'); // Status modal: 'loading' | 'success'
-    const isShake = ref(false);            // Animasi shake saat error di mobile
+    // [MOBILE] State khusus mobile
+    const showMobileLoading = ref(false);
+    const mobileLoginStatus = ref('loading');
+    const isShake = ref(false);
 
-    // Timer untuk redirect otomatis setelah login berhasil
+    // [DESKTOP] State untuk loading modal desktop
+    // Cara Kerja: Saat login diklik di desktop, modal muncul di tengah layar
+    // menampilkan Logo, spinner, progress bar, dan status verifikasi.
+    const showDesktopLoading = ref(false);
+    const desktopLoginStatus = ref('loading');
+    const desktopProgress = ref(0);
+
+    // ── State Floating Label ──────────────────────────────────────────────
+    // Cara Kerja: Menandai apakah input sedang focus agar label naik ke atas.
+    const emailFocused = ref(false);
+    const passwordFocused = ref(false);
+
+    // Computed: label floating ketika focus ATAU sudah ada value
+    const emailFloat = computed(() => emailFocused.value || form.email.length > 0);
+    const passwordFloat = computed(() => passwordFocused.value || form.password.length > 0);
+
     let redirectTimer = null;
+    let progressTimer = null;
 
-    // ── Fungsi: triggerShake ───────────────────────────────────────────────
-    // Fungsi  : Menggerakkan card login (efek goyang) saat terjadi error
-    // Cara Kerja : Menambahkan class 'animate-shake', lalu melepasnya setelah 400ms
-    // Letak   : Dipanggil di submit() dan watcher form.errors (hanya mobile)
+    // ── Fungsi: triggerShake (mobile only) ─────────────────────────────────
     function triggerShake() {
-        if (window.innerWidth >= 768) return; // Hanya berlaku di mobile
+        if (window.innerWidth >= 768) return;
         isShake.value = true;
         setTimeout(() => isShake.value = false, 400);
     }
 
-    // ── Fungsi: toast (Desktop Only) ──────────────────────────────────────
-    // Fungsi  : Menampilkan notifikasi toast (SweetAlert2) di desktop
-    // Cara Kerja : Menggunakan key untuk mencegah toast duplikat berturut-turut
-    function toast(icon, title) {
-        const key = `${icon}:${title}`;
-        if (lastToast.value === key) return;
-        lastToast.value = key;
-        fireToast(icon, title);
-    }
-
     // ── Fungsi: isGmail ───────────────────────────────────────────────────
-    // Fungsi  : Validasi apakah email berakhiran @gmail.com
-    // Cara Kerja : Regex sederhana yang mencocokkan akhiran domain
     function isGmail(email) {
         return /@gmail\.com$/i.test((email || '').trim());
     }
 
+    // ── Fungsi: simulateProgress ──────────────────────────────────────────
+    // Cara Kerja: Menjalankan progress bar dari 0 ke ~90% secara bertahap
+    // saat menunggu respons server. Berhenti di 90% sampai server merespons.
+    function simulateProgress() {
+        desktopProgress.value = 0;
+        progressTimer = setInterval(() => {
+            if (desktopProgress.value < 90) {
+                desktopProgress.value += Math.random() * 15 + 3;
+                if (desktopProgress.value > 90) desktopProgress.value = 90;
+            }
+        }, 300);
+    }
+
     // ── Fungsi: submit ────────────────────────────────────────────────────
-    // Fungsi  : Menangani pengiriman form login
-    // Cara Kerja :
-    //   1. Validasi email lokal (harus @gmail.com)
-    //   2. Jika mobile, tampilkan modal loading
-    //   3. Kirim POST /login via Inertia
-    //   4. Jika error, sembunyikan modal + shake (mobile) atau toast (desktop)
     function submit() {
         localEmailError.value = '';
 
-        // Validasi email lokal sebelum kirim ke server
         if (!form.email || !isGmail(form.email)) {
             localEmailError.value = 'Email harus menggunakan @gmail.com';
             if (window.innerWidth < 768) {
                 triggerShake();
-            } else {
-                toast('warning', localEmailError.value);
             }
             return;
         }
 
-        // Tampilkan modal loading khusus mobile
+        // [DESKTOP] Tampilkan loading modal + progress bar
+        if (window.innerWidth >= 768) {
+            showDesktopLoading.value = true;
+            desktopLoginStatus.value = 'loading';
+            simulateProgress();
+        }
+
+        // [MOBILE] Tampilkan loading modal
         if (window.innerWidth < 768) {
             showMobileLoading.value = true;
             mobileLoginStatus.value = 'loading';
         }
 
-        // Kirim data login ke server via Inertia POST
         form.post('/login', {
             preserveScroll: true,
             onFinish: () => {
                 form.reset('password');
             },
             onError: () => {
-                // Sembunyikan modal loading jika gagal (mobile)
+                // Desktop: Sembunyikan modal loading
+                if (window.innerWidth >= 768) {
+                    showDesktopLoading.value = false;
+                    if (progressTimer) clearInterval(progressTimer);
+                }
+                // Mobile: Sembunyikan modal + shake
                 if (window.innerWidth < 768) {
                     showMobileLoading.value = false;
                     triggerShake();
@@ -136,51 +142,47 @@
     }
 
     // ── Watcher: form.errors ──────────────────────────────────────────────
-    // Fungsi  : Menampilkan feedback saat server mengembalikan error validasi
-    // Cara Kerja : Di mobile → shake card. Di desktop → toast warning.
     watch(
         () => form.errors,
         (errs) => {
-            const msg = localEmailError.value || errs?.email || errs?.password;
-            if (msg) {
-                if (window.innerWidth < 768) {
-                    triggerShake();
-                } else {
-                    toast('warning', msg);
-                }
+            if (localEmailError.value || errs?.email || errs?.password) {
+                if (window.innerWidth < 768) triggerShake();
             }
         },
         { deep: true },
     );
 
     // ── Watcher: loginSuccess ─────────────────────────────────────────────
-    // Fungsi  : Menangani redirect otomatis setelah login berhasil
-    // Cara Kerja :
-    //   Mobile  → Ubah status modal ke 'success', redirect setelah 1 detik
-    //   Desktop → Toast sukses, redirect setelah 1.5 detik
     watch(
         () => props.loginSuccess,
         (ok) => {
             if (!ok) return;
-            if (window.innerWidth < 768) {
+
+            if (window.innerWidth >= 768) {
+                // Desktop: Progress 100% → status success → redirect
+                if (progressTimer) clearInterval(progressTimer);
+                desktopProgress.value = 100;
+                setTimeout(() => {
+                    desktopLoginStatus.value = 'success';
+                    redirectTimer = setTimeout(() => {
+                        router.visit(route('dashboard'), { replace: true });
+                    }, 1200);
+                }, 400);
+            } else {
+                // Mobile: Status success → redirect
                 mobileLoginStatus.value = 'success';
                 redirectTimer = setTimeout(() => {
                     router.visit(route('dashboard'), { replace: true });
                 }, 1000);
-            } else {
-                toast('success', 'Login berhasil! Mengalihkan ke Dashboard...');
-                redirectTimer = setTimeout(() => {
-                    router.visit(route('dashboard'), { replace: true });
-                }, 1500);
             }
         },
         { immediate: true },
     );
 
-    // ── Cleanup Timer ─────────────────────────────────────────────────────
-    // Fungsi  : Membersihkan timer redirect saat komponen di-unmount
+    // ── Cleanup ───────────────────────────────────────────────────────────
     onBeforeUnmount(() => {
         if (redirectTimer) clearTimeout(redirectTimer);
+        if (progressTimer) clearInterval(progressTimer);
     });
 </script>
 
@@ -462,86 +464,140 @@
     </div>
 
     <!-- ================================================================== -->
-    <!-- [DESKTOP VIEW] — Tampilan untuk layar >= 768px                      -->
-    <!-- Desain: Card centered dengan efek glow abstrak di background        -->
-    <!-- Catatan: Bagian ini TIDAK DIUBAH dari desain sebelumnya             -->
+    <!-- [DESKTOP VIEW] — Enterprise Premium Authentication Portal V5        -->
+    <!-- Layout: Hero atas (20vh) → Card tengah → Footer → Hero bawah (9vh)  -->
+    <!-- Constraint: Seluruh konten muat dalam 100vh TANPA scrollbar         -->
+    <!-- Fitur: Staggered Entrance Anim, 14s Float Hero Anim, 400px Card     -->
     <!-- ================================================================== -->
-    <div class="hidden md:flex min-h-[100dvh] w-full relative items-center justify-center bg-slate-50 dark:bg-slate-950 font-sans overflow-hidden">
+    <div class="hidden md:flex h-[100vh] w-full relative flex-col items-center justify-between bg-slate-50 dark:bg-[#080B14] overflow-hidden">
 
-        <!-- Background glow abstrak (CSS only, ringan) -->
-        <div class="absolute top-[-15%] left-[-10%] w-[50%] h-[50%] rounded-full bg-blue-500/10 dark:bg-blue-600/20 blur-[100px] pointer-events-none transform-gpu"></div>
-        <div class="absolute bottom-[-15%] right-[-10%] w-[50%] h-[50%] rounded-full bg-purple-500/10 dark:bg-purple-600/20 blur-[100px] pointer-events-none transform-gpu"></div>
-        <div class="absolute top-[30%] left-[60%] w-[300px] h-[300px] rounded-full bg-indigo-400/5 dark:bg-indigo-500/10 blur-[80px] pointer-events-none transform-gpu"></div>
+        <!-- ============================================================== -->
+        <!-- HERO ATAS — Semi Circle Full Width (20vh)                       -->
+        <!-- Bentuk: Melengkung ke bawah, full width tanpa celah             -->
+        <!-- Animasi: translateY ±3px selama 14 detik (hero-float)           -->
+        <!-- ============================================================== -->
+        <div class="absolute top-0 left-0 right-0 h-[20vh] overflow-hidden hero-float"
+             style="border-bottom-left-radius: 50% 60px; border-bottom-right-radius: 50% 60px;">
+             
+            <!-- Glow Blur 70px -->
+            <div class="absolute inset-0 bg-blue-500/15 dark:bg-blue-600/20 blur-[70px] pointer-events-none mix-blend-screen"></div>
 
-        <!-- Login Card Desktop -->
-        <div class="relative z-10 w-full max-w-[520px] px-5 sm:px-0">
-            <div class="login-card-anim bg-white/70 dark:bg-slate-900/70 backdrop-blur-2xl border border-white/50 dark:border-slate-700/50 shadow-[0_24px_60px_-15px_rgba(0,0,0,0.05)] dark:shadow-[0_24px_60px_-15px_rgba(0,0,0,0.2)] rounded-[28px] p-7 sm:p-10 md:p-12 transition-transform duration-300 hover:-translate-y-1">
+            <!-- Layer 1: Base Gradient Royal Blue → Indigo -->
+            <div class="absolute inset-0 bg-gradient-to-br from-[#1D4ED8] via-[#2349F5] to-[#6D28D9]"></div>
 
-                <!-- Logo & Title Desktop -->
-                <div class="text-center flex flex-col items-center mb-8">
-                    <img
-                        src="/images/logo-softsend-hd.png"
-                        alt="SoftSend Logo"
-                        class="w-[100px] sm:w-[120px] h-auto object-contain drop-shadow-md hover:scale-105 transition-transform duration-300 ease-out"
-                        fetchpriority="high"
-                    />
-                    <h1 class="mt-6 text-2xl sm:text-[28px] font-bold text-slate-900 dark:text-white tracking-tight">
-                        Welcome Back
-                    </h1>
-                    <p class="mt-2 text-sm text-slate-500 dark:text-slate-400 font-medium">
-                        Masuk ke akun administrator Anda
-                    </p>
+            <!-- Layer 2: Gelombang Horizontal Tebal — Biru terang transparan -->
+            <svg class="absolute inset-0 w-full h-full" viewBox="0 0 1200 300" fill="none" preserveAspectRatio="none" aria-hidden="true">
+                <path d="M0,240 C200,200 400,140 600,180 C800,220 1000,120 1200,160" stroke="rgba(96,165,250,0.2)" stroke-width="4.5" fill="none"/>
+                <path d="M0,180 C300,140 500,220 700,150 C900,80 1100,180 1200,110" stroke="rgba(96,165,250,0.15)" stroke-width="3.5" fill="none"/>
+                <path d="M0,100 C250,160 450,60 650,120 C850,180 1050,60 1200,80" stroke="rgba(96,165,250,0.15)" stroke-width="3" fill="none"/>
+            </svg>
+
+            <!-- Layer 3: Garis Lengkung Diagonal — Biru terang transparan -->
+            <svg class="absolute inset-0 w-full h-full" viewBox="0 0 1200 300" fill="none" preserveAspectRatio="none" aria-hidden="true">
+                <path d="M1200,220 C1000,180 800,260 600,200 C400,140 200,220 0,180" stroke="rgba(59,130,246,0.15)" stroke-width="4" fill="none"/>
+                <path d="M1200,130 C900,90 700,180 500,120 C300,60 100,140 0,100" stroke="rgba(59,130,246,0.12)" stroke-width="3" fill="none"/>
+            </svg>
+
+            <!-- Layer 4: Circle Overlay Transparan -->
+            <div class="absolute -top-[30%] -right-[5%] w-[45%] h-[180%] rounded-full bg-white/[0.05] pointer-events-none"></div>
+        </div>
+
+        <!-- ============================================================== -->
+        <!-- KONTEN TENGAH — Flexbox centered antara hero atas dan bawah     -->
+        <!-- ============================================================== -->
+        <div class="relative z-10 flex-1 flex flex-col items-center justify-center w-full max-w-[400px] px-5 pt-[6vh]">
+
+            <!-- ========================================================== -->
+            <!-- LOGO HD — 86px, animasi stagger 1                           -->
+            <!-- ========================================================== -->
+            <div class="text-center flex flex-col items-center mb-6">
+                <img
+                    src="/images/logo-softsend-hd.png"
+                    alt="SoftSend Logo"
+                    class="w-[86px] h-[86px] object-contain drop-shadow-lg anim-stagger-1"
+                    width="86"
+                    height="86"
+                    fetchpriority="high"
+                />
+                <div class="anim-stagger-2">
+                    <h1 class="mt-[12px] text-[30px] font-bold text-slate-900 dark:text-white tracking-tight leading-none">SoftSend</h1>
+                    <p class="mt-1.5 text-[15px] text-slate-500 dark:text-slate-400 font-medium">Premium Delivery Management</p>
                 </div>
+            </div>
 
-                <!-- Form Desktop -->
-                <form class="space-y-6" @submit.prevent="submit">
+            <!-- ========================================================== -->
+            <!-- CARD LOGIN — 400px width, padding 26px, custom shadow       -->
+            <!-- ========================================================== -->
+            <div class="anim-stagger-3 w-full bg-white dark:bg-[#11131A] border border-slate-200/50 dark:border-gray-800/50 shadow-[0_30px_80px_rgba(30,40,80,0.10)] dark:shadow-[0_30px_80px_rgba(0,0,0,0.4)] rounded-[24px] p-[26px]">
 
-                    <!-- Email Input Desktop -->
-                    <div class="relative w-full group">
+                <form class="space-y-5" @submit.prevent="submit">
+
+                    <!-- EMAIL -->
+                    <div class="relative w-full">
                         <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-600 dark:group-focus-within:text-blue-500 transition-colors duration-300">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors duration-300"
+                                 :class="emailFocused ? 'text-[#2349F5]' : 'text-slate-400'">
                                 <Mail class="w-5 h-5" />
                             </div>
                             <input
                                 v-model="form.email"
                                 type="email"
-                                id="email"
+                                id="desktop-email"
                                 autocomplete="username"
-                                placeholder="Alamat Email"
                                 required
-                                class="block w-full h-[54px] pl-11 pr-4 bg-white/60 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-[16px] text-sm font-medium text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/15 transition-all duration-300 shadow-sm hover:border-slate-300 dark:hover:border-slate-600"
+                                @focus="emailFocused = true"
+                                @blur="emailFocused = false"
+                                class="peer block w-full h-[50px] pl-12 pr-4 pt-3 bg-slate-50 dark:bg-[#0A0D14] border border-slate-200 dark:border-gray-700 rounded-[18px] text-[14px] font-medium text-slate-900 dark:text-white placeholder-transparent focus:outline-none focus:border-[#2349F5] focus:ring-2 focus:ring-[#2349F5]/15 transition-all duration-300"
+                                placeholder="Email"
                             />
+                            <!-- Floating Label -->
+                            <label
+                                for="desktop-email"
+                                class="absolute left-12 transition-all duration-[200ms] pointer-events-none font-medium"
+                                :class="emailFloat
+                                    ? 'top-1 text-[10px] text-[#2349F5] dark:text-[#886BFF]'
+                                    : 'top-[14px] text-[14px] text-slate-400 dark:text-gray-500'"
+                            >Alamat Email</label>
                         </div>
                         <Transition name="fade-slide">
-                            <div
-                                v-if="localEmailError || form.errors.email"
-                                class="absolute -bottom-5 left-1 flex items-center gap-1 text-[11px] font-bold text-red-500"
-                            >
+                            <div v-if="localEmailError || form.errors.email"
+                                 class="absolute -bottom-4.5 left-1 flex items-center gap-1 text-[11px] font-bold text-red-500">
                                 <AlertCircle class="w-3.5 h-3.5" />
                                 <span>{{ localEmailError || form.errors.email }}</span>
                             </div>
                         </Transition>
                     </div>
 
-                    <!-- Password Input Desktop -->
-                    <div class="relative w-full group">
+                    <!-- PASSWORD -->
+                    <div class="relative w-full">
                         <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-600 dark:group-focus-within:text-blue-500 transition-colors duration-300">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors duration-300"
+                                 :class="passwordFocused ? 'text-[#2349F5]' : 'text-slate-400'">
                                 <LockKeyhole class="w-5 h-5" />
                             </div>
                             <input
                                 v-model="form.password"
                                 :type="showPassword ? 'text' : 'password'"
-                                id="password"
+                                id="desktop-password"
                                 autocomplete="current-password"
-                                placeholder="Kata Sandi"
                                 required
-                                class="block w-full h-[54px] pl-11 pr-12 bg-white/60 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-[16px] text-sm font-medium text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/15 transition-all duration-300 shadow-sm hover:border-slate-300 dark:hover:border-slate-600"
+                                @focus="passwordFocused = true"
+                                @blur="passwordFocused = false"
+                                class="peer block w-full h-[50px] pl-12 pr-12 pt-3 bg-slate-50 dark:bg-[#0A0D14] border border-slate-200 dark:border-gray-700 rounded-[18px] text-[14px] font-medium text-slate-900 dark:text-white placeholder-transparent focus:outline-none focus:border-[#2349F5] focus:ring-2 focus:ring-[#2349F5]/15 transition-all duration-300"
+                                placeholder="Password"
                             />
+                            <!-- Floating Label -->
+                            <label
+                                for="desktop-password"
+                                class="absolute left-12 transition-all duration-[200ms] pointer-events-none font-medium"
+                                :class="passwordFloat
+                                    ? 'top-1 text-[10px] text-[#2349F5] dark:text-[#886BFF]'
+                                    : 'top-[14px] text-[14px] text-slate-400 dark:text-gray-500'"
+                            >Kata Sandi</label>
                             <button
                                 type="button"
                                 tabindex="-1"
-                                class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-blue-600 transition-colors focus:outline-none"
+                                class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-[#2349F5] transition-colors focus:outline-none"
                                 @click="showPassword = !showPassword"
                             >
                                 <EyeOff v-if="showPassword" class="w-5 h-5" />
@@ -549,75 +605,158 @@
                             </button>
                         </div>
                         <Transition name="fade-slide">
-                            <div
-                                v-if="form.errors.password"
-                                class="absolute -bottom-5 left-1 flex items-center gap-1 text-[11px] font-bold text-red-500"
-                            >
+                            <div v-if="form.errors.password"
+                                 class="absolute -bottom-4.5 left-1 flex items-center gap-1 text-[11px] font-bold text-red-500">
                                 <AlertCircle class="w-3.5 h-3.5" />
                                 <span>{{ form.errors.password }}</span>
                             </div>
                         </Transition>
                     </div>
 
-                    <!-- Remember Me Desktop (Switch) -->
-                    <div class="pt-1 flex items-center">
-                        <label class="flex items-center gap-3 cursor-pointer group w-fit select-none">
-                            <div class="relative flex items-center">
-                                <input v-model="form.remember" type="checkbox" class="sr-only peer" />
-                                <div class="w-10 h-5 bg-slate-200 dark:bg-slate-700 rounded-full peer-focus:ring-2 peer-focus:ring-blue-500/20 peer-checked:bg-blue-600 transition-colors duration-300 shadow-inner"></div>
-                                <div class="absolute left-[2px] bg-white w-4 h-4 rounded-full shadow-sm peer-checked:translate-x-5 transition-transform duration-300 ease-spring"></div>
+                    <!-- REMEMBER ME -->
+                    <div class="flex items-center">
+                        <label class="flex items-center gap-2.5 cursor-pointer group select-none">
+                            <div class="relative w-[18px] h-[18px]">
+                                <input v-model="form.remember" type="checkbox"
+                                       class="appearance-none w-[18px] h-[18px] rounded-md border-2 border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-800 checked:bg-[#2349F5] checked:border-[#2349F5] transition-all duration-200 cursor-pointer focus:ring-2 focus:ring-[#2349F5]/20 focus:outline-none" />
+                                <svg v-if="form.remember" class="absolute top-[3px] left-[2.5px] w-3 h-3 text-white pointer-events-none" viewBox="0 0 16 16" fill="none">
+                                    <path d="M3.5 8L6.5 11L12.5 5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
                             </div>
-                            <span class="text-sm font-medium text-slate-600 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">Tetap Masuk</span>
+                            <span class="text-[13px] font-medium text-slate-600 dark:text-slate-400 group-hover:text-[#2349F5] transition-colors duration-200">Tetap Masuk</span>
                         </label>
                     </div>
 
-                    <!-- Submit Button Desktop -->
-                    <div class="pt-4">
+                    <!-- SUBMIT BUTTON -->
+                    <div class="pt-1">
                         <button
                             type="submit"
                             :disabled="form.processing"
-                            class="relative w-full h-[54px] flex items-center justify-center gap-2 rounded-[16px] text-white font-bold text-[15px] bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-[0_8px_16px_-4px_rgba(37,99,235,0.3)] hover:shadow-[0_12px_20px_-4px_rgba(37,99,235,0.4)] transform active:scale-[0.98] transition-all duration-300 disabled:opacity-80 disabled:cursor-wait overflow-hidden group"
+                            class="w-full h-[48px] flex items-center justify-center rounded-[18px] text-white font-bold text-[15px] tracking-wide bg-gradient-to-r from-[#1D4ED8] to-[#6D28D9] shadow-[0_6px_20px_-6px_rgba(37,99,235,0.35)] hover:shadow-[0_12px_24px_-4px_rgba(37,99,235,0.45)] hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-300 disabled:opacity-80 disabled:cursor-wait"
                         >
-                            <div class="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></div>
-                            <span class="relative flex items-center gap-2">
-                                <Loader2 v-if="form.processing" class="w-5 h-5 animate-spin" />
-                                <span :class="{ 'opacity-90': form.processing }">{{
-                                    form.processing ? 'Memproses...' : 'Masuk Sekarang'
-                                }}</span>
-                                <LogIn
-                                    v-if="!form.processing"
-                                    class="w-5 h-5 group-hover:translate-x-1 transition-transform duration-300"
-                                />
-                            </span>
+                            LOGIN
                         </button>
                     </div>
                 </form>
             </div>
+
+            <!-- FOOTER -->
+            <div class="text-center mt-6 mb-2 anim-stagger-4">
+                <p class="text-[10px] text-slate-400 dark:text-gray-500 font-medium tracking-wide">Powered by</p>
+                <p class="text-[11px] text-slate-500 dark:text-gray-400 font-semibold tracking-[0.2em] mt-1 uppercase">NOCTRYNX CORP</p>
+            </div>
         </div>
+
+        <!-- ============================================================== -->
+        <!-- HERO BAWAH — Semi Circle Terbalik (Navy → Biru Gelap) 9vh       -->
+        <!-- Bentuk: Melengkung ke atas, full width                          -->
+        <!-- ============================================================== -->
+        <div class="absolute bottom-0 left-0 right-0 h-[9vh] overflow-hidden hero-float"
+             style="border-top-left-radius: 50% 50px; border-top-right-radius: 50% 50px;">
+            <!-- Layer 1: Base Gradient Navy → Deep Blue -->
+            <div class="absolute inset-0 bg-gradient-to-t from-[#0F172A] to-[#1E3A8A]"></div>
+
+            <!-- Layer 2: Gelombang Vertikal -->
+            <svg class="absolute inset-0 w-full h-full" viewBox="0 0 1200 250" fill="none" preserveAspectRatio="none" aria-hidden="true">
+                <path d="M200,0 C180,60 220,120 200,180 C180,240 200,250 200,250" stroke="rgba(96,165,250,0.15)" stroke-width="3.5" fill="none"/>
+                <path d="M500,0 C480,70 520,130 500,190 C480,250 500,250 500,250" stroke="rgba(96,165,250,0.15)" stroke-width="3" fill="none"/>
+                <path d="M800,0 C780,55 820,115 800,175 C780,235 800,250 800,250" stroke="rgba(96,165,250,0.15)" stroke-width="3.5" fill="none"/>
+            </svg>
+
+            <!-- Layer 3: Garis Lengkung Tebal Horizontal -->
+            <svg class="absolute inset-0 w-full h-full" viewBox="0 0 1200 250" fill="none" preserveAspectRatio="none" aria-hidden="true">
+                <path d="M0,80 C300,40 600,120 900,60 C1100,20 1200,80 1200,80" stroke="rgba(96,165,250,0.10)" stroke-width="4" fill="none"/>
+            </svg>
+
+            <!-- Layer 4: Circle Overlay Transparan -->
+            <div class="absolute -bottom-[30%] -left-[10%] w-[40%] h-[160%] rounded-full bg-blue-400/[0.04] pointer-events-none"></div>
+        </div>
+
+        <!-- ============================================================== -->
+        <!-- DESKTOP LOADING MODAL — Popup verifikasi login (DIPERTAHANKAN) -->
+        <!-- TIDAK DIUBAH dari implementasi sebelumnya                       -->
+        <!-- Cara Kerja:                                                     -->
+        <!--   1. showDesktopLoading = true → modal muncul di tengah layar  -->
+        <!--   2. Progress bar berjalan dari 0–90% sambil menunggu server   -->
+        <!--   3. Jika sukses → progress 100% → ikon centang → redirect    -->
+        <!--   4. Jika gagal → modal hilang otomatis                        -->
+        <!-- ============================================================== -->
+        <Teleport to="body">
+            <Transition name="fade-modal">
+                <div v-if="showDesktopLoading"
+                     class="hidden md:flex fixed inset-0 z-[9999] items-center justify-center">
+                    <!-- Overlay gelap ringan -->
+                    <div class="absolute inset-0 bg-black/25"></div>
+
+                    <!-- Modal konten -->
+                    <div class="relative w-full max-w-[340px] bg-white dark:bg-[#11131A] border border-slate-200/60 dark:border-gray-800/60 rounded-[28px] p-8 text-center shadow-2xl">
+                        <!-- Logo -->
+                        <div class="w-16 h-16 mx-auto mb-5 bg-gradient-to-br from-[#2349F5] to-[#886BFF] rounded-[20px] flex items-center justify-center shadow-lg shadow-blue-500/20">
+                            <span class="font-black text-2xl text-white tracking-tighter">SS</span>
+                        </div>
+
+                        <!-- Status Icon -->
+                        <div class="w-12 h-12 mx-auto mb-4 rounded-2xl flex items-center justify-center"
+                             :class="desktopLoginStatus === 'success'
+                                 ? 'bg-emerald-50 dark:bg-emerald-500/10'
+                                 : 'bg-blue-50 dark:bg-blue-500/10'">
+                            <CheckCircle2 v-if="desktopLoginStatus === 'success'" class="w-7 h-7 text-emerald-500" />
+                            <Loader2 v-else class="w-7 h-7 text-[#2349F5] animate-spin" />
+                        </div>
+
+                        <!-- Status Text -->
+                        <h3 class="font-bold text-lg text-slate-800 dark:text-white mb-1">
+                            {{ desktopLoginStatus === 'success' ? 'Login Successful' : 'Logging In...' }}
+                        </h3>
+
+                        <!-- Progress Bar -->
+                        <div v-if="desktopLoginStatus !== 'success'" class="w-full h-1.5 bg-slate-100 dark:bg-gray-800 rounded-full overflow-hidden mt-4 mb-3">
+                            <div class="h-full bg-gradient-to-r from-[#2349F5] to-[#886BFF] rounded-full transition-all duration-300 ease-out"
+                                 :style="{ width: `${Math.round(desktopProgress)}%` }"></div>
+                        </div>
+
+                        <!-- Sub Text -->
+                        <p class="text-[13px] text-slate-500 dark:text-slate-400 font-medium">
+                            {{ desktopLoginStatus === 'success' ? 'Redirecting...' : 'Verifying Credentials...' }}
+                        </p>
+                    </div>
+                </div>
+            </Transition>
+        </Teleport>
     </div>
 </template>
 
 <style scoped>
     /* ================================================================== */
-    /* ANIMASI LOGIN — Semua menggunakan transform/opacity (GPU optimized) */
+    /* ANIMASI LOGIN — GPU optimized (transform/opacity only)              */
     /* ================================================================== */
 
-    /* Animasi Masuk Card Desktop — Fade + slide up saat halaman dimuat */
-    @keyframes loginCardIn {
+    /* Card Desktop & Staggered Animations */
+    @keyframes fadeSlideUp {
         0% {
             opacity: 0;
-            transform: translateY(20px) scale(0.98);
+            transform: translateY(15px);
         }
         100% {
             opacity: 1;
-            transform: translateY(0) scale(1);
+            transform: translateY(0);
         }
     }
-    .login-card-anim {
-        animation: loginCardIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+    .anim-stagger-1 { animation: fadeSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.05s both; }
+    .anim-stagger-2 { animation: fadeSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both; }
+    .anim-stagger-3 { animation: fadeSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both; }
+    .anim-stagger-4 { animation: fadeSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.35s both; }
+
+    /* Floating Hero Animasi */
+    @keyframes floatLayer {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(3px); }
+    }
+    .hero-float {
+        animation: floatLayer 14s ease-in-out infinite;
     }
 
-    /* Animasi Error Text Desktop — Fade + slide untuk pesan error */
+    /* Error Text — Fade + slide untuk pesan error */
     .fade-slide-enter-active,
     .fade-slide-leave-active {
         transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -628,7 +767,7 @@
         transform: translateY(-5px);
     }
 
-    /* Animasi Shake Mobile — Efek goyang saat login gagal (250ms) */
+    /* Shake Mobile — Efek goyang saat login gagal */
     @keyframes shake {
         0%, 100% { transform: translateX(0); }
         20% { transform: translateX(-6px); }
@@ -640,7 +779,7 @@
         animation: shake 0.25s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
     }
 
-    /* Animasi Fade Modal Mobile — Untuk loading popup */
+    /* Fade Modal — Untuk loading popup (mobile + desktop) */
     .fade-modal-enter-active {
         transition: opacity 0.2s ease-out;
     }
@@ -651,9 +790,5 @@
     .fade-modal-leave-to {
         opacity: 0;
     }
-
-    /* Timing Function Spring — Untuk switch toggle desktop */
-    .ease-spring {
-        transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
 </style>
+

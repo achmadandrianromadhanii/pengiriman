@@ -85,12 +85,12 @@ Route::middleware(['auth', 'admin.active'])->group(function () {
     // Cara Kerja: Membaca versi Laravel, PHP, PostgreSQL, Vue, Vite
     //             secara dinamis dari runtime dan package.json.
     Route::get('/system/about', function () {
-        $db = \Illuminate\Support\Facades\DB::getFacadeRoot();
+        // [FIX] Gunakan DB facade langsung sesuai dokumentasi Laravel
 
         // ── Versi PostgreSQL (query langsung ke server) ──────────────
         $pgVersion = 'N/A';
         try {
-            $row = $db::selectOne("SELECT current_setting('server_version') AS v");
+            $row = \Illuminate\Support\Facades\DB::selectOne("SELECT current_setting('server_version') AS v");
             $pgVersion = $row->v ?? 'N/A';
         } catch (\Throwable $e) {
             $pgVersion = 'N/A';
@@ -107,10 +107,10 @@ Route::middleware(['auth', 'admin.active'])->group(function () {
             $viteVersion = ltrim($deps['vite'] ?? '8.x', '^~');
         }
 
-        // ── Status koneksi database ──────────────────────────────────
+        // ── Status koneksi database ──────────────────────────────
         $dbStatus = 'disconnected';
         try {
-            $db::selectOne('SELECT 1');
+            \Illuminate\Support\Facades\DB::selectOne('SELECT 1');
             $dbStatus = 'connected';
         } catch (\Throwable $e) {
             $dbStatus = 'error';
@@ -146,12 +146,12 @@ Route::middleware(['auth', 'admin.active'])->group(function () {
     // Fungsi: Mengirim statistik database ASLI dari PostgreSQL/Neon.
     // Cara Kerja: Query pg_database_size() untuk ukuran, COUNT untuk jumlah record.
     Route::get('/system/storage', function () {
-        $db = \Illuminate\Support\Facades\DB::getFacadeRoot();
+        // [FIX] Gunakan DB facade langsung sesuai dokumentasi Laravel
 
-        // ── Ukuran database asli (PostgreSQL) ────────────────────────
+        // ── Ukuran database asli (PostgreSQL) ────────────────────
         $dbSizeBytes = 0;
         try {
-            $row = $db::selectOne("SELECT pg_database_size(current_database()) AS size");
+            $row = \Illuminate\Support\Facades\DB::selectOne("SELECT pg_database_size(current_database()) AS size");
             $dbSizeBytes = (int) ($row->size ?? 0);
         } catch (\Throwable $e) {
             $dbSizeBytes = 0;
@@ -199,13 +199,69 @@ Route::middleware(['auth', 'admin.active'])->group(function () {
         ]);
     })->name('system.storage');
 
+    // =====================================================================
+    // KEAMANAN AKUN — DATA ASLI DARI DATABASE [UPDATE: SECURITY MODULE]
+    // =====================================================================
+    // Fungsi: Mengirim data keamanan ASLI ke halaman Security.
+    // Cara Kerja:
+    //   1. Ambil 10 riwayat login terakhir dari tabel login_histories
+    //   2. Ambil semua sesi aktif dari tabel sessions
+    //   3. Parse user_agent untuk setiap sesi aktif
+    //   4. Kirim password_changed_at dari admin
+    // =====================================================================
     Route::get('/profile/security', function () {
-        return Inertia\Inertia::render('Profile/Security');
+        $admin = \Illuminate\Support\Facades\Auth::user();
+
+        // ── Riwayat Login Terakhir (10 terbaru) ─────────────────────
+        $loginHistories = \App\Models\LoginHistory::where('admin_id', $admin->id)
+            ->orderByDesc('logged_in_at')
+            ->take(10)
+            ->get()
+            ->map(fn ($h) => [
+                'id'          => $h->id,
+                'ip_address'  => $h->ip_address,
+                'browser'     => $h->browser,
+                'os'          => $h->os,
+                'device_type' => $h->device_type,
+                'logged_in_at'=> $h->logged_in_at?->toIso8601String(),
+            ]);
+
+        // ── Sesi Aktif (dari tabel sessions) ────────────────────────
+        // [FIX] Gunakan DB facade langsung, bukan getFacadeRoot()
+        $currentSessionId = request()->session()->getId();
+        $activeSessions = \Illuminate\Support\Facades\DB::table('sessions')
+            ->where('user_id', $admin->id)
+            ->orderByDesc('last_activity')
+            ->get()
+            ->map(function ($s) use ($currentSessionId) {
+                $ua = $s->user_agent ?? '';
+                $parsed = \App\Models\LoginHistory::parseUserAgent($ua);
+                return [
+                    'id'            => $s->id,
+                    'ip_address'    => $s->ip_address,
+                    'browser'       => $parsed['browser'],
+                    'os'            => $parsed['os'],
+                    'device_type'   => $parsed['device_type'],
+                    'last_activity' => date('c', $s->last_activity),
+                    'is_current'    => $s->id === $currentSessionId,
+                ];
+            });
+
+        return Inertia\Inertia::render('Profile/Security', [
+            'password_changed_at' => $admin->password_changed_at?->toIso8601String(),
+            'last_login'          => $admin->last_login?->toIso8601String(),
+            'login_histories'     => $loginHistories,
+            'active_sessions'     => $activeSessions,
+        ]);
     })->name('security.index');
 
     Route::get('/profile/password', function () {
         return Inertia\Inertia::render('Profile/Password');
     })->name('password.edit');
+
+    // ── [UPDATE: SECURITY] Logout semua perangkat lain ───────────────
+    Route::post('/profile/security/logout-others', [AuthenticatedSessionController::class, 'logoutOtherDevices'])
+        ->name('security.logout-others');
 
     // Kota (CRUD)
     Route::get('/kota', [KotaController::class, 'index'])->name('kota.index');

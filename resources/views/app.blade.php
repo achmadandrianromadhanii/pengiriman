@@ -22,11 +22,6 @@
     <meta property="og:image" content="/images/softsend-logo.png">
     <meta property="og:title" content="{{ config('app.name', 'SoftSend') }}">
 
-    <!-- UPDATE: Preload Logo Utama untuk mengamankan skor LCP 100% Hijau -->
-    <!-- Fungsi: Memaksa browser memuat gambar logo lebih awal (prioritas tinggi) sebelum render selesai. -->
-    <!-- Cara Kerja: tag preload membuat logo diunduh bersamaan dengan CSS/JS tanpa menunggu DOM dirender. -->
-    <link rel="preload" as="image" href="/images/softsend-logo.png">
-    <link rel="preload" as="image" href="/images/logo-softsend-hd.png" media="(max-width: 767px)">
     <!-- [UPDATE: FONT LOADING — KONSOLIDASI & NON-BLOCKING]
          Fungsi: Memuat Google Fonts dalam SATU request tunggal tanpa memblokir render.
          Perubahan: 
