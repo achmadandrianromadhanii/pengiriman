@@ -1,284 +1,399 @@
-# FINAL REVISION — MOBILE WEB SETTINGS (CACHE & SECURITY)
+# FINAL REVISION
+# SECURITY PAGE — ORIGINAL TOGGLE SWITCH (MOBILE WEB ONLY)
 
-## ROLE
+==============================================================================
+ROLE
+==============================================================================
 
 Bertindak sebagai:
 
+- Senior Mobile UI Engineer
+- Senior UI/UX Designer
+- Senior Frontend Engineer
 - Senior Laravel Engineer
-- Senior PostgreSQL Engineer
 - Senior PWA Engineer
-- Senior Mobile Web Engineer
-- Senior Security Engineer
-- Senior UI/UX Engineer
 
-================================================================================
-TUJUAN
-================================================================================
+==============================================================================
+ATURAN WAJIB
+==============================================================================
 
-Fokus HANYA pada halaman:
+Fokus HANYA pada komponen Toggle Switch di halaman:
 
-- Cache
-- Keamanan
-
-JANGAN mengubah halaman lain.
+Menu
+→ Jelajahi
+→ Keamanan
+→ Pengaturan
 
 JANGAN mengubah:
 
-- Dashboard
-- Login
-- Laporan
-- Tracking
-- Tarif
-- Pengiriman
-- UI utama
-- Animasi yang sudah ada
+- Layout
+- Card
+- Typography
+- Font
+- Icon Lucide
+- Warna halaman
+- Spacing
+- Margin
+- Padding
+- Animasi halaman
+- Bottom Sheet
+- Biometrik
+- Riwayat Login
+- Card Keamanan
+- Halaman lain
 
-================================================================================
-TARGET
-================================================================================
+Tidak boleh ada perubahan selain Toggle Switch.
 
-Mengubah halaman Cache dan Keamanan dari tampilan visual menjadi modul enterprise yang menggunakan DATA ASLI secara realtime.
+==============================================================================
 
-================================================================================
-1. CACHE
-================================================================================
+TUJUAN
+==============================================================================
 
-Seluruh data cache HARUS berasal dari data nyata browser/PWA.
+Mengganti seluruh Toggle Switch custom menjadi Toggle Switch original yang:
 
-Hitung ukuran secara realtime menggunakan sumber yang memang tersedia, seperti:
+✔ Native
+✔ Premium
+✔ Smooth
+✔ Ringan
+✔ Stabil
+✔ Responsif
+✔ Production Ready
+✔ Clean Code
+✔ Tidak ada bug
+✔ Tidak ada delay
+✔ Tidak ada glitch
 
-- Cache Storage API (Service Worker cache)
-- LocalStorage
-- SessionStorage
-- IndexedDB
-- Browser cache yang dapat diakses aplikasi
-- Temporary offline assets
-- Manifest/PWA cache
-- Cache gambar yang dikelola aplikasi
+==============================================================================
 
-Jangan menggunakan angka statis atau dummy.
+1. GANTI IMPLEMENTASI
 
-Tampilkan total cache yang merupakan hasil penjumlahan semua sumber tersebut.
+Hapus seluruh Toggle Switch custom.
 
-================================================================================
-2. PEMBERSIHAN CACHE
-================================================================================
+Gunakan Toggle Switch original dari library UI yang dipakai proyek.
 
-Saat tombol "Bersihkan Cache" ditekan:
+Contoh:
 
-- Tampilkan dialog konfirmasi.
-- Jalankan proses pembersihan cache nyata.
-- Bersihkan hanya cache yang aman untuk dihapus:
-  - Cache Storage
-  - IndexedDB aplikasi
-  - SessionStorage
-  - LocalStorage non-esensial
-  - Temporary image cache
-  - Offline assets
+• Switch native framework
+atau
+• Radix UI Switch
+atau
+• Headless UI Switch
 
-JANGAN menghapus:
-- Session login
-- Token autentikasi
-- Preferensi pengguna
-- Tema aplikasi
+Jangan membuat Toggle menggunakan div manual.
 
-Selama proses berjalan:
+==============================================================================
 
-- Tampilkan popup loading.
-- Progress bar bergerak bertahap.
-- Nilai total cache berkurang secara realtime hingga selesai.
-- Setelah selesai tampilkan notifikasi sukses dengan jumlah ruang yang berhasil dibersihkan.
+2. UKURAN
 
-================================================================================
-3. KEAMANAN
-================================================================================
+Track
 
-Seluruh informasi keamanan HARUS berasal dari data nyata sistem.
+Lebar:
+44px
 
-Status Password:
-- Ambil dari metadata pengguna (misalnya `password_changed_at`).
-- Jika belum pernah diubah, tampilkan "Belum pernah diubah".
+Tinggi:
+24px
 
-Riwayat Login:
-- Ambil dari tabel riwayat login.
-- Tampilkan:
-  - Tanggal
-  - Jam
-  - Browser
-  - Sistem operasi
-  - IP
-  - Lokasi (jika tersedia)
+Radius:
+999px
 
-Perangkat Saat Ini:
-- Deteksi otomatis:
-  - Nama perangkat
-  - Browser
-  - Sistem operasi
-  - Jenis perangkat (Desktop / Android / iPhone)
-  - Status ONLINE
+Padding:
+2px
 
-================================================================================
-4. MANAJEMEN PERANGKAT
-================================================================================
+Thumb
 
-Tambahkan halaman "Perangkat Terhubung".
+Diameter:
+20px
 
-Daftar seluruh sesi aktif dengan informasi:
-- Nama perangkat
-- Browser
-- Sistem operasi
-- Lokasi
-- Waktu login terakhir
-- Status aktif
+Posisi harus benar-benar center.
 
-Sediakan aksi:
-- Logout perangkat tertentu
-- Logout semua perangkat (dengan konfirmasi)
+==============================================================================
 
-================================================================================
-5. PENGATURAN KEAMANAN
-================================================================================
-
-Tambahkan opsi:
-- Notifikasi login baru (ON/OFF)
-- Logout otomatis saat idle (ON/OFF)
-- Biometric Ready (ON/OFF jika didukung PWA)
-
-================================================================================
-6. SINKRONISASI
-================================================================================
-
-Semua data HARUS sinkron secara realtime menggunakan backend aplikasi (Laravel + PostgreSQL + Broadcast/Pusher jika sudah tersedia).
-
-Perubahan login, logout, atau metadata keamanan harus langsung tercermin pada halaman tanpa refresh.
-
-================================================================================
-7. UI/UX
-================================================================================
-
-Pertahankan desain yang sudah ada.
-
-Jangan mengubah layout utama.
-
-Gunakan ikon Lucide secara konsisten.
-
-Tambahkan hanya animasi ringan pada perubahan data (angka cache, status sinkron, progres pembersihan).
-
-================================================================================
-HASIL AKHIR
-================================================================================
-
-✔ Seluruh data berasal dari sumber nyata.
-✔ Tidak ada angka dummy.
-✔ Cache benar-benar dibersihkan secara aman.
-✔ Informasi keamanan sinkron dengan data pengguna dan sesi login.
-✔ Semua fitur bekerja realtime.
-✔ Tampilan tetap ringan, modern, dan konsisten dengan UI aplikasi.
-
-Wireframe Keamanan
-┌──────────────────────────┐
-
-STATUS PASSWORD
-
-Aktif
-
-24 Juli 2026
-
-──────────────
-
-LOGIN TERAKHIR
-
-Hari ini
-
-14.22 WIB
-
-Chrome
-
-Windows 11
-
-──────────────
-
-PERANGKAT
-
-Samsung A55
-
-Android 15
-
-Chrome
-
-ONLINE
-
-──────────────
-
-Toggle
-
-Login Notification
+3. WARNA
 
 ON
 
-Auto Logout
+Track
+
+#2F54EB
+
+Thumb
+
+#FFFFFF
 
 OFF
 
-Biometric
+Track
 
-ON
+#DDE4EE
 
-──────────────
+Thumb
 
-Logout Semua Perangkat
+#FFFFFF
 
-└──────────────────────────┘
+Disabled
 
-Wireframe Cache
-┌──────────────────────────┐
+#EEF2F7
 
-TOTAL CACHE
+==============================================================================
 
-108.25 MB
+4. SHADOW
 
-██████████████
+Thumb
 
-Browser
+Gunakan shadow ringan
 
-48 MB
+0 2px 6px rgba(0,0,0,.16)
 
-███████
+Track tidak perlu shadow besar.
 
-Image
+==============================================================================
 
-32 MB
+5. BORDER
 
-█████
+Track
 
-IndexedDB
+1px solid transparan
 
-20 MB
+Saat OFF
 
-███
+border tipis abu
 
-Storage
+Saat ON
 
-8 MB
+border hilang
 
-──────────────
+==============================================================================
 
-[ Bersihkan Cache ]
+6. ANIMASI
+
+Animasi harus native.
+
+Durasi
+
+180–220ms
+
+Timing
+
+ease-out
+
+Thumb harus bergeser perlahan.
+
+Tidak boleh:
+
+❌ Lompat
+
+❌ Berkedip
+
+❌ Delay
+
+❌ Patah
+
+==============================================================================
+
+7. TAP AREA
+
+Area sentuh minimal
+
+44px
+
+Walaupun visual hanya 24px.
+
+Agar nyaman disentuh di mobile.
+
+==============================================================================
+
+8. STATE
+
+Harus memiliki state:
+
+Loading
+
+On
+
+Off
+
+Disabled
+
+Readonly
+
+==============================================================================
+
+9. LOADING
+
+Saat Toggle ditekan
 
 ↓
 
-Popup
-
-Membersihkan...
-
-72%
-
-██████████░░
+Switch disable sementara
 
 ↓
 
-0 KB
+Kirim request
 
-✓ Berhasil
+↓
 
-└──────────────────────────┘
+Server berhasil
+
+↓
+
+Aktif kembali
+
+Jika gagal
+
+↓
+
+Kembali ke state sebelumnya
+
+↓
+
+Tampilkan Toast Error
+
+==============================================================================
+
+10. PERSISTEN
+
+State Switch tidak boleh hilang setelah:
+
+✔ Refresh
+✔ Tutup Browser
+✔ Install PWA
+✔ Re-open
+
+Status diambil dari database asli.
+
+==============================================================================
+
+11. DATABASE
+
+Gunakan data asli.
+
+Contoh:
+
+notifications_enabled
+
+auto_logout_enabled
+
+biometric_enabled
+
+Jangan memakai local visual state.
+
+==============================================================================
+
+12. SINKRON
+
+Jika Toggle diubah
+
+Desktop
+
+↓
+
+Mobile ikut berubah
+
+Jika diubah
+
+Mobile
+
+↓
+
+Desktop ikut berubah
+
+Gunakan sistem realtime yang sudah ada.
+
+==============================================================================
+
+13. ACCESSIBILITY
+
+Pastikan mendukung:
+
+role="switch"
+
+aria-checked
+
+aria-label
+
+Keyboard
+
+Screen Reader
+
+Focus Ring
+
+==============================================================================
+
+14. CLEAN CODE
+
+Rapikan seluruh kode Toggle.
+
+Hilangkan:
+
+- kode lama
+- state ganda
+- watcher tidak dipakai
+- event tidak dipakai
+- CSS tidak dipakai
+- JS tidak dipakai
+
+Pastikan:
+
+✔ Tidak ada warning
+✔ Tidak ada memory leak
+✔ Tidak ada console error
+✔ Tidak ada bug visual
+
+==============================================================================
+
+15. HASIL AKHIR
+
+Toggle terlihat seperti Toggle native aplikasi mobile premium.
+
+Halus.
+
+Responsif.
+
+Ringan.
+
+Tidak terasa custom.
+
+Tidak mengubah layout halaman sama sekali.
+
+Semua Toggle tetap berada di posisi sekarang.
+
+Hanya kualitas komponen Toggle yang ditingkatkan.
+
+Wireframe Target (Tidak Mengubah Layout)
+┌─────────────────────────────────────────────┐
+
+PENGATURAN
+
+──────────────────────────────────────────────
+
+🔔  Notifikasi Login
+    Beritahu saat ada login baru
+
+                             ╭──────────╮
+                             │      ●   │
+                             ╰──────────╯
+                                  ON
+
+
+──────────────────────────────────────────────
+
+⏱  Auto Logout
+    Logout otomatis saat idle
+
+                             ╭──────────╮
+                             │ ●        │
+                             ╰──────────╯
+                                  OFF
+
+
+──────────────────────────────────────────────
+
+🛡  Biometrik
+    Login dengan sidik jari / wajah
+
+                             ╭──────────╮
+                             │ ●        │
+                             ╰──────────╯
+                                  OFF
+
+└─────────────────────────────────────────────┘

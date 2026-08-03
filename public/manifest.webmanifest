@@ -1,0 +1,40 @@
+{
+    "name": "SoftSend — Enterprise Logistics",
+    "short_name": "SoftSend",
+    "description": "Sistem Manajemen Pengiriman Enterprise. Kelola resi, tracking, laporan, dan tarif dalam satu platform.",
+    "start_url": "/dashboard",
+    "scope": "/",
+    "display": "standalone",
+    "orientation": "portrait-primary",
+    "background_color": "#0E1117",
+    "theme_color": "#1E3A8A",
+    "lang": "id",
+    "dir": "ltr",
+    "categories": ["business", "productivity"],
+    "icons": [
+        {
+            "src": "/favicon.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/favicon.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "/images/softsend-logo.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/images/softsend-logo.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}

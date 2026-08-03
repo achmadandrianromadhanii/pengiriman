@@ -30,10 +30,22 @@ use Inertia\Response as InertiaResponse;
 
 class AuthenticatedSessionController extends Controller
 {
-    // ── Render halaman login ─────────────────────────────────────────────
+    // =====================================================================
+    // Render halaman login [UPDATE: V3]
+    // =====================================================================
+    // Fungsi: Menampilkan halaman login dengan informasi biometrik.
+    // Cara Kerja: Cek apakah ada admin dengan biometrik aktif, lalu
+    //             kirim flag biometric_active ke frontend.
+    // =====================================================================
     public function create(): InertiaResponse
     {
-        return Inertia::render('Auth/Login');
+        // [UPDATE: V3] Cek apakah ada kredensial WebAuthn terdaftar
+        // Ini menentukan apakah bottom sheet biometrik muncul di halaman login.
+        $hasBiometric = \App\Models\WebauthnCredential::exists();
+
+        return Inertia::render('Auth/Login', [
+            'biometric_active' => $hasBiometric,
+        ]);
     }
 
     // =====================================================================
@@ -107,18 +119,43 @@ class AuthenticatedSessionController extends Controller
     }
 
     // =====================================================================
-    // [UPDATE: SECURITY] Logout semua perangkat lain
+    // [UPDATE: SECURITY V4] Logout semua perangkat (termasuk saat ini)
     // =====================================================================
-    // Fungsi: Menghapus semua sesi aktif kecuali sesi saat ini.
-    // Cara Kerja: Hapus semua record sessions di database yang memiliki
-    //             user_id = admin saat ini KECUALI session_id saat ini.
+    // Fungsi: Menghapus semua sesi aktif di server.
+    // Cara Kerja:
+    //   - Jika request memiliki logout_current = true:
+    //     → Hapus SEMUA sesi dari tabel sessions (termasuk sesi ini).
+    //     → Logout user saat ini (Auth::logout).
+    //     → Invalidate session + regenerate CSRF token.
+    //     → Redirect ke halaman login.
+    //   - Jika logout_current = false (default):
+    //     → Hapus semua sesi KECUALI sesi saat ini.
+    //     → Kembali ke halaman sebelumnya.
     // =====================================================================
     public function logoutOtherDevices(Request $request): RedirectResponse
     {
-        $sessionId = $request->session()->getId();
         $userId = Auth::id();
+        $logoutCurrent = $request->boolean('logout_current', false);
 
-        // Hapus semua sesi lain dari tabel sessions
+        if ($logoutCurrent) {
+            // [V4] Hapus SELURUH sesi dari database (termasuk sesi saat ini)
+            DB::table('sessions')
+                ->where('user_id', $userId)
+                ->delete();
+
+            // Logout user saat ini
+            Auth::logout();
+
+            // Invalidate session & regenerate CSRF token
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            // Redirect ke halaman login
+            return redirect()->route('login');
+        }
+
+        // Default: hapus sesi lain, pertahankan sesi saat ini
+        $sessionId = $request->session()->getId();
         DB::table('sessions')
             ->where('user_id', $userId)
             ->where('id', '!=', $sessionId)

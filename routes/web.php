@@ -200,34 +200,36 @@ Route::middleware(['auth', 'admin.active'])->group(function () {
     })->name('system.storage');
 
     // =====================================================================
-    // KEAMANAN AKUN — DATA ASLI DARI DATABASE [UPDATE: SECURITY MODULE]
+    // KEAMANAN AKUN — DATA ASLI DARI DATABASE [UPDATE: SECURITY V2]
     // =====================================================================
     // Fungsi: Mengirim data keamanan ASLI ke halaman Security.
     // Cara Kerja:
     //   1. Ambil 10 riwayat login terakhir dari tabel login_histories
-    //   2. Ambil semua sesi aktif dari tabel sessions
-    //   3. Parse user_agent untuk setiap sesi aktif
+    //   2. Ambil semua sesi aktif dari tabel sessions + parse device_name
+    //   3. Hitung password_age (umur password dalam hari)
     //   4. Kirim password_changed_at dari admin
     // =====================================================================
     Route::get('/profile/security', function () {
         $admin = \Illuminate\Support\Facades\Auth::user();
 
         // ── Riwayat Login Terakhir (10 terbaru) ─────────────────────
+        // [UPDATE: V2] Tambah device_name dari parseDeviceName()
         $loginHistories = \App\Models\LoginHistory::where('admin_id', $admin->id)
             ->orderByDesc('logged_in_at')
             ->take(10)
             ->get()
-            ->map(fn ($h) => [
-                'id'          => $h->id,
-                'ip_address'  => $h->ip_address,
-                'browser'     => $h->browser,
-                'os'          => $h->os,
-                'device_type' => $h->device_type,
-                'logged_in_at'=> $h->logged_in_at?->toIso8601String(),
+            ->map(fn($h) => [
+                'id'           => $h->id,
+                'ip_address'   => $h->ip_address,
+                'browser'      => $h->browser,
+                'os'           => $h->os,
+                'device_type'  => $h->device_type,
+                'device_name'  => \App\Models\LoginHistory::parseDeviceName($h->user_agent ?? ''),
+                'logged_in_at' => $h->logged_in_at?->toIso8601String(),
             ]);
 
         // ── Sesi Aktif (dari tabel sessions) ────────────────────────
-        // [FIX] Gunakan DB facade langsung, bukan getFacadeRoot()
+        // [UPDATE: V2] Tambah device_name untuk setiap sesi
         $currentSessionId = request()->session()->getId();
         $activeSessions = \Illuminate\Support\Facades\DB::table('sessions')
             ->where('user_id', $admin->id)
@@ -236,22 +238,44 @@ Route::middleware(['auth', 'admin.active'])->group(function () {
             ->map(function ($s) use ($currentSessionId) {
                 $ua = $s->user_agent ?? '';
                 $parsed = \App\Models\LoginHistory::parseUserAgent($ua);
+                $deviceName = \App\Models\LoginHistory::parseDeviceName($ua);
                 return [
                     'id'            => $s->id,
                     'ip_address'    => $s->ip_address,
                     'browser'       => $parsed['browser'],
                     'os'            => $parsed['os'],
                     'device_type'   => $parsed['device_type'],
+                    'device_name'   => $deviceName,
                     'last_activity' => date('c', $s->last_activity),
                     'is_current'    => $s->id === $currentSessionId,
                 ];
             });
 
+        // ── Hitung umur password (dalam hari) ───────────────────────
+        $passwordAge = null;
+        if ($admin->password_changed_at) {
+            $passwordAge = (int) $admin->password_changed_at->diffInDays(now());
+        }
+
+        // ── [UPDATE: V3] Ambil pengaturan keamanan dari database ─────
+        $settings = \App\Models\AdminSecuritySetting::getOrCreate($admin->id);
+
+        // ── [UPDATE: V3] Cek apakah admin punya kredensial WebAuthn ──
+        $hasWebauthn = \App\Models\WebauthnCredential::where('admin_id', $admin->id)->exists();
+
         return Inertia\Inertia::render('Profile/Security', [
             'password_changed_at' => $admin->password_changed_at?->toIso8601String(),
+            'password_age'        => $passwordAge,
             'last_login'          => $admin->last_login?->toIso8601String(),
             'login_histories'     => $loginHistories,
             'active_sessions'     => $activeSessions,
+            // [UPDATE: V3] Data pengaturan keamanan dari database
+            'security_settings'   => [
+                'login_notification' => $settings->login_notification,
+                'auto_logout'        => $settings->auto_logout,
+                'biometric_enabled'  => $settings->biometric_enabled,
+            ],
+            'has_webauthn'        => $hasWebauthn,
         ]);
     })->name('security.index');
 
@@ -259,9 +283,87 @@ Route::middleware(['auth', 'admin.active'])->group(function () {
         return Inertia\Inertia::render('Profile/Password');
     })->name('password.edit');
 
-    // ── [UPDATE: SECURITY] Logout semua perangkat lain ───────────────
+    // ── [UPDATE: SECURITY V2] Logout semua perangkat lain ────────────
     Route::post('/profile/security/logout-others', [AuthenticatedSessionController::class, 'logoutOtherDevices'])
         ->name('security.logout-others');
+
+    // ── [UPDATE: SECURITY V2] Hapus seluruh riwayat login ────────────
+    // Fungsi: Menghapus semua record login_histories milik admin saat ini.
+    // Cara Kerja: DELETE dari tabel login_histories WHERE admin_id = current.
+    Route::delete('/profile/security/clear-history', function () {
+        $admin = \Illuminate\Support\Facades\Auth::user();
+        \App\Models\LoginHistory::where('admin_id', $admin->id)->delete();
+        return back();
+    })->name('security.clear-history');
+
+    // =====================================================================
+    // [UPDATE: SECURITY V3] Toggle pengaturan keamanan — simpan ke database
+    // =====================================================================
+    // Fungsi: Menyimpan perubahan toggle (notifikasi, auto logout, biometrik)
+    //         ke tabel admin_security_settings agar sinkron lintas perangkat.
+    // Cara Kerja: POST dengan field 'key' dan 'value' → update kolom yang sesuai.
+    // =====================================================================
+    Route::post('/profile/security/toggle-setting', function (\Illuminate\Http\Request $request) {
+        $request->validate([
+            'key'   => 'required|in:login_notification,auto_logout,biometric_enabled',
+            'value' => 'required|boolean',
+        ]);
+
+        $admin = \Illuminate\Support\Facades\Auth::user();
+        $settings = \App\Models\AdminSecuritySetting::getOrCreate($admin->id);
+
+        // [UPDATE: V3] Pastikan nilai di-cast ke boolean murni untuk Postgres
+        $settings->{$request->key} = filter_var($request->value, FILTER_VALIDATE_BOOLEAN);
+        $settings->save();
+
+        return back();
+    })->name('security.toggle-setting');
+
+    // =====================================================================
+    // [UPDATE: SECURITY V3] WebAuthn — Simpan kredensial biometrik
+    // =====================================================================
+    // Fungsi: Menyimpan public key credential dari WebAuthn API ke database.
+    // Cara Kerja: Frontend memanggil navigator.credentials.create(), lalu
+    //             mengirim credential_id + public_key ke route ini.
+    // =====================================================================
+    Route::post('/profile/security/webauthn/register', function (\Illuminate\Http\Request $request) {
+        $request->validate([
+            'credential_id' => 'required|string',
+            'public_key'    => 'required|string',
+            'device_name'   => 'nullable|string|max:255',
+        ]);
+
+        $admin = \Illuminate\Support\Facades\Auth::user();
+
+        // Simpan kredensial WebAuthn ke database
+        \App\Models\WebauthnCredential::create([
+            'admin_id'      => $admin->id,
+            'credential_id' => $request->credential_id,
+            'public_key'    => $request->public_key,
+            'device_name'   => $request->device_name,
+            'sign_count'    => 0,
+        ]);
+
+        // Aktifkan biometrik di settings
+        $settings = \App\Models\AdminSecuritySetting::getOrCreate($admin->id);
+        $settings->biometric_enabled = true;
+        $settings->save();
+
+        return back();
+    })->name('security.webauthn.register');
+
+    // ── [UPDATE: V3] Hapus kredensial WebAuthn ───────────────────────────
+    Route::delete('/profile/security/webauthn/remove', function () {
+        $admin = \Illuminate\Support\Facades\Auth::user();
+        \App\Models\WebauthnCredential::where('admin_id', $admin->id)->delete();
+
+        // Nonaktifkan biometrik di settings
+        $settings = \App\Models\AdminSecuritySetting::getOrCreate($admin->id);
+        $settings->biometric_enabled = false;
+        $settings->save();
+
+        return back();
+    })->name('security.webauthn.remove');
 
     // Kota (CRUD)
     Route::get('/kota', [KotaController::class, 'index'])->name('kota.index');

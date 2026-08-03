@@ -35,6 +35,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Sora:wght@600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
     <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Sora:wght@600;700&display=swap" rel="stylesheet"></noscript>
 
+    <!-- [UPDATE: PWA V1] Web App Manifest -->
+    <!-- Fungsi: Mendaftarkan aplikasi sebagai PWA (Progressive Web App). -->
+    <!-- Cara Kerja: Browser membaca manifest ini untuk menampilkan prompt 'Install App', -->
+    <!--             mendefinisikan ikon, warna splash screen, dan mode standalone. -->
+    <link rel="manifest" href="/manifest.webmanifest">
+
     <!-- PWA & Mobile Web App Meta -->
     <meta name="theme-color" content="#1E3A8A" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#0E1117" media="(prefers-color-scheme: dark)">
@@ -49,6 +55,21 @@
 
 <body class="font-sans antialiased">
     @inertia
+
+    <!-- [UPDATE: PWA V1] Service Worker Registration -->
+    <!-- Fungsi: Mendaftarkan service worker untuk caching offline. -->
+    <!-- Cara Kerja: -->
+    <!--   1. Menunggu halaman selesai load (window.onload) agar tidak memblokir render. -->
+    <!--   2. Cek apakah browser mendukung Service Worker API. -->
+    <!--   3. Register /sw.js yang menangani cache offline. -->
+    <!-- Catatan: Kompatibel dengan localhost (dev) dan HTTPS (Vercel production). -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js').catch(function() {});
+            });
+        }
+    </script>
 </body>
 
 </html>

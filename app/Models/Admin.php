@@ -81,4 +81,26 @@ class Admin extends Authenticatable
     {
         return $this->hasMany(LoginHistory::class, 'admin_id');
     }
+
+    // =====================================================================
+    // [UPDATE: SECURITY V3] Relasi: Admin memiliki pengaturan keamanan
+    // =====================================================================
+    // Fungsi: Mengakses record admin_security_settings (1:1).
+    // Cara Kerja: hasOne ke tabel admin_security_settings via admin_id.
+    // =====================================================================
+    public function securitySettings()
+    {
+        return $this->hasOne(AdminSecuritySetting::class, 'admin_id');
+    }
+
+    // =====================================================================
+    // [UPDATE: SECURITY V3] Relasi: Admin memiliki kredensial WebAuthn
+    // =====================================================================
+    // Fungsi: Mengakses semua Passkey/biometrik yang terdaftar.
+    // Cara Kerja: hasMany ke tabel webauthn_credentials via admin_id.
+    // =====================================================================
+    public function webauthnCredentials()
+    {
+        return $this->hasMany(WebauthnCredential::class, 'admin_id');
+    }
 }

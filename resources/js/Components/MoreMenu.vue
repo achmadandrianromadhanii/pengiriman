@@ -296,7 +296,7 @@
                     <div>
                         <h3 class="px-2 mb-3 text-[11px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest">Akun</h3>
                         <div class="bg-white dark:bg-[#11131A] rounded-[24px] shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] border border-slate-100 dark:border-gray-800/60 overflow-hidden">
-                            <Link :href="route('profile.edit')" @click="emit('close')" class="w-full flex items-center justify-between p-4 border-b border-gray-100/50 dark:border-gray-800/80 active:bg-slate-50 dark:active:bg-gray-800/30 transition-colors">
+                            <Link :href="route('profile.edit')" prefetch cacheFor="1m" @click="emit('close')" class="w-full flex items-center justify-between p-4 border-b border-gray-100/50 dark:border-gray-800/80 active:bg-slate-50 dark:active:bg-gray-800/30 transition-colors">
                                 <div class="flex items-center gap-3.5">
                                     <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-[#2349F5] flex items-center justify-center">
                                         <UserRound :size="20" stroke-width="2.5" />
@@ -305,7 +305,7 @@
                                 </div>
                                 <ChevronRight :size="18" class="text-gray-400" />
                             </Link>
-                            <Link :href="route('security.index')" @click="emit('close')" class="w-full flex items-center justify-between p-4 border-b border-gray-100/50 dark:border-gray-800/80 active:bg-slate-50 dark:active:bg-gray-800/30 transition-colors">
+                            <Link :href="route('security.index')" prefetch cacheFor="1m" @click="emit('close')" class="w-full flex items-center justify-between p-4 border-b border-gray-100/50 dark:border-gray-800/80 active:bg-slate-50 dark:active:bg-gray-800/30 transition-colors">
                                 <div class="flex items-center gap-3.5">
                                     <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 flex items-center justify-center">
                                         <ShieldCheck :size="20" stroke-width="2.5" />
@@ -314,7 +314,7 @@
                                 </div>
                                 <ChevronRight :size="18" class="text-gray-400" />
                             </Link>
-                            <Link :href="route('password.edit')" @click="emit('close')" class="w-full flex items-center justify-between p-4 active:bg-slate-50 dark:active:bg-gray-800/30 transition-colors">
+                            <Link :href="route('password.edit')" prefetch cacheFor="1m" @click="emit('close')" class="w-full flex items-center justify-between p-4 active:bg-slate-50 dark:active:bg-gray-800/30 transition-colors">
                                 <div class="flex items-center gap-3.5">
                                     <div class="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-900/20 text-orange-600 flex items-center justify-center">
                                         <LockKeyhole :size="20" stroke-width="2.5" />
@@ -329,7 +329,7 @@
                     <div>
                         <h3 class="px-2 mb-3 text-[11px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest">Sistem</h3>
                         <div class="bg-white dark:bg-[#11131A] rounded-[24px] shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] border border-slate-100 dark:border-gray-800/60 overflow-hidden">
-                            <Link :href="route('system.about')" @click="emit('close')" class="w-full flex items-center justify-between p-4 border-b border-gray-100/50 dark:border-gray-800/80 active:bg-slate-50 dark:active:bg-gray-800/30 transition-colors cursor-pointer outline-none">
+                            <Link :href="route('system.about')" prefetch cacheFor="1m" @click="emit('close')" class="w-full flex items-center justify-between p-4 border-b border-gray-100/50 dark:border-gray-800/80 active:bg-slate-50 dark:active:bg-gray-800/30 transition-colors cursor-pointer outline-none">
                                 <div class="flex items-center gap-3.5">
                                     <div class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-gray-800/50 text-slate-600 dark:text-slate-400 flex items-center justify-center">
                                         <Info :size="20" stroke-width="2.5" />
@@ -347,7 +347,7 @@
                                 </div>
                                 <span class="text-xs font-bold text-gray-400 mr-1">5.0</span>
                             </div>
-                            <Link :href="route('system.cache')" @click="emit('close')" class="w-full flex items-center justify-between p-4 border-b border-gray-100/50 dark:border-gray-800/80 active:bg-slate-50 dark:active:bg-gray-800/30 transition-colors cursor-pointer outline-none">
+                            <Link :href="route('system.cache')" prefetch cacheFor="1m" @click="emit('close')" class="w-full flex items-center justify-between p-4 border-b border-gray-100/50 dark:border-gray-800/80 active:bg-slate-50 dark:active:bg-gray-800/30 transition-colors cursor-pointer outline-none">
                                 <div class="flex items-center gap-3.5">
                                     <div class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-gray-800/50 text-slate-600 dark:text-slate-400 flex items-center justify-center">
                                         <Database :size="20" stroke-width="2.5" />
@@ -356,7 +356,7 @@
                                 </div>
                                 <ChevronRight :size="18" class="text-gray-400" />
                             </Link>
-                            <Link :href="route('system.storage')" @click="emit('close')" class="w-full flex items-center justify-between p-4 active:bg-slate-50 dark:active:bg-gray-800/30 transition-colors cursor-pointer outline-none">
+                            <Link :href="route('system.storage')" prefetch cacheFor="1m" @click="emit('close')" class="w-full flex items-center justify-between p-4 active:bg-slate-50 dark:active:bg-gray-800/30 transition-colors cursor-pointer outline-none">
                                 <div class="flex items-center gap-3.5">
                                     <div class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-gray-800/50 text-slate-600 dark:text-slate-400 flex items-center justify-center">
                                         <HardDrive :size="20" stroke-width="2.5" />

@@ -124,6 +124,9 @@
                     <img
                         src="/images/softsend-logo.png"
                         alt="SoftSend Logo"
+                        width="800"
+                        height="200"
+                        fetchpriority="high"
                         class="object-contain transition duration-300"
                         :class="
                             collapsed

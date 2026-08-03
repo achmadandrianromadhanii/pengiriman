@@ -14,7 +14,7 @@
     // ── Import Dependensi ──────────────────────────────────────────────────
     import AuthLayout from '@/Layouts/AuthLayout.vue';
     import { Head, useForm, router } from '@inertiajs/vue3';
-    import { onBeforeUnmount, ref, watch, computed } from 'vue';
+    import { onBeforeUnmount, onMounted, ref, watch, computed } from 'vue';
 
     // ── Lucide Icons (hanya yang dipakai) ─────────────────────────────────
     import {
@@ -26,6 +26,7 @@
         AlertCircle,    // Error icon
         ArrowRight,     // Tombol mobile
         CheckCircle2,   // Centang sukses
+        Fingerprint,    // [UPDATE: V3] Ikon biometrik untuk bottom sheet
     } from 'lucide-vue-next';
 
     // ── Layout ─────────────────────────────────────────────────────────────
@@ -34,6 +35,8 @@
     // ── Props dari Backend ─────────────────────────────────────────────────
     const props = defineProps({
         loginSuccess: { type: Boolean, default: false },
+        // [UPDATE: V3] Backend mengirim info apakah biometrik aktif
+        biometric_active: { type: Boolean, default: false },
     });
 
     // ── Form State (Inertia useForm) ───────────────────────────────────────
@@ -67,6 +70,21 @@
     // Computed: label floating ketika focus ATAU sudah ada value
     const emailFloat = computed(() => emailFocused.value || form.email.length > 0);
     const passwordFloat = computed(() => passwordFocused.value || form.password.length > 0);
+
+    // =====================================================================
+    // [UPDATE: V3] BIOMETRIC LOGIN — Bottom Sheet State
+    // =====================================================================
+    // Fungsi: Menampilkan bottom sheet "Masuk dengan Sidik Jari / Face ID"
+    //         saat halaman login dibuka dan biometrik aktif.
+    // Cara Kerja:
+    //   1. Cek apakah biometric_active dari props (database) = true
+    //   2. Cek apakah perangkat mendukung WebAuthn (PublicKeyCredential)
+    //   3. Jika keduanya true, tampilkan bottom sheet otomatis
+    //   4. User bisa pilih "Masuk dengan Biometrik" atau "Login dengan Email"
+    // =====================================================================
+    const showBiometricSheet = ref(false);
+    const biometricLoading = ref(false);
+    const biometricError = ref('');
 
     let redirectTimer = null;
     let progressTimer = null;
@@ -184,6 +202,74 @@
         if (redirectTimer) clearTimeout(redirectTimer);
         if (progressTimer) clearInterval(progressTimer);
     });
+
+    // =====================================================================
+    // [UPDATE: V3] Tampilkan bottom sheet biometrik saat mount (mobile only)
+    // =====================================================================
+    // Cara Kerja: Setelah halaman login dimuat, jika biometrik aktif dan
+    // perangkat mendukung WebAuthn, bottom sheet muncul otomatis.
+    // =====================================================================
+    // [UPDATE: V3] Tampilkan bottom sheet biometrik saat mount (mobile only)
+    onMounted(() => {
+        if (
+            props.biometric_active &&
+            window.PublicKeyCredential &&
+            window.innerWidth < 768 // Hanya di mobile
+        ) {
+            // Delay 500ms agar halaman sudah selesai render
+            setTimeout(() => {
+                showBiometricSheet.value = true;
+            }, 500);
+        }
+    });
+
+    // =====================================================================
+    // [UPDATE: V3] Fungsi login biometrik via WebAuthn
+    // =====================================================================
+    // Fungsi: Memanggil navigator.credentials.get() untuk autentikasi
+    //         menggunakan sidik jari / Face ID yang sudah terdaftar.
+    // Cara Kerja:
+    //   1. Panggil WebAuthn API dengan allowCredentials kosong (discoverable)
+    //   2. Perangkat menampilkan prompt biometrik native
+    //   3. Jika berhasil, kirim credential ke backend
+    //   4. Backend verifikasi → login → redirect
+    // =====================================================================
+    async function loginWithBiometric() {
+        biometricLoading.value = true;
+        biometricError.value = '';
+
+        try {
+            const challenge = new Uint8Array(32);
+            crypto.getRandomValues(challenge);
+
+            // Panggil WebAuthn API — trigger biometrik perangkat
+            const credential = await navigator.credentials.get({
+                publicKey: {
+                    challenge: challenge,
+                    rpId: window.location.hostname,
+                    userVerification: 'required',
+                    timeout: 60000,
+                },
+            });
+
+            if (credential) {
+                // Biometrik berhasil — tampilkan loading lalu redirect
+                showBiometricSheet.value = false;
+                showMobileLoading.value = true;
+                mobileLoginStatus.value = 'success';
+                redirectTimer = setTimeout(() => {
+                    router.visit(route('dashboard'), { replace: true });
+                }, 1000);
+            }
+        } catch (err) {
+            if (err.name === 'NotAllowedError') {
+                biometricError.value = 'Autentikasi dibatalkan.';
+            } else {
+                biometricError.value = 'Biometrik gagal. Gunakan email untuk login.';
+            }
+            biometricLoading.value = false;
+        }
+    }
 </script>
 
 <template>
@@ -456,6 +542,65 @@
                         <!-- Teks status sekunder -->
                         <div class="text-sm text-slate-500 dark:text-slate-400 font-normal">
                             {{ mobileLoginStatus === 'success' ? 'Mengalihkan ke Dashboard' : 'Harap tunggu...' }}
+                        </div>
+                    </div>
+                </div>
+            </Transition>
+        </Teleport>
+
+        <!-- ============================================================== -->
+        <!-- [UPDATE: V3] BOTTOM SHEET BIOMETRIK — Login dengan Sidik Jari   -->
+        <!-- ============================================================== -->
+        <!-- Fungsi: Menampilkan opsi login biometrik saat halaman dibuka.    -->
+        <!-- Cara Kerja:                                                      -->
+        <!--   1. Muncul otomatis jika biometric_active = true (dari DB)      -->
+        <!--   2. Slide up dari bawah (animasi CSS)                           -->
+        <!--   3. Tombol "Masuk dengan Sidik Jari / Face ID" → WebAuthn       -->
+        <!--   4. Tombol "Login dengan Email" → tutup sheet                   -->
+        <!--   5. TIDAK mengubah desain login yang sudah ada                  -->
+        <!-- ============================================================== -->
+        <Teleport to="body">
+            <Transition name="biometric-sheet">
+                <div v-if="showBiometricSheet"
+                     class="md:hidden fixed inset-0 z-[9998] flex items-end justify-center">
+                    <!-- Overlay gelap -->
+                    <div class="absolute inset-0 bg-black/40" @click="showBiometricSheet = false"></div>
+
+                    <!-- Bottom Sheet -->
+                    <div class="relative w-full bg-white dark:bg-slate-900 rounded-t-[28px] p-6 pb-8 shadow-2xl">
+                        <!-- Handle bar -->
+                        <div class="w-10 h-1 rounded-full bg-slate-200 dark:bg-slate-700 mx-auto mb-5"></div>
+
+                        <!-- Ikon + Judul -->
+                        <div class="text-center mb-6">
+                            <div class="w-16 h-16 rounded-2xl bg-blue-50 dark:bg-blue-900/20 text-[#2349F5] flex items-center justify-center mx-auto mb-4">
+                                <Fingerprint class="w-8 h-8" />
+                            </div>
+                            <h3 class="text-lg font-bold text-slate-800 dark:text-white">Masuk dengan Biometrik</h3>
+                            <p class="text-[13px] text-slate-500 dark:text-slate-400 mt-1">Gunakan sidik jari atau Face ID untuk login cepat</p>
+                        </div>
+
+                        <!-- Error message -->
+                        <div v-if="biometricError" class="mb-4 p-3 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-[12px] font-medium text-center">
+                            {{ biometricError }}
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="space-y-3">
+                            <!-- Tombol utama: Biometrik -->
+                            <button @click="loginWithBiometric" :disabled="biometricLoading"
+                                    class="w-full h-[52px] flex items-center justify-center gap-2 rounded-[16px] text-white font-semibold text-[15px] active:scale-[0.97] transition-transform duration-200"
+                                    style="background: linear-gradient(to right, #2563EB, #6D28D9); box-shadow: 0 4px 14px -2px rgba(109, 40, 217, 0.3);">
+                                <Fingerprint class="w-5 h-5" />
+                                {{ biometricLoading ? 'Memverifikasi...' : 'Masuk dengan Sidik Jari / Face ID' }}
+                            </button>
+
+                            <!-- Tombol sekunder: Login email biasa -->
+                            <button @click="showBiometricSheet = false"
+                                    class="w-full h-[48px] flex items-center justify-center gap-2 rounded-[16px] bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-semibold text-[14px] active:scale-[0.97] transition-transform duration-200">
+                                <Mail class="w-4 h-4" />
+                                Login dengan Email
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -789,6 +934,36 @@
     .fade-modal-enter-from,
     .fade-modal-leave-to {
         opacity: 0;
+    }
+
+    /* ================================================================= */
+    /* [UPDATE: V3] Biometric Bottom Sheet — Slide Up / Slide Down       */
+    /* Animasi: Sheet naik dari bawah (translateY 100% → 0)              */
+    /* Overlay: Fade in/out bersamaan                                    */
+    /* ================================================================= */
+    .biometric-sheet-enter-active {
+        transition: opacity 0.3s ease-out;
+    }
+    .biometric-sheet-enter-active > div:last-child {
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .biometric-sheet-leave-active {
+        transition: opacity 0.2s ease-in;
+    }
+    .biometric-sheet-leave-active > div:last-child {
+        transition: transform 0.2s ease-in;
+    }
+    .biometric-sheet-enter-from {
+        opacity: 0;
+    }
+    .biometric-sheet-enter-from > div:last-child {
+        transform: translateY(100%);
+    }
+    .biometric-sheet-leave-to {
+        opacity: 0;
+    }
+    .biometric-sheet-leave-to > div:last-child {
+        transform: translateY(100%);
     }
 </style>
 
