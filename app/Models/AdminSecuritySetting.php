@@ -35,9 +35,9 @@ class AdminSecuritySetting extends Model
 
     // ── Casting ──────────────────────────────────────────────────────────
     protected $casts = [
-        'login_notification' => 'boolean',
-        'auto_logout' => 'boolean',
-        'biometric_enabled' => 'boolean',
+        'login_notification' => \App\Casts\PostgresBoolean::class,
+        'auto_logout' => \App\Casts\PostgresBoolean::class,
+        'biometric_enabled' => \App\Casts\PostgresBoolean::class,
     ];
 
     // ── Relasi: Setting ini milik admin mana ────────────────────────────
