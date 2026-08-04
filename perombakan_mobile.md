@@ -1,399 +1,231 @@
 # FINAL REVISION
-# SECURITY PAGE — ORIGINAL TOGGLE SWITCH (MOBILE WEB ONLY)
+# MOBILE WEB ONLY
+# HALAMAN MENU → JELAJAH → KEAMANAN
+# FOKUS HANYA TOGGLE SWITCH DAN BUG FIX
 
-==============================================================================
-ROLE
-==============================================================================
+================================================================
 
-Bertindak sebagai:
+PERINGATAN PALING PENTING
 
-- Senior Mobile UI Engineer
-- Senior UI/UX Designer
-- Senior Frontend Engineer
-- Senior Laravel Engineer
-- Senior PWA Engineer
-
-==============================================================================
-ATURAN WAJIB
-==============================================================================
-
-Fokus HANYA pada komponen Toggle Switch di halaman:
-
-Menu
-→ Jelajahi
-→ Keamanan
-→ Pengaturan
-
-JANGAN mengubah:
+JANGAN MERUBAH:
 
 - Layout
-- Card
 - Typography
-- Font
-- Icon Lucide
-- Warna halaman
-- Spacing
+- Card
 - Margin
 - Padding
-- Animasi halaman
-- Bottom Sheet
-- Biometrik
-- Riwayat Login
-- Card Keamanan
+- Warna halaman
+- Icon
+- Struktur halaman
+- Animasi lain
+- Bottom Sheet Biometrik
 - Halaman lain
 
-Tidak boleh ada perubahan selain Toggle Switch.
+Semua UI yang sudah bagus WAJIB DIPERTAHANKAN.
 
-==============================================================================
+================================================================
 
-TUJUAN
-==============================================================================
+TARGET
 
-Mengganti seluruh Toggle Switch custom menjadi Toggle Switch original yang:
+Fokus hanya memperbaiki Toggle Switch.
 
-✔ Native
+================================================================
+
+TOGGLE SWITCH
+
+HAPUS implementasi Toggle Switch custom lama apabila memang menjadi penyebab bug.
+
+Gunakan Toggle Switch original dari library.
+
+Prioritas:
+
+1. Radix Vue Switch
+2. Headless UI Switch
+3. PrimeVue InputSwitch
+
+Jangan membuat Toggle Switch dengan CSS custom.
+
+================================================================
+
+SPESIFIKASI
+
+Track
+
+- width 42px
+- height 24px
+
+Thumb
+
+- 18px
+
+Padding
+
+- 3px
+
+Radius
+
+- full
+
+Animasi
+
+- transition 200ms ease
+- translateX
+- tanpa bounce
+- tanpa rotate
+- tanpa ripple
+
+Warna OFF
+
+#E4EAF3
+
+Warna ON
+
+#2F5DFF
+
+Thumb putih.
+
+Shadow thumb ringan.
+
+================================================================
+
+STATE
+
+Status Toggle wajib berasal dari backend.
+
+Tidak boleh menggunakan state visual.
+
+Harus sinkron dengan database.
+
+Refresh halaman:
+
+Status tetap.
+
+Pindah halaman:
+
+Status tetap.
+
+Logout:
+
+Status tetap.
+
+================================================================
+
+BUG
+
+Perbaiki seluruh bug Toggle.
+
+Tidak boleh ada:
+
+- Flicker
+- Delay
+- Double Click
+- Ghost Click
+- UI mismatch
+- Hydration warning
+- Vue warning
+- Memory leak
+
+================================================================
+
+RESPONSIVE
+
+Pastikan proporsional pada:
+
+320
+
+360
+
+375
+
+390
+
+414
+
+430
+
+480
+
+================================================================
+
+KODE
+
+Hapus CSS lama yang menyebabkan conflict.
+
+Pastikan tidak ada CSS duplicate.
+
+Pastikan component bersih.
+
+================================================================
+
+OUTPUT
+
+Berikan laporan:
+
+✔ Penyebab bug
+
+✔ File yang diubah
+
+✔ Kenapa diubah
+
+✔ Bug yang diperbaiki
+
+================================================================
+
+HASIL AKHIR
+
+✔ Toggle Switch original library
+
+✔ Proporsional
+
 ✔ Premium
-✔ Smooth
-✔ Ringan
-✔ Stabil
-✔ Responsif
-✔ Production Ready
-✔ Clean Code
-✔ Tidak ada bug
-✔ Tidak ada delay
-✔ Tidak ada glitch
 
-==============================================================================
+✔ Mirip iOS / Material 3
 
-1. GANTI IMPLEMENTASI
+✔ Sinkron backend
 
-Hapus seluruh Toggle Switch custom.
+✔ Sinkron database
 
-Gunakan Toggle Switch original dari library UI yang dipakai proyek.
+✔ Tidak mengubah UI lain
 
-Contoh:
+✔ Tidak mengubah halaman lain
 
-• Switch native framework
-atau
-• Radix UI Switch
-atau
-• Headless UI Switch
+✔ Tidak mengubah desain yang sudah bagus
 
-Jangan membuat Toggle menggunakan div manual.
-
-==============================================================================
-
-2. UKURAN
-
-Track
-
-Lebar:
-44px
-
-Tinggi:
-24px
-
-Radius:
-999px
-
-Padding:
-2px
-
-Thumb
-
-Diameter:
-20px
-
-Posisi harus benar-benar center.
-
-==============================================================================
-
-3. WARNA
-
-ON
-
-Track
-
-#2F54EB
-
-Thumb
-
-#FFFFFF
-
-OFF
-
-Track
-
-#DDE4EE
-
-Thumb
-
-#FFFFFF
-
-Disabled
-
-#EEF2F7
-
-==============================================================================
-
-4. SHADOW
-
-Thumb
-
-Gunakan shadow ringan
-
-0 2px 6px rgba(0,0,0,.16)
-
-Track tidak perlu shadow besar.
-
-==============================================================================
-
-5. BORDER
-
-Track
-
-1px solid transparan
-
-Saat OFF
-
-border tipis abu
-
-Saat ON
-
-border hilang
-
-==============================================================================
-
-6. ANIMASI
-
-Animasi harus native.
-
-Durasi
-
-180–220ms
-
-Timing
-
-ease-out
-
-Thumb harus bergeser perlahan.
-
-Tidak boleh:
-
-❌ Lompat
-
-❌ Berkedip
-
-❌ Delay
-
-❌ Patah
-
-==============================================================================
-
-7. TAP AREA
-
-Area sentuh minimal
-
-44px
-
-Walaupun visual hanya 24px.
-
-Agar nyaman disentuh di mobile.
-
-==============================================================================
-
-8. STATE
-
-Harus memiliki state:
-
-Loading
-
-On
-
-Off
-
-Disabled
-
-Readonly
-
-==============================================================================
-
-9. LOADING
-
-Saat Toggle ditekan
-
-↓
-
-Switch disable sementara
-
-↓
-
-Kirim request
-
-↓
-
-Server berhasil
-
-↓
-
-Aktif kembali
-
-Jika gagal
-
-↓
-
-Kembali ke state sebelumnya
-
-↓
-
-Tampilkan Toast Error
-
-==============================================================================
-
-10. PERSISTEN
-
-State Switch tidak boleh hilang setelah:
-
-✔ Refresh
-✔ Tutup Browser
-✔ Install PWA
-✔ Re-open
-
-Status diambil dari database asli.
-
-==============================================================================
-
-11. DATABASE
-
-Gunakan data asli.
-
-Contoh:
-
-notifications_enabled
-
-auto_logout_enabled
-
-biometric_enabled
-
-Jangan memakai local visual state.
-
-==============================================================================
-
-12. SINKRON
-
-Jika Toggle diubah
-
-Desktop
-
-↓
-
-Mobile ikut berubah
-
-Jika diubah
-
-Mobile
-
-↓
-
-Desktop ikut berubah
-
-Gunakan sistem realtime yang sudah ada.
-
-==============================================================================
-
-13. ACCESSIBILITY
-
-Pastikan mendukung:
-
-role="switch"
-
-aria-checked
-
-aria-label
-
-Keyboard
-
-Screen Reader
-
-Focus Ring
-
-==============================================================================
-
-14. CLEAN CODE
-
-Rapikan seluruh kode Toggle.
-
-Hilangkan:
-
-- kode lama
-- state ganda
-- watcher tidak dipakai
-- event tidak dipakai
-- CSS tidak dipakai
-- JS tidak dipakai
-
-Pastikan:
+✔ Kode bersih
 
 ✔ Tidak ada warning
-✔ Tidak ada memory leak
-✔ Tidak ada console error
-✔ Tidak ada bug visual
 
-==============================================================================
+✔ Tidak ada error
 
-15. HASIL AKHIR
+✔ Stabil di Local maupun Vercel
 
-Toggle terlihat seperti Toggle native aplikasi mobile premium.
+Wireframe
+────────────────────────
 
-Halus.
+🔔 Notifikasi Login
 
-Responsif.
+Beritahu saat ada login baru
 
-Ringan.
+                      ╭──────╮
+                      │    ● │
+                      ╰──────╯
 
-Tidak terasa custom.
+────────────────────────
 
-Tidak mengubah layout halaman sama sekali.
+⏱ Auto Logout
 
-Semua Toggle tetap berada di posisi sekarang.
+Logout otomatis saat idle
 
-Hanya kualitas komponen Toggle yang ditingkatkan.
+                      ╭──────╮
+                      │ ●    │
+                      ╰──────╯
 
-Wireframe Target (Tidak Mengubah Layout)
-┌─────────────────────────────────────────────┐
+────────────────────────
 
-PENGATURAN
+🪪 Biometrik
 
-──────────────────────────────────────────────
+Sidik jari / Face ID
 
-🔔  Notifikasi Login
-    Beritahu saat ada login baru
-
-                             ╭──────────╮
-                             │      ●   │
-                             ╰──────────╯
-                                  ON
-
-
-──────────────────────────────────────────────
-
-⏱  Auto Logout
-    Logout otomatis saat idle
-
-                             ╭──────────╮
-                             │ ●        │
-                             ╰──────────╯
-                                  OFF
-
-
-──────────────────────────────────────────────
-
-🛡  Biometrik
-    Login dengan sidik jari / wajah
-
-                             ╭──────────╮
-                             │ ●        │
-                             ╰──────────╯
-                                  OFF
-
-└─────────────────────────────────────────────┘
+                      ╭──────╮
+                      │    ● │
+                      ╰──────╯

@@ -17,6 +17,8 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
     Route::post('/login', [AuthenticatedSessionController::class, 'store'])->middleware('throttle:login');
+    // [UPDATE: V3] Route untuk verifikasi login biometrik (WebAuthn)
+    Route::post('/login/biometric', [AuthenticatedSessionController::class, 'storeBiometric'])->name('login.biometric')->middleware('throttle:login');
 });
 
 // ─── PUBLIK — Tracking tanpa login ──────────────────────────────────
@@ -297,22 +299,25 @@ Route::middleware(['auth', 'admin.active'])->group(function () {
     })->name('security.clear-history');
 
     // =====================================================================
-    // [UPDATE: SECURITY V3] Toggle pengaturan keamanan — simpan ke database
+    // [UPDATE: SECURITY V6] Toggle pengaturan keamanan — simpan ke database
     // =====================================================================
     // Fungsi: Menyimpan perubahan toggle (notifikasi, auto logout, biometrik)
     //         ke tabel admin_security_settings agar sinkron lintas perangkat.
     // Cara Kerja: POST dengan field 'key' dan 'value' → update kolom yang sesuai.
+    // PENTING: Validasi menggunakan 'present|boolean' bukan 'required|boolean'
+    //          karena 'required' menolak nilai false/0 sebagai "empty".
     // =====================================================================
     Route::post('/profile/security/toggle-setting', function (\Illuminate\Http\Request $request) {
         $request->validate([
             'key'   => 'required|in:login_notification,auto_logout,biometric_enabled',
-            'value' => 'required|boolean',
+            'value' => 'present|boolean',
         ]);
 
         $admin = \Illuminate\Support\Facades\Auth::user();
         $settings = \App\Models\AdminSecuritySetting::getOrCreate($admin->id);
 
-        // [UPDATE: V3] Pastikan nilai di-cast ke boolean murni untuk Postgres
+        // [UPDATE: V6] Set nilai via Attribute accessor → otomatis konversi
+        // ke string 'true'/'false' untuk Neon PostgreSQL
         $settings->{$request->key} = filter_var($request->value, FILTER_VALIDATE_BOOLEAN);
         $settings->save();
 

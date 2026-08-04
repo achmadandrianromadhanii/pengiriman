@@ -107,6 +107,65 @@ class AuthenticatedSessionController extends Controller
         ]);
     }
 
+    // =====================================================================
+    // [UPDATE: V3] LOGIN BIOMETRIK: Verifikasi credential_id
+    // =====================================================================
+    // Fungsi: Menerima credential.id dari frontend (WebAuthn), memverifikasinya,
+    //         dan melakukan login jika cocok dengan database.
+    // Cara Kerja:
+    //   1. Validasi credential_id
+    //   2. Cari di tabel webauthn_credentials
+    //   3. Dapatkan admin_id, verifikasi status aktif
+    //   4. Auth::login() + catat riwayat login
+    // =====================================================================
+    public function storeBiometric(Request $request): InertiaResponse|RedirectResponse
+    {
+        $validated = $request->validate([
+            'credential_id' => 'required|string',
+        ]);
+
+        // Cari kredensial di database
+        $credential = \App\Models\WebauthnCredential::where('credential_id', $validated['credential_id'])->first();
+
+        if (! $credential) {
+            return back()->withErrors(['biometric' => 'Kredensial biometrik tidak ditemukan atau belum terdaftar.']);
+        }
+
+        // Ambil data admin terkait
+        $admin = Admin::find($credential->admin_id);
+
+        if (! $admin || $admin->status !== 'aktif') {
+            return back()->withErrors(['biometric' => 'Akun tidak aktif atau tidak ditemukan.']);
+        }
+
+        // Login (dengan opsi remember = true)
+        Auth::login($admin, true);
+        $request->session()->regenerate();
+
+        // ── [UPDATE: SECURITY] Catat riwayat login ke database ───────
+        $ua = $request->userAgent() ?? '';
+        $parsed = LoginHistory::parseUserAgent($ua);
+
+        LoginHistory::create([
+            'admin_id'    => $admin->id,
+            'ip_address'  => $request->ip(),
+            'user_agent'  => $ua,
+            'browser'     => $parsed['browser'],
+            'os'          => $parsed['os'],
+            'device_type' => $parsed['device_type'],
+            'logged_in_at'=> now(),
+        ]);
+
+        // ── Update last_login timestamp ──────────────────────────────
+        $admin->forceFill([
+            'last_login' => now(),
+        ])->save();
+
+        return Inertia::render('Auth/Login', [
+            'loginSuccess' => true,
+        ]);
+    }
+
     // ── Logout admin ────────────────────────────────────────────────────
     public function destroy(Request $request): RedirectResponse
     {

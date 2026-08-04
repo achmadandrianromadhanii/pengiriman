@@ -17,7 +17,7 @@
        - IP ditampilkan di perangkat saat ini
      ========================================================================= -->
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { Head, usePage, router } from '@inertiajs/vue3';
 // [UPDATE: SECURITY V4] Import ikon Lucide yang digunakan di halaman keamanan
 // Power: ikon tombol logout semua perangkat (menggantikan LogOut sesuai revisi)
@@ -41,10 +41,8 @@ import {
     Trash2,
     X
 } from 'lucide-vue-next';
-// [UPDATE: TOGGLE V5] Import komponen ToggleSwitch premium
-// Fungsi: Menggantikan semua toggle inline dengan komponen reusable
-// Lokasi: resources/js/Components/ToggleSwitch.vue
-import ToggleSwitch from '@/Components/ToggleSwitch.vue';
+
+import { SwitchRoot, SwitchThumb } from 'radix-vue';
 
 // ── Props dari backend (data asli dari database) ─────────────────────────
 const props = defineProps({
@@ -53,7 +51,7 @@ const props = defineProps({
     last_login: { type: String, default: null },
     login_histories: { type: Array, default: () => [] },
     active_sessions: { type: Array, default: () => [] },
-    // [UPDATE: V3] Pengaturan keamanan dari database
+    // [UPDATE: V6] Pengaturan keamanan dari database
     security_settings: {
         type: Object,
         default: () => ({
@@ -73,12 +71,14 @@ const logoutDone = ref(false);
 const isClearingHistory = ref(false);
 const clearHistoryDone = ref(false);
 
-// ── [UPDATE: V3] Toggle state dari database (bukan localStorage) ─────────
-// Cara Kerja: Dibaca dari props security_settings (database),
-// disimpan kembali ke database saat toggle berubah via POST request.
-const loginNotification = ref(false);
-const autoLogout = ref(false);
-const biometricEnabled = ref(false);
+// ── [UPDATE: FINAL] Toggle state dari DATABASE (source of truth = backend props)
+// Cara Kerja:
+//   - UI toggle dikontrol oleh props `security_settings` (data dari server).
+//   - Saat user klik, kita POST/DELETE ke backend.
+//   - Toggle baru berubah saat Inertia mengirim props terbaru (sinkron database).
+const loginNotification = computed(() => !!props.security_settings.login_notification);
+const autoLogout = computed(() => !!props.security_settings.auto_logout);
+const biometricEnabled = computed(() => !!props.security_settings.biometric_enabled);
 const biometricSupported = ref(false);
 const isUpdatingSetting = ref(false);
 
@@ -91,69 +91,72 @@ const biometricRegistering = ref(false);
 const biometricError = ref('');
 const selectedBiometricType = ref(null);
 
+// ── [UPDATE: V6] Inisialisasi dukungan biometric (hanya client-side) ──
 onMounted(() => {
-    // [UPDATE: V3] Baca dari database props, bukan localStorage
-    loginNotification.value = props.security_settings.login_notification;
-    autoLogout.value = props.security_settings.auto_logout;
-    biometricEnabled.value = props.security_settings.biometric_enabled;
-
     // Cek dukungan biometric (WebAuthn / PublicKeyCredential API)
     // Sesuai W3C WebAuthn spec: https://www.w3.org/TR/webauthn-3/
     biometricSupported.value = !!(window.PublicKeyCredential);
 });
 
+// ── [UPDATE: FINAL] Watch props — hanya untuk mematikan loading UI ─────
+// Catatan: Checked state switch berasal dari computed(props...), jadi
+// watch ini tidak mengubah "state visual" toggle; hanya mengakhiri
+// mode disable ketika props backend sudah tersinkron.
+watch(() => props.security_settings, () => {
+    isUpdatingSetting.value = false;
+}, { deep: true });
+
 // =====================================================================
-// [UPDATE: V3] Toggle handler — simpan ke DATABASE via POST (Optimistic UI)
+// [UPDATE: FINAL] Toggle handler — simpan ke DATABASE via POST
 // =====================================================================
-// Fungsi: Mengubah status toggle dan menyimpannya ke tabel
-//         admin_security_settings di database.
-// Cara Kerja: 
-//   1. Ubah UI secara instan (optimistic)
-//   2. POST ke route security.toggle-setting
-//   3. Jika gagal, revert (kembalikan) ke state semula
+// Fungsi: Menerima nilai baru dari Radix Vue SwitchRoot @update:checked,
+//         lalu menyimpannya ke tabel admin_security_settings di database.
+// Cara Kerja:
+//   1. Radix Vue SwitchRoot memancarkan event @update:checked(newVal)
+//   2. Handler ini menerima (key, newValue) langsung dari template
+//   3. UI toggle TIDAK diubah secara optimistic.
+//      Switch terikat ke computed(props.security_settings), jadi nilai
+//      berubah hanya setelah backend mengirim props terbaru.
+//   4. POST ke route security.toggle-setting
+//   5. Jika gagal → batalkan disable (isUpdatingSetting=false) dan tampilkan error
+//   6. Jika berhasil → Inertia update props → watch props mematikan mode disable
+// Khusus biometrik:
+//   - Jika mengaktifkan (newValue=true) → buka bottom sheet WebAuthn
+//   - Jika menonaktifkan (newValue=false) → hapus kredensial via API
 // =====================================================================
-async function toggleSetting(key) {
+async function toggleSetting(key, newValue) {
     if (isUpdatingSetting.value) return;
 
-    let newValue = false;
-    let originalValue = false;
-
-    if (key === 'login_notification') {
-        originalValue = loginNotification.value;
-        loginNotification.value = !loginNotification.value;
-        newValue = loginNotification.value;
-    } else if (key === 'auto_logout') {
-        originalValue = autoLogout.value;
-        autoLogout.value = !autoLogout.value;
-        newValue = autoLogout.value;
-    } else if (key === 'biometric_enabled') {
-        // Biometrik: buka bottom sheet jika mengaktifkan
-        if (!biometricEnabled.value) {
+    // --- Khusus Biometrik: alur khusus WebAuthn ---
+    if (key === 'biometric_enabled') {
+        if (newValue) {
+            // Mengaktifkan → buka bottom sheet registrasi WebAuthn.
+            // Toggle tidak berubah sampai props backend tersinkron (setelah WebAuthn sukses).
+            isUpdatingSetting.value = true; // mencegah double/ghost click
             showBiometricSheet.value = true;
-            return; // Jangan langsung toggle, tunggu WebAuthn selesai
+            return;
         }
-        // Jika menonaktifkan, hapus kredensial
+
+        // Menonaktifkan → hapus kredensial biometrik.
+        isUpdatingSetting.value = true;
         disableBiometric();
         return;
     }
 
+    // --- Toggle biasa: Notifikasi Login / Auto Logout ---
     isUpdatingSetting.value = true;
 
-    // Simpan ke database dengan pola Optimistic Update
+    // POST ke database
     router.post(route('security.toggle-setting'), {
         key: key,
         value: newValue,
-    }, { 
+    }, {
         preserveScroll: true,
-        onSuccess: () => {
-            isUpdatingSetting.value = false;
-        },
+        // onSuccess tidak mematikan disable di sini; biarkan watch props backend yang sinkron.
         onError: async () => {
-            // Revert state jika gagal
-            if (key === 'login_notification') loginNotification.value = originalValue;
-            if (key === 'auto_logout') autoLogout.value = originalValue;
             isUpdatingSetting.value = false;
 
+            // Tampilkan notifikasi error
             const Swal = (await import('sweetalert2')).default;
             Swal.fire({
                 toast: true,
@@ -189,6 +192,7 @@ async function registerBiometric() {
         if (!available) {
             biometricError.value = 'Perangkat ini belum memiliki biometrik. Silakan aktifkan di Pengaturan perangkat.';
             biometricRegistering.value = false;
+            isUpdatingSetting.value = false;
             return;
         }
 
@@ -220,7 +224,8 @@ async function registerBiometric() {
                 authenticatorSelection: {
                     authenticatorAttachment: 'platform', // Hanya biometrik perangkat
                     userVerification: 'required',        // Wajib verifikasi biometrik
-                    residentKey: 'preferred',
+                    residentKey: 'required',             // Wajib Passkey (discoverable)
+                    requireResidentKey: true,            // Backward compatibility
                 },
                 timeout: 60000, // 60 detik timeout
                 attestation: 'none',
@@ -230,8 +235,9 @@ async function registerBiometric() {
         // Panggil WebAuthn API — ini akan trigger biometrik perangkat
         const credential = await navigator.credentials.create(createOptions);
 
-        // Encode credential ke base64url untuk dikirim ke server
-        const credentialId = btoa(String.fromCharCode(...new Uint8Array(credential.rawId)));
+        // Ambil credential_id (base64url natively)
+        const credentialId = credential.id;
+        // Public key dari array buffer ke base64 (standard base64)
         const publicKey = btoa(String.fromCharCode(...new Uint8Array(credential.response.getPublicKey())));
 
         // Kirim ke backend
@@ -242,13 +248,14 @@ async function registerBiometric() {
         }, {
             preserveScroll: true,
             onSuccess: () => {
-                biometricEnabled.value = true;
                 showBiometricSheet.value = false;
                 biometricRegistering.value = false;
+                selectedBiometricType.value = null;
             },
             onError: () => {
                 biometricError.value = 'Gagal menyimpan kredensial. Coba lagi.';
                 biometricRegistering.value = false;
+                isUpdatingSetting.value = false;
             },
         });
 
@@ -262,6 +269,7 @@ async function registerBiometric() {
             biometricError.value = 'Gagal registrasi biometrik. Pastikan perangkat mendukung sidik jari atau Face ID.';
         }
         biometricRegistering.value = false;
+        isUpdatingSetting.value = false;
     }
 }
 
@@ -269,51 +277,48 @@ async function registerBiometric() {
 function disableBiometric() {
     router.delete(route('security.webauthn.remove'), {
         preserveScroll: true,
-        onSuccess: () => {
-            biometricEnabled.value = false;
-        },
+        onError: async () => {
+            isUpdatingSetting.value = false;
+            const Swal = (await import('sweetalert2')).default;
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                icon: 'error',
+                title: 'Gagal menyimpan pengaturan'
+            });
+        }
     });
 }
 
 // =====================================================================
-// DETEKSI PERANGKAT SAAT INI — Dari navigator.userAgent
+// [UPDATE: FINAL REVISION] DETEKSI PERANGKAT SAAT INI (Dari Session Backend)
+// =====================================================================
+// Fungsi: Mengambil data session saat ini dari props active_sessions agar
+//         mendapatkan data yang sama dengan backend (termasuk IP Address).
 // =====================================================================
 const currentDevice = computed(() => {
-    const ua = navigator.userAgent || '';
+    // Cari session yang memiliki flag is_current
+    const currentSession = props.active_sessions.find(s => s.is_current);
+    if (currentSession) {
+        return {
+            browser: currentSession.browser,
+            os: currentSession.os,
+            deviceType: currentSession.device_type,
+            deviceName: currentSession.device_name || currentSession.browser,
+            ipAddress: currentSession.ip_address
+        };
+    }
 
-    // Browser + Versi
-    let browser = 'Browser';
-    if (/Edg\/(\d+)/i.test(ua))          browser = 'Edge ' + ua.match(/Edg\/(\d+)/i)[1];
-    else if (/OPR\/(\d+)/i.test(ua))     browser = 'Opera ' + ua.match(/OPR\/(\d+)/i)[1];
-    else if (/Chrome\/(\d+)/i.test(ua))  browser = 'Chrome ' + ua.match(/Chrome\/(\d+)/i)[1];
-    else if (/Firefox\/(\d+)/i.test(ua)) browser = 'Firefox ' + ua.match(/Firefox\/(\d+)/i)[1];
-    else if (/Safari/i.test(ua) && !/Chrome/i.test(ua)) browser = 'Safari';
-
-    // OS + Versi
-    let os = 'Unknown OS';
-    if (/Windows NT 10/i.test(ua))          os = 'Windows 10/11';
-    else if (/Windows/i.test(ua))           os = 'Windows';
-    else if (/Mac OS X/i.test(ua))          os = 'macOS';
-    else if (/Android (\d+)/i.test(ua))     os = ua.match(/Android (\d+)/i)?.[0] || 'Android';
-    else if (/iPhone OS (\d+)/i.test(ua))   os = 'iOS ' + (ua.match(/iPhone OS (\d+)/i)?.[1] || '');
-    else if (/Linux/i.test(ua))             os = 'Linux';
-
-    // Device Type
-    let deviceType = 'Desktop';
-    if (/Mobile|Android/i.test(ua) && !/Tablet|iPad/i.test(ua)) deviceType = 'Mobile';
-    else if (/Tablet|iPad/i.test(ua)) deviceType = 'Tablet';
-
-    // Device Name (vendor + model)
-    let deviceName = 'Desktop PC';
-    if (/iPhone/i.test(ua)) deviceName = 'iPhone';
-    else if (/iPad/i.test(ua)) deviceName = 'iPad';
-    else if (/;\s*([^;)]+)\s*Build\//i.test(ua)) {
-        const m = ua.match(/;\s*([^;)]+)\s*Build\//i);
-        if (m?.[1]) deviceName = m[1].replace(/^(Linux;\s*)?Android\s*\d+(\.\d+)*;\s*/i, '').trim();
-    } else if (/Macintosh/i.test(ua)) deviceName = 'Mac';
-    else if (/Windows/i.test(ua)) deviceName = 'Windows PC';
-
-    return { browser, os, deviceType, deviceName };
+    // Fallback jika session belum termuat
+    return {
+        browser: 'Unknown',
+        os: 'Unknown',
+        deviceType: 'Desktop',
+        deviceName: 'Desktop PC',
+        ipAddress: '127.0.0.1'
+    };
 });
 
 // ── Ikon perangkat berdasarkan tipe ─────────────────────────────────────
@@ -333,16 +338,22 @@ function getDeviceIcon(type) {
 //   3. Backend menghapus semua session + invalidate session saat ini.
 //   4. User diarahkan ke halaman login.
 // =====================================================================
+// =====================================================================
+// [UPDATE: FINAL REVISION] LOGOUT SEMUA PERANGKAT (Logout Others)
+// =====================================================================
+// Fungsi: Menghapus semua sesi aktif KECUALI sesi saat ini (Logout Others).
+// Sesuai revisi: "Device sekarang tetap login... Session lain dihapus... Realtime"
+// =====================================================================
 async function logoutAllDevices() {
     if (isLoggingOut.value) return;
 
     const Swal = (await import('sweetalert2')).default;
     const res = await Swal.fire({
         icon: 'warning',
-        title: 'Logout semua perangkat?',
-        text: 'Semua sesi aktif akan diakhiri termasuk perangkat ini. Anda akan diarahkan ke halaman login.',
+        title: 'Logout perangkat lain?',
+        text: 'Semua sesi aktif di perangkat lain akan diakhiri. Perangkat ini akan tetap login.',
         showCancelButton: true,
-        confirmButtonText: 'Ya, Logout Semua',
+        confirmButtonText: 'Ya, Logout Perangkat Lain',
         cancelButtonText: 'Batal',
         confirmButtonColor: '#EF4444',
     });
@@ -350,12 +361,23 @@ async function logoutAllDevices() {
     if (!res.isConfirmed) return;
 
     isLoggingOut.value = true;
-    router.post(route('security.logout-others'), { logout_current: true }, {
+    // [UPDATE: FINAL REVISION] Ubah logout_current menjadi false
+    router.post(route('security.logout-others'), { logout_current: false }, {
         preserveScroll: true,
         onSuccess: () => {
             isLoggingOut.value = false;
             logoutDone.value = true;
             setTimeout(() => { logoutDone.value = false; }, 3000);
+            
+            // Tampilkan toast berhasil
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                icon: 'success',
+                title: 'Perangkat lain berhasil dilogout'
+            });
         },
         onError: () => { isLoggingOut.value = false; },
     });
@@ -534,7 +556,7 @@ function goBack() { window.history.back(); }
                             </div>
                             <div>
                                 <span class="font-semibold text-[14px] text-slate-800 dark:text-gray-200 block">{{ currentDevice.deviceName }}</span>
-                                <span class="text-[11px] text-slate-400 dark:text-gray-500 font-medium">{{ currentDevice.os }} • {{ currentDevice.browser }}</span>
+                                <span class="text-[11px] text-slate-400 dark:text-gray-500 font-medium">{{ currentDevice.os }} • {{ currentDevice.browser }} • {{ currentDevice.ipAddress }}</span>
                             </div>
                         </div>
                         <div class="px-2.5 py-1 rounded-full bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-[9px] font-bold tracking-wider uppercase flex items-center gap-1">
@@ -624,13 +646,25 @@ function goBack() { window.history.back(); }
                                 <span class="text-[11px] text-slate-400 dark:text-gray-500 font-medium">Beritahu saat ada login baru</span>
                             </div>
                         </div>
-                        <!-- [UPDATE: TOGGLE V5] Komponen ToggleSwitch — Notifikasi Login -->
-                        <ToggleSwitch
-                            :modelValue="loginNotification"
-                            @update:modelValue="toggleSetting('login_notification')"
-                            :loading="isUpdatingSetting"
-                            label="Toggle Notifikasi Login"
-                        />
+                        <!-- [UPDATE: FINAL] Radix Vue Switch — Notifikasi Login
+                             Spesifikasi:
+                               Track: 42×24px
+                               Thumb: 18px
+                               Padding: 3px
+                               OFF: #E4EAF3
+                               ON:  #2F5DFF
+                               Thumb: putih + shadow ringan
+                               Animasi: transition 200ms ease, translateX only -->
+                        <SwitchRoot
+                            :checked="loginNotification"
+                            @update:checked="(val) => toggleSetting('login_notification', val)"
+                            :disabled="isUpdatingSetting"
+                            class="w-[42px] h-[24px] rounded-[9999px] relative inline-flex items-center cursor-pointer transition-colors duration-[200ms] ease flex-shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2F5DFF]/75 disabled:cursor-not-allowed bg-[#E4EAF3] data-[state=checked]:bg-[#2F5DFF]"
+                        >
+                            <SwitchThumb
+                                class="block w-[18px] h-[18px] bg-white rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.12)] transition-transform duration-[200ms] ease translate-x-[3px] data-[state=checked]:translate-x-[21px]"
+                            />
+                        </SwitchRoot>
                     </div>
 
                     <!-- ============================================================ -->
@@ -645,13 +679,17 @@ function goBack() { window.history.back(); }
                                 <span class="text-[11px] text-slate-400 dark:text-gray-500 font-medium">Logout otomatis saat idle</span>
                             </div>
                         </div>
-                        <!-- [UPDATE: TOGGLE V5] Komponen ToggleSwitch — Auto Logout -->
-                        <ToggleSwitch
-                            :modelValue="autoLogout"
-                            @update:modelValue="toggleSetting('auto_logout')"
-                            :loading="isUpdatingSetting"
-                            label="Toggle Auto Logout"
-                        />
+                        <!-- [UPDATE: FINAL] Radix Vue Switch — Auto Logout (spesifikasi sama) -->
+                        <SwitchRoot
+                            :checked="autoLogout"
+                            @update:checked="(val) => toggleSetting('auto_logout', val)"
+                            :disabled="isUpdatingSetting"
+                            class="w-[42px] h-[24px] rounded-[9999px] relative inline-flex items-center cursor-pointer transition-colors duration-[200ms] ease flex-shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2F5DFF]/75 disabled:cursor-not-allowed bg-[#E4EAF3] data-[state=checked]:bg-[#2F5DFF]"
+                        >
+                            <SwitchThumb
+                                class="block w-[18px] h-[18px] bg-white rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.12)] transition-transform duration-[200ms] ease translate-x-[3px] data-[state=checked]:translate-x-[21px]"
+                            />
+                        </SwitchRoot>
                     </div>
 
                     <!-- ============================================================ -->
@@ -672,14 +710,17 @@ function goBack() { window.history.back(); }
                                 </span>
                             </div>
                         </div>
-                        <!-- [UPDATE: TOGGLE V5] Komponen ToggleSwitch — Biometrik -->
-                        <ToggleSwitch
-                            :modelValue="biometricEnabled"
-                            @update:modelValue="toggleSetting('biometric_enabled')"
-                            :loading="isUpdatingSetting"
-                            :disabled="!biometricSupported"
-                            label="Toggle Biometrik"
-                        />
+                        <!-- [UPDATE: FINAL] Radix Vue Switch — Biometrik (spesifikasi sama) -->
+                        <SwitchRoot
+                            :checked="biometricEnabled"
+                            @update:checked="(val) => toggleSetting('biometric_enabled', val)"
+                            :disabled="!biometricSupported || isUpdatingSetting"
+                            class="w-[42px] h-[24px] rounded-[9999px] relative inline-flex items-center cursor-pointer transition-colors duration-[200ms] ease flex-shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2F5DFF]/75 disabled:cursor-not-allowed disabled:bg-[#EEF2F7] bg-[#E4EAF3] data-[state=checked]:bg-[#2F5DFF]"
+                        >
+                            <SwitchThumb
+                                class="block w-[18px] h-[18px] bg-white rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.12)] transition-transform duration-[200ms] ease translate-x-[3px] data-[state=checked]:translate-x-[21px]"
+                            />
+                        </SwitchRoot>
                     </div>
                 </div>
             </div>
@@ -731,7 +772,7 @@ function goBack() { window.history.back(); }
                             <div class="w-10 h-1 rounded-full bg-slate-200 dark:bg-gray-700 mx-auto mb-5"></div>
 
                             <!-- Close button -->
-                            <button @click="showBiometricSheet = false; selectedBiometricType = null" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-gray-800" aria-label="Tutup">
+                            <button @click="showBiometricSheet = false; selectedBiometricType = null; isUpdatingSetting = false" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-gray-800" aria-label="Tutup">
                                 <X :size="16" class="text-slate-500" />
                             </button>
 
@@ -800,7 +841,7 @@ function goBack() { window.history.back(); }
                                     <component :is="selectedBiometricType === 'face' ? ScanFace : Fingerprint" :size="18" stroke-width="2.5" />
                                     {{ biometricRegistering ? 'Memverifikasi...' : 'Aktifkan Biometrik' }}
                                 </button>
-                                <button @click="showBiometricSheet = false; selectedBiometricType = null"
+                                <button @click="showBiometricSheet = false; selectedBiometricType = null; isUpdatingSetting = false"
                                         class="w-full py-3.5 rounded-[18px] bg-slate-100 dark:bg-gray-800 text-slate-600 dark:text-gray-300 font-bold text-[14px] active:scale-[0.97] transition-all duration-200 outline-none">
                                     Batal
                                 </button>

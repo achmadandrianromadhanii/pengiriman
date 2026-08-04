@@ -253,13 +253,40 @@
             });
 
             if (credential) {
-                // Biometrik berhasil — tampilkan loading lalu redirect
-                showBiometricSheet.value = false;
-                showMobileLoading.value = true;
-                mobileLoginStatus.value = 'success';
-                redirectTimer = setTimeout(() => {
-                    router.visit(route('dashboard'), { replace: true });
-                }, 1000);
+                // Biometrik berhasil di perangkat — kirim ke backend untuk autentikasi
+                router.post('/login/biometric', {
+                    credential_id: credential.id
+                }, {
+                    preserveScroll: true,
+                    onStart: () => {
+                        showBiometricSheet.value = false;
+                        showMobileLoading.value = true;
+                        mobileLoginStatus.value = 'loading';
+                        if (window.innerWidth >= 768) {
+                            showDesktopLoading.value = true;
+                            desktopLoginStatus.value = 'loading';
+                            simulateProgress();
+                        }
+                    },
+                    onSuccess: () => {
+                        // Tidak perlu redirect manual, Inertia akan redirect otomatis 
+                        // ke intended URL (Dashboard) karena login berhasil.
+                    },
+                    onError: (errors) => {
+                        biometricError.value = errors.biometric || 'Biometrik gagal diverifikasi server.';
+                        showBiometricSheet.value = true; // Munculkan sheet lagi
+                        if (window.innerWidth < 768) {
+                            showMobileLoading.value = false;
+                            triggerShake();
+                        } else {
+                            showDesktopLoading.value = false;
+                            if (progressTimer) clearInterval(progressTimer);
+                        }
+                    },
+                    onFinish: () => {
+                        biometricLoading.value = false;
+                    }
+                });
             }
         } catch (err) {
             if (err.name === 'NotAllowedError') {

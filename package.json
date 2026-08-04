@@ -33,6 +33,7 @@
         "lucide-vue-next": "^1.0.0",
         "nprogress": "^0.2.0",
         "qrcode": "^1.5.4",
+        "radix-vue": "^1.9.17",
         "sweetalert2": "^11.26.21",
         "vue3-apexcharts": "^1.11.1",
         "ziggy-js": "^2.6.1"

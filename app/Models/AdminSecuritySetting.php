@@ -11,9 +11,12 @@ namespace App\Models;
 //   - Relasi 1:1 dengan Admin (admin_id unique)
 //   - Method static getOrCreate() untuk auto-create jika belum ada
 //   - Menggantikan localStorage agar sinkron lintas perangkat
-// [UPDATE: SECURITY V3]
+//   - Menggunakan Laravel Attribute accessor (get/set) untuk konversi
+//     boolean <-> string agar kompatibel dengan Neon PostgreSQL.
+// [UPDATE: SECURITY V6 — FIX DIRTY CHECK & NEON BOOLEAN]
 // =========================================================================
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -30,37 +33,12 @@ class AdminSecuritySetting extends Model
         'biometric_enabled',
     ];
 
-    // ── Cast tipe data (READING: DB → PHP boolean) ─────────────────────
-    // Fungsi: Saat membaca dari database, konversi ke PHP boolean.
+    // ── Casting ──────────────────────────────────────────────────────────
     protected $casts = [
         'login_notification' => 'boolean',
-        'auto_logout'        => 'boolean',
-        'biometric_enabled'  => 'boolean',
+        'auto_logout' => 'boolean',
+        'biometric_enabled' => 'boolean',
     ];
-
-    // ── [FIX: NEON POSTGRESQL BOOLEAN] ───────────────────────────────────
-    // Fungsi: Konversi boolean PHP ke string 'true'/'false' saat MENULIS.
-    // Alasan: PDO mengirim PHP true/false sebagai integer 1/0, tapi
-    //         Neon PostgreSQL menolak integer untuk kolom boolean.
-    //         Mutator ini memastikan nilai dikirim sebagai string literal
-    //         yang diterima PostgreSQL: 'true' atau 'false'.
-    // Catatan: Tidak konflik dengan $casts karena:
-    //   - $casts menangani READING (DB → PHP)
-    //   - Mutator menangani WRITING (PHP → DB)
-    public function setLoginNotificationAttribute($value): void
-    {
-        $this->attributes['login_notification'] = filter_var($value, FILTER_VALIDATE_BOOLEAN) ? 'true' : 'false';
-    }
-
-    public function setAutoLogoutAttribute($value): void
-    {
-        $this->attributes['auto_logout'] = filter_var($value, FILTER_VALIDATE_BOOLEAN) ? 'true' : 'false';
-    }
-
-    public function setBiometricEnabledAttribute($value): void
-    {
-        $this->attributes['biometric_enabled'] = filter_var($value, FILTER_VALIDATE_BOOLEAN) ? 'true' : 'false';
-    }
 
     // ── Relasi: Setting ini milik admin mana ────────────────────────────
     public function admin(): BelongsTo
@@ -72,7 +50,7 @@ class AdminSecuritySetting extends Model
     // STATIC: Ambil atau buat setting untuk admin tertentu
     // =====================================================================
     // Fungsi: Memastikan setiap admin selalu punya 1 record setting.
-    // Cara Kerja: firstOrCreate() → ambil yang ada, atau buat baru dengan
+    // Cara Kerja: Cari by admin_id, jika tidak ada buat baru dengan
     //             semua toggle default false.
     // =====================================================================
     public static function getOrCreate(int $adminId): self
