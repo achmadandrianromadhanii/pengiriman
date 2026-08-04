@@ -190,7 +190,14 @@ async function registerBiometric() {
         // Cek apakah perangkat mendukung platform authenticator (sidik jari/face)
         const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
         if (!available) {
-            biometricError.value = 'Perangkat ini belum memiliki biometrik. Silakan aktifkan di Pengaturan perangkat.';
+            const Swal = (await import('sweetalert2')).default;
+            Swal.fire({
+                title: 'Gagal',
+                text: 'Perangkat ini belum mendukung autentikasi biometrik.',
+                icon: 'error',
+                confirmButtonText: 'Tutup',
+                confirmButtonColor: '#2F54EB'
+            });
             biometricRegistering.value = false;
             isUpdatingSetting.value = false;
             return;
@@ -247,15 +254,30 @@ async function registerBiometric() {
             device_name: currentDevice.value.deviceName,
         }, {
             preserveScroll: true,
-            onSuccess: () => {
+            onSuccess: async () => {
                 showBiometricSheet.value = false;
                 biometricRegistering.value = false;
                 selectedBiometricType.value = null;
+                const Swal = (await import('sweetalert2')).default;
+                Swal.fire({
+                    title: 'Berhasil',
+                    text: 'Biometrik berhasil diaktifkan.',
+                    icon: 'success',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#2F54EB'
+                });
             },
-            onError: () => {
-                biometricError.value = 'Gagal menyimpan kredensial. Coba lagi.';
+            onError: async () => {
                 biometricRegistering.value = false;
                 isUpdatingSetting.value = false;
+                const Swal = (await import('sweetalert2')).default;
+                Swal.fire({
+                    title: 'Pendaftaran biometrik gagal.',
+                    text: 'Tidak ada perubahan pada akun.',
+                    icon: 'error',
+                    confirmButtonText: 'Tutup',
+                    confirmButtonColor: '#2F54EB'
+                });
             },
         });
 
