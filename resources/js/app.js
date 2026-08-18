@@ -30,10 +30,26 @@ NProgress.configure({
     trickleSpeed: 100,
 });
 
+import AppLayout from '@/Layouts/AppLayout.vue';
+
 createInertiaApp({
     title: (title) => appName,
-    resolve: (name) =>
-        resolvePageComponent(`./Pages/${name}.vue`, import.meta.glob('./Pages/**/*.vue')),
+    resolve: async (name) => {
+        const page = await resolvePageComponent(`./Pages/${name}.vue`, import.meta.glob('./Pages/**/*.vue'));
+        
+        // [UPDATE: PERSISTENT LAYOUT FIX]
+        // Fungsi: Pastikan AppLayout hanya di-assign pada halaman yang memerlukannya.
+        // Cara Kerja: Halaman Auth/ dan Splash bersifat standalone (tanpa navbar/sidebar),
+        //             sehingga dikecualikan dari pembungkusan AppLayout.
+        // Catatan: Splash menggunakan defineOptions({ layout: false }) sebagai fallback,
+        //          tetapi pengecekan nama di sini lebih aman dan eksplisit.
+        const isStandalone = name.startsWith('Auth/') || name === 'Splash';
+        if (page.default.layout === undefined && !isStandalone) {
+            page.default.layout = AppLayout;
+        }
+        
+        return page;
+    },
     setup({ el, App, props, plugin }) {
         createApp({ render: () => h(App, props) })
             .use(plugin)

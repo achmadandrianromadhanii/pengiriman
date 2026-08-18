@@ -11,6 +11,7 @@ use App\Http\Controllers\SettingController;
 use App\Http\Controllers\TarifController;
 use App\Http\Controllers\TarifManagementController;
 use App\Http\Controllers\TrackingController;
+use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 
 // ─── AUTH ────────────────────────────────────────────────────────────
@@ -31,12 +32,29 @@ Route::get('/tracking/{nomor_resi}', [TrackingController::class, 'public'])
     ->middleware('throttle:tracking')
     ->where('nomor_resi', '^SS-\d{6}-\d{4}$');
 
+// ─── ROOT / SPLASH SCREEN — Initialization Gate (Mobile PWA) ──────────
+// Fungsi: Menampilkan splash screen premium saat aplikasi pertama dibuka.
+// Cara Kerja: Halaman ini melakukan inisialisasi nyata (auth check, PWA, dll)
+//             kemudian otomatis navigasi ke /dashboard atau /login.
+// Catatan: Ini menggantikan root '/', diposisikan DI LUAR middleware auth
+//          agar selalu dieksekusi pertama kali, baik sudah login maupun belum.
+Route::get('/', function (\Illuminate\Http\Request $request) {
+    return \Inertia\Inertia::render('Splash', [
+        'intended_url' => $request->user() ? '/dashboard' : '/login',
+    ]);
+})->name('splash');
+
 // ─── ADMIN — semua butuh auth + admin aktif ───────────────────────────
 Route::middleware(['auth', 'admin.active'])->group(function () {
-    Route::get('/', fn() => redirect()->route('dashboard'));
+    // Route '/' sudah dihapus dari sini agar tidak menimpa Splash Screen di atas.
 
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Notifications API (Ajax)
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
 
     // Pengiriman
     Route::get('/pengiriman', [PengirimanController::class, 'index'])->name('pengiriman.index');

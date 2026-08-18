@@ -17,11 +17,11 @@
        - IP ditampilkan di perangkat saat ini
      ========================================================================= -->
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { Head, usePage, router } from '@inertiajs/vue3';
-// [UPDATE: SECURITY V4] Import ikon Lucide yang digunakan di halaman keamanan
-// Power: ikon tombol logout semua perangkat (menggantikan LogOut sesuai revisi)
-// ScanFace: ikon untuk pilihan Face ID/Face Unlock di bottom sheet biometrik
+import { initEcho } from '../../echo.js';
+// [UPDATE: HEADLESS UI SWITCH] Import ikon Lucide yang digunakan di halaman keamanan
+// Power: ikon tombol logout semua perangkat
 import {
     ChevronLeft,
     ShieldCheck,
@@ -36,13 +36,12 @@ import {
     Bell,
     Timer,
     Fingerprint,
-    ScanFace,
     Wifi,
     Trash2,
     X
 } from 'lucide-vue-next';
 
-import { SwitchRoot, SwitchThumb } from 'radix-vue';
+import { Switch } from '@headlessui/vue';
 
 // ── Props dari backend (data asli dari database) ─────────────────────────
 const props = defineProps({
@@ -82,20 +81,38 @@ const biometricEnabled = computed(() => !!props.security_settings.biometric_enab
 const biometricSupported = ref(false);
 const isUpdatingSetting = ref(false);
 
-// ── [UPDATE: V4] WebAuthn Bottom Sheet state ────────────────────────────
+// ── WebAuthn Bottom Sheet state ──────────────────────────────────────────
 // Fungsi: Mengontrol tampilan dan status bottom sheet registrasi biometrik.
-// selectedBiometricType: 'fingerprint' atau 'face' — pilihan metode biometrik user.
-// Catatan: Pilihan ini hanya visual, OS yang menentukan metode autentikasi.
 const showBiometricSheet = ref(false);
 const biometricRegistering = ref(false);
 const biometricError = ref('');
-const selectedBiometricType = ref(null);
 
-// ── [UPDATE: V6] Inisialisasi dukungan biometric (hanya client-side) ──
-onMounted(() => {
+// ── [UPDATE: V6] Inisialisasi dukungan biometric & Realtime Session ──
+let echoChannel = null;
+
+onMounted(async () => {
     // Cek dukungan biometric (WebAuthn / PublicKeyCredential API)
     // Sesuai W3C WebAuthn spec: https://www.w3.org/TR/webauthn-3/
     biometricSupported.value = !!(window.PublicKeyCredential);
+
+    // [UPDATE: REALTIME SESSION]
+    // Inisialisasi Echo & listen ke channel private admin
+    await initEcho();
+    const adminId = page.props.auth?.user?.id;
+    if (adminId && window.Echo) {
+        echoChannel = window.Echo.private(`Admin.${adminId}`);
+        echoChannel.listen('SessionUpdated', () => {
+            // Ketika ada sesi login baru atau device logout, update data tanpa full refresh
+            router.reload({ only: ['active_sessions', 'login_histories'] });
+        });
+    }
+});
+
+onUnmounted(() => {
+    if (echoChannel && window.Echo) {
+        const adminId = page.props.auth?.user?.id;
+        window.Echo.leave(`Admin.${adminId}`);
+    }
 });
 
 // ── [UPDATE: FINAL] Watch props — hanya untuk mematikan loading UI ─────
@@ -107,12 +124,12 @@ watch(() => props.security_settings, () => {
 }, { deep: true });
 
 // =====================================================================
-// [UPDATE: FINAL] Toggle handler — simpan ke DATABASE via POST
+// [UPDATE: HEADLESS UI SWITCH] Toggle handler — simpan ke DATABASE via POST
 // =====================================================================
-// Fungsi: Menerima nilai baru dari Radix Vue SwitchRoot @update:checked,
+// Fungsi: Menerima nilai baru dari @headlessui/vue Switch @update:modelValue,
 //         lalu menyimpannya ke tabel admin_security_settings di database.
 // Cara Kerja:
-//   1. Radix Vue SwitchRoot memancarkan event @update:checked(newVal)
+//   1. Headless UI Switch memancarkan event @update:modelValue(newVal)
 //   2. Handler ini menerima (key, newValue) langsung dari template
 //   3. UI toggle TIDAK diubah secara optimistic.
 //      Switch terikat ke computed(props.security_settings), jadi nilai
@@ -257,7 +274,6 @@ async function registerBiometric() {
             onSuccess: async () => {
                 showBiometricSheet.value = false;
                 biometricRegistering.value = false;
-                selectedBiometricType.value = null;
                 const Swal = (await import('sweetalert2')).default;
                 Swal.fire({
                     title: 'Berhasil',
@@ -605,7 +621,7 @@ function goBack() { window.history.back(); }
                                 <span class="text-[11px] text-slate-400 dark:text-gray-500 font-medium">{{ session.os }} • {{ session.ip_address }} • {{ formatTimeAgo(session.last_activity) }}</span>
                             </div>
                         </div>
-                        <div v-if="session.is_current" class="px-2.5 py-1 rounded-full bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-[9px] font-bold tracking-wider uppercase">Ini</div>
+                        <div v-if="session.is_current" class="px-2.5 py-1 rounded-full bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-[9px] font-bold tracking-wider uppercase">Aktif</div>
                     </div>
                 </div>
             </div>
@@ -668,30 +684,28 @@ function goBack() { window.history.back(); }
                                 <span class="text-[11px] text-slate-400 dark:text-gray-500 font-medium">Beritahu saat ada login baru</span>
                             </div>
                         </div>
-                        <!-- [UPDATE: FINAL] Radix Vue Switch — Notifikasi Login
-                             Spesifikasi:
-                               Track: 42×24px
-                               Thumb: 18px
-                               Padding: 3px
-                               OFF: #E4EAF3
-                               ON:  #2F5DFF
-                               Thumb: putih + shadow ringan
-                               Animasi: transition 200ms ease, translateX only -->
-                        <SwitchRoot
-                            :checked="loginNotification"
-                            @update:checked="(val) => toggleSetting('login_notification', val)"
+                        <!-- [UPDATE: HEADLESS UI SWITCH — SPEC FINAL] -->
+                        <!-- Track: 46x26px, Thumb: 20x20px, Padding: 3px -->
+                        <!-- OFF: #DCE4EF, ON: #2F54EB, Thumb: #FFFFFF -->
+                        <!-- Translasi: track(46) - thumb(20) - padding(6) = 20px -->
+                        <Switch
+                            :modelValue="loginNotification"
+                            @update:modelValue="(val) => toggleSetting('login_notification', val)"
                             :disabled="isUpdatingSetting"
-                            class="w-[42px] h-[24px] rounded-[9999px] relative inline-flex items-center cursor-pointer transition-colors duration-[200ms] ease flex-shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2F5DFF]/75 disabled:cursor-not-allowed bg-[#E4EAF3] data-[state=checked]:bg-[#2F5DFF]"
+                            :class="loginNotification ? 'bg-[#2F54EB]' : 'bg-[#DCE4EF] dark:bg-gray-600'"
+                            class="relative inline-flex h-[26px] w-[46px] shrink-0 cursor-pointer items-center rounded-full p-[3px] transition-colors duration-200 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2F54EB]/50 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                         >
-                            <SwitchThumb
-                                class="block w-[18px] h-[18px] bg-white rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.12)] transition-transform duration-[200ms] ease translate-x-[3px] data-[state=checked]:translate-x-[21px]"
+                            <span class="sr-only">Notifikasi Login</span>
+                            <span
+                                aria-hidden="true"
+                                :class="loginNotification ? 'translate-x-[20px]' : 'translate-x-0'"
+                                class="pointer-events-none inline-block h-[20px] w-[20px] rounded-full bg-white shadow-sm ring-0 transition-transform duration-200 ease-out"
                             />
-                        </SwitchRoot>
+                        </Switch>
                     </div>
 
                     <!-- ============================================================ -->
                     <!-- TOGGLE: Auto Logout                                          -->
-                    <!-- Fungsi: Mengaktifkan/menonaktifkan auto logout saat idle      -->
                     <!-- ============================================================ -->
                     <div class="flex items-center justify-between p-4">
                         <div class="flex items-center gap-3.5">
@@ -701,23 +715,25 @@ function goBack() { window.history.back(); }
                                 <span class="text-[11px] text-slate-400 dark:text-gray-500 font-medium">Logout otomatis saat idle</span>
                             </div>
                         </div>
-                        <!-- [UPDATE: FINAL] Radix Vue Switch — Auto Logout (spesifikasi sama) -->
-                        <SwitchRoot
-                            :checked="autoLogout"
-                            @update:checked="(val) => toggleSetting('auto_logout', val)"
+                        <!-- [UPDATE: HEADLESS UI SWITCH — SPEC FINAL] -->
+                        <Switch
+                            :modelValue="autoLogout"
+                            @update:modelValue="(val) => toggleSetting('auto_logout', val)"
                             :disabled="isUpdatingSetting"
-                            class="w-[42px] h-[24px] rounded-[9999px] relative inline-flex items-center cursor-pointer transition-colors duration-[200ms] ease flex-shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2F5DFF]/75 disabled:cursor-not-allowed bg-[#E4EAF3] data-[state=checked]:bg-[#2F5DFF]"
+                            :class="autoLogout ? 'bg-[#2F54EB]' : 'bg-[#DCE4EF] dark:bg-gray-600'"
+                            class="relative inline-flex h-[26px] w-[46px] shrink-0 cursor-pointer items-center rounded-full p-[3px] transition-colors duration-200 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2F54EB]/50 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                         >
-                            <SwitchThumb
-                                class="block w-[18px] h-[18px] bg-white rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.12)] transition-transform duration-[200ms] ease translate-x-[3px] data-[state=checked]:translate-x-[21px]"
+                            <span class="sr-only">Auto Logout</span>
+                            <span
+                                aria-hidden="true"
+                                :class="autoLogout ? 'translate-x-[20px]' : 'translate-x-0'"
+                                class="pointer-events-none inline-block h-[20px] w-[20px] rounded-full bg-white shadow-sm ring-0 transition-transform duration-200 ease-out"
                             />
-                        </SwitchRoot>
+                        </Switch>
                     </div>
 
                     <!-- ============================================================ -->
                     <!-- TOGGLE: Biometrik (WebAuthn/Passkeys)                        -->
-                    <!-- Fungsi: Mengaktifkan login dengan sidik jari/Face ID          -->
-                    <!-- Catatan: Jika biometricSupported=false, toggle disabled       -->
                     <!-- ============================================================ -->
                     <div class="flex items-center justify-between p-4">
                         <div class="flex items-center gap-3.5">
@@ -728,21 +744,25 @@ function goBack() { window.history.back(); }
                             <div>
                                 <span class="font-semibold text-[14px] text-slate-800 dark:text-gray-200 block">Biometrik</span>
                                 <span class="text-[11px] font-medium" :class="biometricSupported ? 'text-slate-400 dark:text-gray-500' : 'text-slate-300 dark:text-gray-600'">
-                                    {{ biometricSupported ? 'Login dengan sidik jari/wajah' : 'Tidak didukung perangkat ini' }}
+                                    {{ biometricSupported ? 'Login dengan sidik jari' : 'Tidak didukung perangkat ini' }}
                                 </span>
                             </div>
                         </div>
-                        <!-- [UPDATE: FINAL] Radix Vue Switch — Biometrik (spesifikasi sama) -->
-                        <SwitchRoot
-                            :checked="biometricEnabled"
-                            @update:checked="(val) => toggleSetting('biometric_enabled', val)"
+                        <!-- [UPDATE: HEADLESS UI SWITCH — SPEC FINAL] -->
+                        <Switch
+                            :modelValue="biometricEnabled"
+                            @update:modelValue="(val) => toggleSetting('biometric_enabled', val)"
                             :disabled="!biometricSupported || isUpdatingSetting"
-                            class="w-[42px] h-[24px] rounded-[9999px] relative inline-flex items-center cursor-pointer transition-colors duration-[200ms] ease flex-shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2F5DFF]/75 disabled:cursor-not-allowed disabled:bg-[#EEF2F7] bg-[#E4EAF3] data-[state=checked]:bg-[#2F5DFF]"
+                            :class="biometricEnabled ? 'bg-[#2F54EB]' : 'bg-[#DCE4EF] dark:bg-gray-600'"
+                            class="relative inline-flex h-[26px] w-[46px] shrink-0 cursor-pointer items-center rounded-full p-[3px] transition-colors duration-200 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2F54EB]/50 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                         >
-                            <SwitchThumb
-                                class="block w-[18px] h-[18px] bg-white rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.12)] transition-transform duration-[200ms] ease translate-x-[3px] data-[state=checked]:translate-x-[21px]"
+                            <span class="sr-only">Biometrik</span>
+                            <span
+                                aria-hidden="true"
+                                :class="biometricEnabled ? 'translate-x-[20px]' : 'translate-x-0'"
+                                class="pointer-events-none inline-block h-[20px] w-[20px] rounded-full bg-white shadow-sm ring-0 transition-transform duration-200 ease-out"
                             />
-                        </SwitchRoot>
+                        </Switch>
                     </div>
                 </div>
             </div>
@@ -782,88 +802,42 @@ function goBack() { window.history.back(); }
                         leave-to-class="translate-y-full"
                     >
                         <!-- ============================================================ -->
-                        <!-- [UPDATE: V4] BIOMETRIC BOTTOM SHEET — Dua Kartu Pilihan  -->
-                        <!-- Fungsi: Menampilkan 2 pilihan metode biometrik:           -->
-                        <!--   1. Sidik Jari (Fingerprint)                             -->
-                        <!--   2. Face ID / Face Unlock                                -->
-                        <!-- Catatan: Website tidak menentukan metode. OS yang memilih -->
-                        <!--           authenticator yang tersedia di perangkat.        -->
+                        <!-- BIOMETRIC BOTTOM SHEET                                       -->
                         <!-- ============================================================ -->
                         <div v-if="showBiometricSheet" class="absolute bottom-0 left-0 right-0 bg-white dark:bg-[#11131A] rounded-t-[28px] p-6 pb-8 shadow-2xl">
                             <!-- Handle bar -->
                             <div class="w-10 h-1 rounded-full bg-slate-200 dark:bg-gray-700 mx-auto mb-5"></div>
 
                             <!-- Close button -->
-                            <button @click="showBiometricSheet = false; selectedBiometricType = null; isUpdatingSetting = false" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-gray-800" aria-label="Tutup">
+                            <button @click="showBiometricSheet = false; isUpdatingSetting = false" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-gray-800" aria-label="Tutup">
                                 <X :size="16" class="text-slate-500" />
                             </button>
 
                             <!-- Header -->
                             <div class="text-center mb-6">
+                                <div class="w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-900/20 text-[#2349F5] flex items-center justify-center mx-auto mb-4">
+                                    <Fingerprint :size="32" stroke-width="2" />
+                                </div>
                                 <h3 class="text-lg font-bold text-slate-800 dark:text-white">Aktifkan Biometrik</h3>
-                                <p class="text-[13px] text-slate-500 dark:text-gray-400 mt-1">
-                                    Pilih metode autentikasi biometrik untuk login.
+                                <p class="text-[13px] text-slate-500 dark:text-gray-400 mt-2 px-4">
+                                    Gunakan sidik jari perangkat untuk login lebih cepat dan aman.
                                 </p>
                             </div>
 
                             <!-- Error message -->
-                            <div v-if="biometricError" class="mb-4 p-3 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-[12px] font-medium text-center">
-                                {{ biometricError }}
+                            <div v-if="biometricError" class="mb-5 p-3 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-[12px] font-medium text-center">
+                                <span class="block font-bold mb-0.5">Sidik jari belum berhasil diaktifkan.</span>
+                                Tidak ada perubahan pada pengaturan keamanan Anda.
                             </div>
-
-                            <!-- [UPDATE: V4] Dua Kartu Pilihan Biometrik -->
-                            <div class="grid grid-cols-2 gap-3 mb-5">
-                                <!-- Kartu 1: Sidik Jari -->
-                                <button
-                                    @click="selectedBiometricType = 'fingerprint'"
-                                    class="flex flex-col items-center gap-3 p-5 rounded-2xl border-2 transition-all duration-200 outline-none active:scale-[0.97]"
-                                    :class="selectedBiometricType === 'fingerprint'
-                                        ? 'border-[#2349F5] bg-blue-50 dark:bg-blue-900/20'
-                                        : 'border-slate-200 dark:border-gray-700 bg-white dark:bg-[#0D0F17]'"
-                                    aria-label="Pilih Sidik Jari"
-                                >
-                                    <div class="w-14 h-14 rounded-2xl flex items-center justify-center"
-                                         :class="selectedBiometricType === 'fingerprint' ? 'bg-[#2349F5]/10 text-[#2349F5]' : 'bg-slate-100 dark:bg-gray-800 text-slate-400'">
-                                        <Fingerprint :size="28" stroke-width="2" />
-                                    </div>
-                                    <span class="text-[13px] font-bold"
-                                          :class="selectedBiometricType === 'fingerprint' ? 'text-[#2349F5]' : 'text-slate-600 dark:text-gray-300'">Sidik Jari</span>
-                                </button>
-
-                                <!-- Kartu 2: Face ID / Face Unlock -->
-                                <button
-                                    @click="selectedBiometricType = 'face'"
-                                    class="flex flex-col items-center gap-3 p-5 rounded-2xl border-2 transition-all duration-200 outline-none active:scale-[0.97]"
-                                    :class="selectedBiometricType === 'face'
-                                        ? 'border-[#2349F5] bg-blue-50 dark:bg-blue-900/20'
-                                        : 'border-slate-200 dark:border-gray-700 bg-white dark:bg-[#0D0F17]'"
-                                    aria-label="Pilih Face ID"
-                                >
-                                    <div class="w-14 h-14 rounded-2xl flex items-center justify-center"
-                                         :class="selectedBiometricType === 'face' ? 'bg-[#2349F5]/10 text-[#2349F5]' : 'bg-slate-100 dark:bg-gray-800 text-slate-400'">
-                                        <ScanFace :size="28" stroke-width="2" />
-                                    </div>
-                                    <span class="text-[13px] font-bold"
-                                          :class="selectedBiometricType === 'face' ? 'text-[#2349F5]' : 'text-slate-600 dark:text-gray-300'">Face ID</span>
-                                </button>
-                            </div>
-
-                            <!-- Penjelasan metode -->
-                            <p class="text-[11px] text-center text-slate-400 dark:text-gray-500 mb-5">
-                                Sistem operasi perangkat yang menentukan metode autentikasi yang tersedia.
-                            </p>
 
                             <!-- Tombol aksi -->
                             <div class="space-y-3">
-                                <button @click="registerBiometric" :disabled="biometricRegistering || !selectedBiometricType"
-                                        class="w-full py-3.5 rounded-[18px] font-bold text-[14px] active:scale-[0.97] transition-all duration-200 outline-none flex items-center justify-center gap-2"
-                                        :class="selectedBiometricType
-                                            ? 'bg-[#2349F5] text-white'
-                                            : 'bg-slate-200 dark:bg-gray-700 text-slate-400 dark:text-gray-500 cursor-not-allowed'">
-                                    <component :is="selectedBiometricType === 'face' ? ScanFace : Fingerprint" :size="18" stroke-width="2.5" />
-                                    {{ biometricRegistering ? 'Memverifikasi...' : 'Aktifkan Biometrik' }}
+                                <button @click="registerBiometric" :disabled="biometricRegistering"
+                                        class="w-full py-3.5 rounded-[18px] font-bold text-[14px] active:scale-[0.97] transition-all duration-200 outline-none flex items-center justify-center gap-2 bg-[#2349F5] text-white disabled:opacity-70 disabled:cursor-not-allowed">
+                                    <Fingerprint :size="18" stroke-width="2.5" />
+                                    {{ biometricRegistering ? 'Memverifikasi...' : 'Aktifkan Sidik Jari' }}
                                 </button>
-                                <button @click="showBiometricSheet = false; selectedBiometricType = null; isUpdatingSetting = false"
+                                <button @click="showBiometricSheet = false; isUpdatingSetting = false"
                                         class="w-full py-3.5 rounded-[18px] bg-slate-100 dark:bg-gray-800 text-slate-600 dark:text-gray-300 font-bold text-[14px] active:scale-[0.97] transition-all duration-200 outline-none">
                                     Batal
                                 </button>

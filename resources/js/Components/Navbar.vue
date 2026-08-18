@@ -1,16 +1,115 @@
 <script setup>
     import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
     import { router, usePage } from '@inertiajs/vue3';
-    import { Sun, Moon, Bell } from 'lucide-vue-next';
-    // [UPDATE: LAZY-LOAD SWEETALERT DI NAVBAR]
-    // Fungsi: Menghapus import statis SweetAlert2 (~50KB) dari Navbar.
-    // Alasan: Navbar dimuat di SETIAP halaman (karena ada di AppLayout).
-    //         Import statis SweetAlert di sini = ~50KB ditambahkan ke SETIAP halaman.
-    // Cara Kerja: Hanya import saat user benar-benar klik tombol Logout.
-    // Hasil: Semua halaman (Dashboard, Pengiriman, Laporan, dll) lebih ringan ~50KB.
+    import { Sun, Moon, Bell, CircleCheck, CircleX, OctagonAlert, TriangleAlert, Info, RefreshCw, Check } from 'lucide-vue-next';
+    import axios from 'axios';
+    import { initEcho } from '@/echo';
 
     const page = usePage();
     const user = computed(() => page.props.auth?.user);
+
+    // --- NOTIFICATION STATE ---
+    const notifications = ref([]);
+    const unreadCount = ref(0);
+    const notifOpen = ref(false);
+    const notifFilter = ref('semua'); // 'semua' | 'belum_dibaca'
+    const pusherStatus = ref('Connecting...');
+
+    const greetingText = computed(() => {
+        const hour = new Date().getHours();
+        if (hour >= 5 && hour < 11) return 'Selamat pagi 👋';
+        if (hour >= 11 && hour < 15) return 'Selamat siang ☀️';
+        if (hour >= 15 && hour < 19) return 'Selamat sore 🌤️';
+        return 'Selamat malam 🌙';
+    });
+
+    const filteredNotifications = computed(() => {
+        if (notifFilter.value === 'belum_dibaca') {
+            return notifications.value.filter(n => !n.read_at);
+        }
+        return notifications.value;
+    });
+
+    async function fetchNotifications() {
+        try {
+            const res = await axios.get(route('notifications.index'));
+            notifications.value = res.data.notifications;
+            unreadCount.value = res.data.unread_count;
+        } catch (e) {
+            console.error('Failed to fetch notifications', e);
+        }
+    }
+
+    async function markAsRead(id, url = null) {
+        try {
+            const res = await axios.post(route('notifications.read', id));
+            unreadCount.value = res.data.unread_count;
+            const n = notifications.value.find(x => x.id === id);
+            if (n) n.read_at = new Date().toISOString();
+            
+            if (url) {
+                notifOpen.value = false;
+                router.visit(url);
+            }
+        } catch (e) {}
+    }
+
+    async function markAllAsRead() {
+        try {
+            await axios.post(route('notifications.read-all'));
+            unreadCount.value = 0;
+            notifications.value.forEach(n => n.read_at = new Date().toISOString());
+        } catch(e) {}
+    }
+
+    function toggleNotif() {
+        notifOpen.value = !notifOpen.value;
+        if (notifOpen.value) {
+            dropdownOpen.value = false;
+            fetchNotifications();
+        }
+    }
+
+    function getCategoryIcon(cat) {
+        if (cat === 'success') return CircleCheck;
+        if (cat === 'error') return CircleX;
+        if (cat === 'warning') return TriangleAlert;
+        return Info;
+    }
+
+    function getCategoryColor(cat) {
+        if (cat === 'success') return 'text-green-500 bg-green-50 dark:bg-green-500/10';
+        if (cat === 'error') return 'text-red-500 bg-red-50 dark:bg-red-500/10';
+        if (cat === 'warning') return 'text-yellow-500 bg-yellow-50 dark:bg-yellow-500/10';
+        return 'text-blue-500 bg-blue-50 dark:bg-blue-500/10';
+    }
+
+    async function setupRealtime() {
+        if (!user.value) return;
+        await initEcho();
+        if (!window.Echo) return;
+
+        pusherStatus.value = 'Live';
+
+        window.Echo.connector.pusher.connection.bind('connected', () => { pusherStatus.value = 'Live'; });
+        window.Echo.connector.pusher.connection.bind('disconnected', () => { pusherStatus.value = 'Offline'; });
+        window.Echo.connector.pusher.connection.bind('unavailable', () => { pusherStatus.value = 'Reconnecting...'; });
+
+        window.Echo.private(`App.Models.Admin.${user.value.id}`)
+            .notification((notification) => {
+                // Hindari duplikat
+                if (!notifications.value.find(n => n.id === notification.id)) {
+                    notifications.value.unshift({
+                        id: notification.id,
+                        data: notification,
+                        read_at: null,
+                        created_at: new Date().toISOString(),
+                        created_diff: 'Baru saja'
+                    });
+                    unreadCount.value++;
+                }
+            });
+    }
 
     const props = defineProps({
         isMobile: { type: Boolean, default: false },
@@ -162,12 +261,6 @@
 
     onMounted(() => {
         // [UPDATE: SKIP CLOCK DI MOBILE — PERFORMA]
-        // Fungsi: Hanya menjalankan setInterval clock di desktop/tablet.
-        // Alasan: Di mobile, elemen jam memiliki class 'hidden sm:flex' (tidak tampil di HP).
-        //         Tapi setInterval TETAP berjalan = Vue re-render Navbar 60x/menit TANPA HASIL.
-        // Cara Kerja: Cek lebar layar. Jika >= 640px (sm breakpoint), jalankan clock.
-        //             Jika < 640px (HP), skip = menghemat 60 re-render/menit.
-        // Hasil: Main thread HP Android lebih lega, scroll lebih mulus di semua halaman.
         if (window.innerWidth >= 640) {
             refreshClock();
             clockTimer = setInterval(refreshClock, 1000);
@@ -182,7 +275,11 @@
         document.addEventListener('keydown', onKeydown);
 
         // inertia events
-        removeInertiaStart = router.on('start', () => closeDropdown());
+        removeInertiaStart = router.on('start', () => { closeDropdown(); notifOpen.value = false; });
+
+        // realtime & notif
+        fetchNotifications();
+        setupRealtime();
     });
 
     onBeforeUnmount(() => {
@@ -191,6 +288,10 @@
         document.removeEventListener('pointerdown', onPointerDownOutside);
         document.removeEventListener('keydown', onKeydown);
         if (removeInertiaStart) removeInertiaStart();
+
+        if (window.Echo && user.value) {
+            window.Echo.leave(`App.Models.Admin.${user.value.id}`);
+        }
     });
 </script>
 
@@ -204,12 +305,12 @@
         :class="isMobile ? 'h-[72px]' : 'h-14'"
     >
         <!-- MOBILE VIEW (Satu Header Terpusat) -->
-        <div v-if="isMobile" class="flex items-center justify-between w-full h-[72px]">
+        <div v-if="isMobile" class="flex items-center justify-between w-full h-[72px] font-sans">
             <div class="flex items-center gap-3">
                 <button
                     type="button"
                     @click="toggleDropdown"
-                    class="relative w-10 h-10 rounded-full border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden active:scale-95 transition-transform"
+                    class="relative w-[38px] h-[38px] rounded-full border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden active:scale-95 transition-transform"
                 >
                     <img
                         :src="
@@ -221,33 +322,128 @@
                     />
                 </button>
                 <div class="flex flex-col justify-center">
-                    <div class="flex items-center gap-1">
-                        <img
-                            src="/images/logo-softsend-hd.png"
-                            alt="SoftSend Logo"
-                            class="h-3 w-auto opacity-80"
-                        />
-                    </div>
                     <span
-                        class="text-[13px] font-bold text-gray-900 dark:text-white leading-tight font-heading mt-0.5"
+                        class="text-[13.5px] font-semibold text-gray-900 dark:text-white leading-tight mt-0.5 tracking-tight font-sans"
                         >{{ user?.name || 'User' }}</span
                     >
-                    <span class="text-[10px] text-primary font-medium tracking-wide"
-                        >Good morning 👋</span
+                    <span class="text-[10.5px] text-gray-500 dark:text-gray-400 font-medium tracking-wide mt-0.5"
+                        >{{ greetingText }}</span
                     >
                 </div>
             </div>
 
-            <div class="flex items-center gap-2">
+            <!-- BELL ICON & NOTIFICATION POPOVER -->
+            <div class="relative flex items-center gap-2">
                 <button
                     type="button"
-                    class="relative flex items-center justify-center w-8 h-8 rounded-full bg-gray-50 dark:bg-white/5 active:scale-95 transition-transform text-gray-600 dark:text-gray-300 shadow-sm border border-gray-100 dark:border-gray-800"
+                    @click="toggleNotif"
+                    aria-label="Notifikasi"
+                    class="relative flex items-center justify-center w-9 h-9 rounded-full bg-gray-50 dark:bg-white/5 active:scale-95 transition-transform text-gray-600 dark:text-gray-300 shadow-sm border border-gray-100 dark:border-gray-800 focus:outline-none"
                 >
-                    <Bell :size="16" stroke-width="2.5" />
+                    <Bell :size="18" stroke-width="2.2" />
+                    <!-- Unread Badge -->
                     <span
-                        class="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-red-500 rounded-full"
-                    ></span>
+                        v-if="unreadCount > 0"
+                        class="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] bg-red-500 border-2 border-white dark:border-[#0A0A0A] text-white text-[9px] font-bold rounded-full px-1 shadow-sm"
+                    >
+                        {{ unreadCount > 9 ? '9+' : unreadCount }}
+                    </span>
                 </button>
+
+                <!-- POPOVER NOTIFICATION CENTER -->
+                <transition
+                    enter-active-class="transition duration-200 ease-out"
+                    enter-from-class="opacity-0 -translate-y-2 scale-95"
+                    enter-to-class="opacity-100 translate-y-0 scale-100"
+                    leave-active-class="transition duration-150 ease-in"
+                    leave-from-class="opacity-100 translate-y-0 scale-100"
+                    leave-to-class="opacity-0 -translate-y-2 scale-95"
+                >
+                    <div
+                        v-if="notifOpen"
+                        class="absolute top-[48px] right-0 w-[320px] max-w-[calc(100vw-32px)] bg-white dark:bg-[#111] rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-100 dark:border-white/10 overflow-hidden flex flex-col z-[999] transform origin-top-right font-sans"
+                    >
+                        <!-- Header -->
+                        <div class="px-4 py-3 border-b border-gray-100 dark:border-white/10 flex items-center justify-between bg-gray-50/50 dark:bg-black/20">
+                            <div>
+                                <h3 class="font-bold text-[14px] text-gray-900 dark:text-white">Notifikasi</h3>
+                                <p class="text-[11px] text-gray-500 mt-0.5">
+                                    {{ unreadCount }} belum dibaca
+                                    <span class="inline-flex items-center gap-1 ml-2 text-[10px] font-medium" :class="pusherStatus === 'Live' ? 'text-green-500' : (pusherStatus === 'Offline' ? 'text-gray-400' : 'text-yellow-500')">
+                                        <span class="w-1.5 h-1.5 rounded-full" :class="pusherStatus === 'Live' ? 'bg-green-500 animate-pulse' : (pusherStatus === 'Offline' ? 'bg-gray-400' : 'bg-yellow-500')"></span>
+                                        {{ pusherStatus }}
+                                    </span>
+                                </p>
+                            </div>
+                            <button
+                                v-if="unreadCount > 0"
+                                @click="markAllAsRead"
+                                class="text-[11px] text-primary font-medium hover:underline px-2 py-1 bg-primary/10 rounded-lg active:scale-95 transition"
+                            >
+                                Tandai dibaca
+                            </button>
+                        </div>
+
+                        <!-- Filter -->
+                        <div class="flex items-center px-2 py-1.5 border-b border-gray-100 dark:border-white/10 bg-white dark:bg-[#111]">
+                            <button
+                                @click="notifFilter = 'semua'"
+                                class="flex-1 py-1.5 text-[11px] font-semibold rounded-md transition"
+                                :class="notifFilter === 'semua' ? 'bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white' : 'text-gray-500 hover:bg-gray-50 dark:hover:bg-white/5'"
+                            >
+                                Semua
+                            </button>
+                            <button
+                                @click="notifFilter = 'belum_dibaca'"
+                                class="flex-1 py-1.5 text-[11px] font-semibold rounded-md transition"
+                                :class="notifFilter === 'belum_dibaca' ? 'bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white' : 'text-gray-500 hover:bg-gray-50 dark:hover:bg-white/5'"
+                            >
+                                Belum Dibaca
+                            </button>
+                        </div>
+
+                        <!-- List -->
+                        <div class="max-h-[340px] overflow-y-auto overscroll-contain">
+                            <div v-if="filteredNotifications.length === 0" class="py-8 text-center flex flex-col items-center">
+                                <div class="w-12 h-12 bg-gray-50 dark:bg-white/5 rounded-full flex items-center justify-center mb-2">
+                                    <Bell :size="20" class="text-gray-300 dark:text-gray-600" />
+                                </div>
+                                <p class="text-[12px] text-gray-500 dark:text-gray-400 font-medium">Belum ada notifikasi baru</p>
+                            </div>
+
+                            <div v-else class="flex flex-col">
+                                <button
+                                    v-for="item in filteredNotifications"
+                                    :key="item.id"
+                                    @click="markAsRead(item.id, item.data.url)"
+                                    class="text-left w-full flex items-start gap-3 p-3 border-b border-gray-50 dark:border-white/5 transition hover:bg-gray-50 dark:hover:bg-white/5 focus:bg-gray-50 focus:outline-none"
+                                    :class="!item.read_at ? 'bg-blue-50/30 dark:bg-blue-500/5' : ''"
+                                >
+                                    <!-- Icon -->
+                                    <div class="shrink-0 w-8 h-8 rounded-full flex items-center justify-center mt-0.5" :class="getCategoryColor(item.data.category)">
+                                        <component :is="getCategoryIcon(item.data.category)" :size="16" stroke-width="2.5" />
+                                    </div>
+                                    
+                                    <!-- Content -->
+                                    <div class="flex-1 min-w-0 pr-2">
+                                        <div class="flex items-start justify-between gap-2">
+                                            <p class="text-[12.5px] leading-snug text-gray-900 dark:text-gray-100 line-clamp-1" :class="!item.read_at ? 'font-semibold' : 'font-medium'">
+                                                {{ item.data.title }}
+                                            </p>
+                                            <div v-if="!item.read_at" class="w-1.5 h-1.5 bg-blue-500 rounded-full shrink-0 mt-1.5 shadow-[0_0_4px_rgba(59,130,246,0.5)]"></div>
+                                        </div>
+                                        <p class="text-[11.5px] text-gray-500 dark:text-gray-400 leading-snug mt-0.5 line-clamp-2">
+                                            {{ item.data.message }}
+                                        </p>
+                                        <p class="text-[9.5px] text-gray-400 dark:text-gray-500 mt-1.5 font-medium flex items-center gap-1">
+                                            <i class="bi bi-clock"></i> {{ item.created_diff }}
+                                        </p>
+                                    </div>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </transition>
             </div>
         </div>
 

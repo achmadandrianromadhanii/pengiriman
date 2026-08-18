@@ -60,7 +60,7 @@ class PengirimanRequest extends FormRequest
             'penerima_nama' => ['bail', 'required', 'string', 'min:2', 'max:100'],
             'penerima_hp' => ['bail', 'required', 'regex:/^(08|628|62)[0-9]{8,11}$/'],
             'penerima_alamat' => ['bail', 'required', 'string', 'min:15', 'max:500'],
-            'penerima_kota_id' => ['bail', 'required', 'integer', 'exists:kota,id', 'different:pengirim_kota_id'],
+            'penerima_kota_id' => ['bail', 'required', 'integer', 'exists:kota,id'],
 
             'barang' => ['bail', 'required', 'array', 'min:1'],
             'barang.*' => ['bail', 'required', 'array'],
@@ -90,7 +90,6 @@ class PengirimanRequest extends FormRequest
         return [
             'pengirim_hp.regex' => 'No HP pengirim harus diawali 08 atau 62 dan panjangnya valid.',
             'penerima_hp.regex' => 'No HP penerima harus diawali 08 atau 62 dan panjangnya valid.',
-            'penerima_kota_id.different' => 'Kota pengirim dan penerima tidak boleh sama.',
 
             'barang.required' => 'Minimal 1 barang wajib diisi.',
             'barang.array' => 'Format data barang tidak valid.',

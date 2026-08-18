@@ -44,4 +44,10 @@ export default defineConfig({
             },
         },
     },
+    // [UPDATE: VITE OPTIMIZE DEPS]
+    // Fungsi: Mencegah error "504 (Outdated Optimize Dep)" secara permanen 
+    //         saat development dengan memaksa sinkronisasi cache.
+    optimizeDeps: {
+        force: true,
+    },
 });

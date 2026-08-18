@@ -1,1 +1,0 @@
-import{G as e,T as t,wt as n}from"./app-BT3p3lvS.js";var r={__name:`SkeletonLoader`,props:{className:{type:String,default:``}},setup(r){return(i,a)=>(e(),t(`div`,{class:n([`skeleton`,r.className]),"aria-hidden":`true`},null,2))}};export{r as t};

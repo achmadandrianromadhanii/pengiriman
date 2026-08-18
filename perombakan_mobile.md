@@ -1,562 +1,876 @@
-# FINAL STABILIZATION
-# MOBILE WEB ONLY
-# HALAMAN MENU → JELAJAH → KEAMANAN
+# FINAL REVISION
 
-====================================================================
+# NEW MOBILE WEB PAGE ONLY
 
-ROLE
+# PREMIUM ANIMATED SPLASH SCREEN + APP INITIALIZATION LOADER
 
-Kamu adalah:
+===============================================================================
 
-• Senior Laravel Engineer
-• Senior Vue 3 Engineer
-• Senior Mobile UI Engineer
-• Senior PWA Engineer
-• Senior Performance Engineer
-• Senior QA Engineer
+1. ROLE
+   ===============================================================================
 
-====================================================================
+Bertindak sebagai:
 
-TUJUAN
+* Senior Mobile UI/UX Engineer
+* Senior Vue 3 Engineer
+* Senior PWA Engineer
+* Senior Frontend Motion Designer
+* Senior Performance Engineer
 
-Fokus HANYA memperbaiki halaman:
+===============================================================================
+2. SCOPE LOCK — SANGAT PENTING
+==============================
+
+Buat SATU HALAMAN BARU khusus:
 
 Mobile Web
-Menu
-→ Jelajah
-→ Keamanan
+→ Splash Screen
 
-JANGAN menyentuh halaman lain.
+Halaman ini adalah halaman baru.
 
-JANGAN mengubah UI lain.
+JANGAN mengubah halaman yang sudah ada.
 
-JANGAN mengubah layout yang sudah baik.
+JANGAN mengubah:
 
-JANGAN mengubah warna.
+* Login
+* Dashboard
+* Navbar
+* Menu/Jelajah
+* Keamanan
+* Cache
+* Penyimpanan
+* Laporan
+* Tracking
+* Pengiriman
+* Tarif
+* Desktop UI
+* Bottom Navigation
+* Business Logic lain
+* UI lain
+* Database Schema yang tidak diperlukan
 
-JANGAN mengubah card.
+Jangan melakukan redesign global.
 
-JANGAN mengubah spacing.
+Semua implementasi splash harus terisolasi hanya untuk halaman/komponen Splash Screen.
 
-JANGAN mengubah animasi popup biometrik.
+===============================================================================
+3. NAMA KONSEP
+==============
 
-JANGAN mengubah animasi login.
+Gunakan konsep:
 
-====================================================================
+"Premium App Initialization Splash"
 
-PRIORITAS PEKERJAAN
+Karakter:
 
-1.
-STABILKAN seluruh halaman keamanan.
+* Premium
+* Modern
+* Elegant
+* Clean
+* Luxury
+* Mobile-first
+* Minimal
+* Smooth
+* Professional
+* Cepat
+* Tidak terlihat seperti template AI
 
-Hilangkan seluruh bug.
+===============================================================================
+4. LOGO
+=======
 
-Hilangkan seluruh error.
+Gunakan LOGO SOFTSEND ASLI yang diberikan user.
 
-Hilangkan seluruh warning yang berasal dari source code aplikasi.
+JANGAN membuat logo baru.
 
-Pastikan kode bersih.
+JANGAN mengubah bentuk logo.
 
-====================================================================
+JANGAN mengganti logo dengan teks.
 
-2.
-TOGGLE SWITCH
+JANGAN melakukan crop sembarangan.
 
-Implementasi Toggle Switch saat ini dianggap gagal.
+Pertahankan aspect ratio.
 
-Jangan lagi menggunakan implementasi custom lama.
+Logo harus:
 
-Gunakan Toggle Switch original dari library.
+* HD
+* Tajam
+* Jernih
+* Tidak blur
+* Tidak pixelated
+* Tidak stretching
+* Tidak patah saat scaling
 
-Prioritas:
+Gunakan ukuran responsive.
 
-1. Radix Vue Switch
-2. Headless UI Switch
-3. PrimeVue InputSwitch
+Target mobile:
 
-Tidak boleh membuat Toggle menggunakan CSS custom.
+sekitar 150–210px lebar, tergantung viewport.
 
-====================================================================
+Jangan terlalu besar sampai memenuhi layar.
 
-SPESIFIKASI SWITCH
+===============================================================================
+5. BACKGROUND
+=============
 
-Track
+Buat background full-screen.
 
-42 x 24 px
+Gunakan warna:
 
-Thumb
+Deep Navy
+→ Royal Blue
+→ Indigo
 
-18 x 18 px
+Gunakan gradient yang halus.
 
-Radius
+Tambahkan pattern dekoratif sangat ringan:
 
-Full
+* curved lines
+* soft geometric arcs
+* subtle glow
+* low-opacity circles
 
-Transition
+Pattern tidak boleh mengganggu logo.
 
-200ms ease
+Jangan menggunakan:
 
-OFF
+* particle animation berat
+* background video
+* 3D animation
+* efek neon berlebihan
+* animasi berat
 
-#E5EBF4
+===============================================================================
+6. KOMPOSISI LAYOUT
+===================
 
-ON
+Gunakan vertical centered composition.
 
-#2F5DFF
+Urutan:
 
-Thumb putih
+1. Logo
+2. Brand name / sub-brand text
+3. Initialization loader
+4. Status text
+5. Optional micro status
+6. Powered by
 
-Shadow ringan
+Jangan menambahkan tombol.
 
-Tidak boleh:
+Jangan menambahkan form.
 
-- Oval aneh
-- Thumb lonjong
-- Thumb tidak center
-- Track terlalu besar
-- Track terlalu kecil
+Jangan menambahkan navigasi.
 
-Target tampilannya mendekati:
+Splash harus bersih.
 
-iOS Settings
+===============================================================================
+7. BRAND TEXT
+=============
 
-Material 3
+Di bawah logo dapat ditampilkan:
 
-Google Wallet
+SoftSend
 
-====================================================================
+dan:
 
-STATE SWITCH
+Premium Delivery Management
 
-Semua Toggle wajib sinkron.
+Gunakan typography modern.
 
-Status berasal dari database.
+SoftSend:
 
-Bukan state visual.
+font-size sekitar 20–26px
 
-Bukan state lokal.
+font-weight 700
 
-Alur:
+Subtitle:
 
-Tap
+11–13px
+
+opacity sedikit lebih rendah.
+
+Jangan membuat brand text lebih dominan daripada logo.
+
+===============================================================================
+8. APP INITIALIZATION LOADER
+============================
+
+Loader HARUS merepresentasikan proses inisialisasi NYATA.
+
+JANGAN menggunakan:
+
+setTimeout()
+setInterval()
+fake percentage
+random percentage
+
+untuk mensimulasikan progress.
+
+Gunakan state initialization aplikasi yang sebenarnya.
+
+===============================================================================
+9. INITIALIZATION PIPELINE
+==========================
+
+Urutan proses:
+
+Application Start
 
 ↓
 
-API
+Load Environment / Runtime Config
 
 ↓
 
-Laravel
+Check Authentication Session
 
 ↓
 
-Database
+Load User Session
 
 ↓
 
-Broadcast
+Initialize PWA / Service Worker
 
 ↓
 
-Pinia
+Initialize Realtime Connection
 
 ↓
 
-UI
-
-Refresh
+Initialize Pusher
 
 ↓
 
-Tetap sama
-
-Pindah halaman
+Load Required Initial Configuration
 
 ↓
 
-Tetap sama
-
-Logout
+Validate Application State
 
 ↓
 
-Tetap sama
+READY
 
-====================================================================
+Tidak semua tahap harus ditampilkan jika tidak diperlukan oleh aplikasi.
 
-SETTING YANG HARUS DISINKRONKAN
+Gunakan hanya proses yang memang benar-benar ada.
 
-- Notifikasi Login
+===============================================================================
+10. LOADER STYLE
+================
 
-- Auto Logout
-
-- Biometrik
-
-Semua harus realtime.
-
-====================================================================
-
-3.
-PERBAIKI BIOMETRIK
-
-Saat ini terdapat bug.
-
-Alur sekarang:
-
-Aktifkan biometrik
-
-↓
-
-Konfirmasi
-
-↓
-
-404
-
-↓
-
-Login berhasil menggunakan biometrik
-
-↓
-
-Tetapi Toggle Biometrik OFF
-
-Ini SALAH.
-
-Harus diperbaiki.
-
-====================================================================
-
-ALUR BIOMETRIK BARU
-
-Aktifkan biometrik
-
-↓
-
-Bottom Sheet
-
-↓
-
-Pilih
-
-- Sidik Jari
-
-atau
-
-- Face ID
-
-↓
-
-Validasi WebAuthn / Passkey
-
-↓
-
-Registrasi berhasil
-
-↓
-
-Simpan credential
-
-↓
-
-Simpan status ke database
-
-↓
-
-Update session
-
-↓
-
-Broadcast
-
-↓
-
-Pinia
-
-↓
-
-Toggle langsung ON
-
-↓
-
-Refresh
-
-↓
-
-Tetap ON
-
-↓
-
-Pindah halaman
-
-↓
-
-Tetap ON
-
-Tidak boleh ada 404.
-
-====================================================================
-
-Jika registrasi gagal
-
-↓
-
-Tidak boleh redirect.
-
-Tidak boleh blank.
-
-Tidak boleh error.
-
-Harus muncul dialog:
-
-"Pendaftaran biometrik gagal."
-
-"Tidak ada perubahan pada akun."
-
-====================================================================
-
-Jika device tidak mendukung
-
-↓
-
-Dialog:
-
-"Perangkat ini belum mendukung autentikasi biometrik."
-
-====================================================================
-
-Jika biometrik berhasil
-
-↓
-
-Dialog:
-
-"Biometrik berhasil diaktifkan."
-
-====================================================================
-
-4.
-LOGIN BIOMETRIK
-
-Saat halaman login dibuka
-
-Jika biometrik aktif
-
-↓
-
-Munculkan Bottom Sheet
-
-↓
-
-Pilih:
-
-Sidik Jari
-
-Face ID
-
-Login Email
-
-Jika memilih Login Email
-
-↓
-
-Bottom Sheet menutup dengan animasi
-
-Tidak redirect.
-
-====================================================================
-
-5.
-PERANGKAT
-
-Pastikan nama perangkat asli.
+Gunakan horizontal progress loader yang elegant.
 
 Contoh:
 
-iPhone 15 Pro
+━━━━━━━━━━━━━━━━░░░░
 
-Samsung Galaxy S24
+Target:
 
-OPPO Find X8
+* tinggi kecil
+* radius penuh
+* tidak terlalu tebal
+* warna mengikuti brand
 
-Google Pixel 9
+Track:
 
-Windows 11
+rgba(255,255,255,.16)
 
-Windows 10
+Progress:
 
-macOS
+white → light blue
 
-ChromeOS
+Gunakan animasi halus.
 
-Jangan hanya Desktop.
+===============================================================================
+11. STATUS TEXT
+===============
 
-Jangan hanya Mobile.
+Status harus berubah berdasarkan proses nyata.
 
-====================================================================
+Contoh:
 
-6.
-RIWAYAT LOGIN
+Initializing application...
 
-Sinkron dengan database.
+Checking session...
 
-Data asli.
+Preparing secure session...
 
-Realtime.
+Connecting realtime...
 
-Tidak dummy.
+Preparing workspace...
 
-====================================================================
+Almost ready...
 
-7.
-LOGOUT SEMUA PERANGKAT
+Ready
 
-Pastikan benar-benar:
+Jangan menampilkan status palsu.
 
-Menghapus session aktif lain.
+Jika proses tertentu tidak ada di aplikasi, jangan tampilkan.
 
-Menghapus remember token.
+===============================================================================
+12. PERCENTAGE
+==============
 
-Menghapus passkey aktif bila diperlukan.
+Jika progress dapat dihitung secara nyata:
 
-Broadcast logout.
+Tampilkan:
 
-Realtime.
+0%
+25%
+50%
+75%
+100%
 
-====================================================================
+Jika progress yang akurat tidak tersedia:
 
-8.
-BERSIHKAN KODE
+JANGAN menampilkan angka palsu.
 
-Hilangkan:
+Gunakan:
 
-- Duplicate watcher
+loading indicator
 
-- Duplicate API
+saja.
 
-- Duplicate state
+===============================================================================
+13. ANIMATION
+=============
 
-- Dead code
+Gunakan animasi ringan berbasis:
 
-- CSS conflict
+* transform
+* opacity
 
-- Memory leak
+Logo:
 
-- Console warning
+fade + scale
 
-- Vue warning
+0.94
+→
+1
 
-- Promise rejection
+Durasi:
 
-====================================================================
+350ms
 
-9.
-PWA
+Brand text:
 
-Pastikan fitur tetap normal:
+fade + translateY
 
-Browser
+Durasi:
 
-Android Chrome
+250–350ms
 
-Safari iOS
+Loader:
 
-Installed PWA
+smooth progress
 
-Vercel
+Status text:
 
-Localhost
+fade transition
 
-====================================================================
+Tidak boleh:
 
-10.
-JANGAN MERUBAH UI
+* bounce berat
+* shake
+* rotate terus menerus
+* animation loop berat
 
-Halaman keamanan saat ini sudah baik.
+===============================================================================
+14. MICRO INTERACTION
+=====================
 
-Yang boleh berubah HANYA:
+Tambahkan satu micro animation elegan pada logo:
 
-Toggle Switch
+soft glow pulse
 
-Bug
+Sangat pelan.
 
-Sinkronisasi data
+Opacity rendah.
 
-Flow biometrik
+Tidak boleh membuat logo berkedip.
 
-Selain itu WAJIB IDENTIK.
+Jika menggunakan loop:
 
-====================================================================
+sekitar 3–5 detik.
 
-OUTPUT
+===============================================================================
+15. READY STATE
+===============
 
-Berikan laporan:
+Saat semua initialization selesai:
 
-✔ Bug ditemukan
+status:
 
-✔ Penyebab
+Ready
 
-✔ File yang diubah
+loader:
 
-✔ Kenapa diubah
+100%
 
-✔ Bug berhasil diperbaiki
+Kemudian:
 
-✔ Pengujian yang dilakukan
+Splash fade out
 
-====================================================================
+opacity:
 
-HASIL AKHIR
+1 → 0
 
-✔ Tidak ada 404
+Durasi:
 
-✔ Toggle original library
+250–350ms
 
-✔ Toggle sinkron database
+Setelah fade out selesai:
 
-✔ Biometrik sinkron database
+Navigasi/render ke halaman aplikasi yang memang menjadi destination.
 
-✔ Biometrik sinkron session
+Jangan membuka tab baru.
 
-✔ Biometrik sinkron login
+Jangan reload browser.
 
-✔ UI tetap sama
+===============================================================================
+16. MINIMUM SPLASH DURATION
+===========================
 
-✔ Tidak mengubah halaman lain
+Jangan membuat splash terlalu singkat hingga terasa seperti flicker.
 
-✔ Tidak ada bug
+Gunakan minimum display duration ringan sekitar:
 
-✔ Tidak ada warning aplikasi
+1000–1200ms
 
-✔ Tidak ada memory leak
+Tetapi:
 
-✔ Tidak ada duplicate state
+JANGAN MEMPERLAMBAT APLIKASI SECARA BUATAN.
 
-✔ Kode bersih
+Jika initialization selesai setelah 1.2 detik:
 
-✔ Stabil di Localhost
+tunggu proses sebenarnya.
 
-✔ Stabil di Vercel
+Jika initialization selesai lebih cepat:
 
-✔ Stabil sebagai PWA Mobile Web
+tampilkan minimum duration tersebut.
 
-Wireframe target (tetap sama, hanya Toggle yang diperbaik
-┌────────────────────────────────────┐
-│ PENGATURAN                         │
-│                                    │
-│ 🔔 Notifikasi Login          ╭────╮│
-│ Beritahu saat ada login baru │ ○  ││
-│                              ╰────╯│
-├────────────────────────────────────┤
-│ ⏱ Auto Logout               ╭────╮│
-│ Logout otomatis saat idle   │ ●  ││
-│                             ╰────╯│
-├────────────────────────────────────┤
-│ 🟣 Biometrik                ╭────╮│
-│ Login dengan sidik jari     │ ○  ││
-│ / Face ID                   ╰────╯│
-└────────────────────────────────────┘
+Jangan memaksa 3–5 detik.
 
-      ┌──────────────────────────────┐
-      │ ⏻ Logout Semua Perangkat     │
-      └──────────────────────────────┘
+===============================================================================
+17. ERROR STATE
+===============
+
+Jika initialization gagal:
+
+Jangan langsung crash.
+
+Tampilkan:
+
+"Unable to initialize application"
+
+atau teks error yang sesuai.
+
+Tambahkan tombol:
+
+Retry
+
+Tetapi tombol Retry hanya muncul saat initialization benar-benar gagal.
+
+Jangan tampilkan Retry saat loading normal.
+
+===============================================================================
+18. RETRY
+=========
+
+Saat Retry ditekan:
+
+* reset initialization state
+* ulangi proses initialization
+* bersihkan state sementara yang memang aman
+* jangan menghapus session
+* jangan menghapus data user
+* jangan merusak PWA state
+
+===============================================================================
+19. PWA
+=======
+
+Splash harus kompatibel dengan:
+
+* Mobile Browser
+* Installed PWA
+* Android Chrome
+* iOS Safari jika platform mendukung perilaku web yang relevan
+
+Jangan membuat splash hanya bekerja pada browser biasa.
+
+===============================================================================
+20. PERFORMANCE
+===============
+
+WAJIB:
+
+* lightweight
+* mobile-first
+* GPU-friendly animation
+* gunakan transform + opacity
+* no heavy library
+* no unnecessary dependency
+* no video background
+* no canvas animation berat
+
+Target:
+
+60 FPS
+
+Hindari layout thrashing.
+
+===============================================================================
+21. ACCESSIBILITY
+=================
+
+Karena Splash adalah halaman loading:
+
+Tambahkan:
+
+aria-live="polite"
+
+untuk status initialization jika diperlukan.
+
+Jangan menyebabkan screen reader membaca status terlalu sering.
+
+===============================================================================
+22. RESPONSIVE
+==============
+
+Harus cocok untuk:
+
+320px
+360px
+375px
+390px
+414px
+430px
+480px
+
+Logo harus tetap tajam.
+
+Text tidak overflow.
+
+Loader tidak keluar layar.
+
+Footer tidak bertabrakan.
+
+===============================================================================
+23. SAFE AREA
+=============
+
+Gunakan safe-area inset untuk perangkat dengan notch atau home indicator bila diperlukan.
+
+Pastikan konten tidak tertutup:
+
+* notch
+* Dynamic Island
+* browser UI
+* bottom safe area
+
+===============================================================================
+24. FOOTER BRAND
+================
+
+Di bagian bawah:
+
+POWERED BY
+
+NOCTRYNX CORP
+
+Font:
+
+* modern
+* semi-bold
+* letter spacing sedikit
+* warna white dengan opacity yang sesuai
+
+Jangan terlalu besar.
+
+Jangan lebih dominan daripada SoftSend.
+
+===============================================================================
+25. WIREFRAME
+=============
+
+┌─────────────────────────────────────────┐
+│                                         │
+│                                         │
+│              [ LOGO HD ]                │
+│                                         │
+│                 SoftSend                │
+│         Premium Delivery Management     │
+│                                         │
+│                                         │
+│          Initializing application...    │
+│                                         │
+│       ━━━━━━━━━━━━━░░░░░░░░             │
+│                                         │
+│                  64%                    │
+│                                         │
+│                                         │
+│                                         │
+│                                         │
+│          POWERED BY                     │
+│        NOCTRYNX CORP                    │
+│                                         │
+└─────────────────────────────────────────┘
+
+===============================================================================
+26. ALTERNATIVE LOADING STATES
+==============================
+
+Contoh saat session:
+
+[ LOGO ]
+
+SoftSend
+
+Checking secure session...
+
+━━━━━━━━━━━━━━░░░
+
+Contoh saat Pusher:
+
+[ LOGO ]
+
+SoftSend
+
+Connecting realtime...
+
+━━━━━━━━━━━━━━━━░░
+
+Contoh siap:
+
+[ LOGO ]
+
+SoftSend
+
+Ready
+
+━━━━━━━━━━━━━━━━━━
+
+100%
+
+Kemudian fade out.
+
+===============================================================================
+27. ROUTING
+===========
+
+Splash hanya menjadi initialization gate.
+
+Jangan mengubah route halaman lain.
+
+Setelah siap:
+
+continue ke route yang sebelumnya memang dituju aplikasi.
+
+Jangan membuat business logic baru.
+
+===============================================================================
+28. CLEAN CODE
+==============
+
+Buat komponen/halaman Splash secara terisolasi.
+
+Jangan memasukkan style splash ke global CSS jika tidak diperlukan.
+
+Gunakan scoped style/component styling.
+
+Jangan mengubah shared component lain.
+
+Jangan menghapus code aplikasi lain.
+
+===============================================================================
+29. FINAL VALIDATION
+====================
+
+WAJIB test:
+
+[ ] Logo tampil HD
+[ ] Logo tidak blur
+[ ] Splash full screen
+[ ] Tidak ada scroll
+[ ] Loader tampil
+[ ] Initialization benar-benar berjalan
+[ ] Status berubah sesuai proses nyata
+[ ] Tidak ada fake progress
+[ ] Retry bekerja jika initialization gagal
+[ ] PWA kompatibel
+[ ] Mobile responsive
+[ ] Safe area aman
+[ ] Tidak ada console error
+[ ] Tidak ada memory leak
+[ ] Tidak ada layout shift
+[ ] Tidak membuka tab baru
+[ ] Tidak reload browser
+[ ] Setelah Ready, aplikasi lanjut normal
+
+===============================================================================
+30. SCOPE PROTECTION
+====================
+
+Task hanya membuat:
+
+NEW MOBILE WEB SPLASH SCREEN
+
+Jika menemukan masalah di halaman lain:
+
+JANGAN diperbaiki dalam task ini.
+
+Jangan melakukan redesign halaman lain.
+
+Jangan melakukan refactor global.
+
+Jangan mengubah mobile UI yang sudah ada.
+
+Jangan mengubah desktop UI.
+
+STOP setelah Splash Screen memenuhi seluruh Definition of Done.
+
+===============================================================================
+31. DEFINITION OF DONE
+======================
+
+✔ Splash Screen baru selesai.
+✔ Logo SoftSend asli digunakan.
+✔ Logo HD dan tajam.
+✔ App Initialization Loader menggunakan proses nyata.
+✔ Tidak ada fake loading.
+✔ Animasi ringan dan smooth.
+✔ Fullscreen mobile.
+✔ PWA compatible.
+✔ Tidak ada scrollbar.
+✔ Ready state berjalan.
+✔ Error state tersedia.
+✔ Retry tersedia saat diperlukan.
+✔ Powered by NOCTRYNX CORP tersedia.
+✔ Tidak ada halaman lain yang berubah.
+
+STEP 01 — INSPEKSI
+Cari bootstrap/startup flow aplikasi.
+Cari:
+- auth initialization
+- Pusher initialization
+- service worker
+- PWA registration
+- initial configuration
+
+Jangan edit dulu.
+
+STEP 02 — TENTUKAN ACTUAL INIT TASKS
+Catat hanya proses yang benar-benar ada.
+Jangan membuat initialization palsu.
+
+STEP 03 — BUAT SPLASH COMPONENT
+Buat halaman/component baru yang terisolasi.
+
+STEP 04 — MASUKKAN LOGO ASLI
+Gunakan asset logo SoftSend yang diberikan.
+Pastikan aspect ratio benar.
+
+STEP 05 — IMPLEMENT INIT STATE
+Gunakan state:
+
+idle
+initializing
+ready
+error
+
+STEP 06 — CONNECT KE INITIALIZATION NYATA
+Hubungkan ke:
+- session
+- PWA
+- Pusher
+- configuration
+
+sesuai kebutuhan aplikasi.
+
+STEP 07 — IMPLEMENT LOADER
+Tidak boleh fake percentage.
+
+Jika progress nyata tidak tersedia:
+gunakan indeterminate loader.
+
+STEP 08 — IMPLEMENT ANIMATION
+Gunakan:
+opacity
+transform
+
+STEP 09 — READY TRANSITION
+Saat semua selesai:
+Ready
+→ fade out
+→ lanjut aplikasi.
+
+STEP 10 — ERROR
+Jika gagal:
+error state
+→ Retry
+
+STEP 11 — RESPONSIVE TEST
+320–480px.
+
+STEP 12 — PWA TEST
+Browser + Installed PWA.
+
+STEP 13 — PERFORMANCE TEST
+Pastikan tidak ada:
+- blocking
+- lag
+- excessive repaint
+- memory leak
+
+STEP 14 — SCOPE AUDIT
+Periksa git diff.
+
+Pastikan hanya file yang berkaitan dengan:
+Splash Screen / initialization integration
+
+yang berubah.
+
+STEP 15 — STOP
+Jangan mengubah halaman lain.
+Jangan melakukan redesign tambahan.
+:::
+
+**Inti desainnya:** logo SoftSend Anda menjadi pusat perhatian, sementara loader memberikan kesan aplikasi benar-benar sedang **menyiapkan sistem**, bukan sekadar menunggu beberapa detik. Itu akan jauh lebih cocok untuk PWA mobile yang ingin terasa seperti aplikasi native.
+
+┌──────────────────────────────────────┐
+│                                      │
+│                                      │
+│             ✦ SoftSend ✦            │
+│                                      │
+│          [ LOGO HD ASLI ]            │
+│                                      │
+│      Premium Delivery Services       │
+│                                      │
+│          ◉ Initializing...           │
+│                                      │
+│      ━━━━━━━━━━━━━░░░░░░░░           │
+│                                      │
+│       Menyiapkan aplikasi...         │
+│                                      │
+│                                      │
+│                                      │
+│       Powered by NOCTRYNX CORP       │
+│                                      │
+└──────────────────────────────────────┘
+
+Logo:
+opacity 0 → 1
+scale 0.94 → 1
+
+Loader:
+0% → 100% mengikuti proses nyata
+
+Status:
+Initializing...
+Checking session...
+Connecting...
+Preparing application...
+Ready

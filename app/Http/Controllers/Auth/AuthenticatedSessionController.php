@@ -102,6 +102,8 @@ class AuthenticatedSessionController extends Controller
             'last_login' => now(),
         ])->save();
 
+        event(new \App\Events\SessionUpdated($admin->id));
+
         return Inertia::render('Auth/Login', [
             'loginSuccess' => true,
         ]);
@@ -161,6 +163,8 @@ class AuthenticatedSessionController extends Controller
             'last_login' => now(),
         ])->save();
 
+        event(new \App\Events\SessionUpdated($admin->id));
+
         return Inertia::render('Auth/Login', [
             'loginSuccess' => true,
         ]);
@@ -169,10 +173,15 @@ class AuthenticatedSessionController extends Controller
     // ── Logout admin ────────────────────────────────────────────────────
     public function destroy(Request $request): RedirectResponse
     {
+        $userId = Auth::id();
         Auth::logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
+        if ($userId) {
+            event(new \App\Events\SessionUpdated($userId));
+        }
 
         return redirect()->route('login');
     }
@@ -219,6 +228,8 @@ class AuthenticatedSessionController extends Controller
             ->where('user_id', $userId)
             ->where('id', '!=', $sessionId)
             ->delete();
+
+        event(new \App\Events\SessionUpdated($userId));
 
         return back();
     }

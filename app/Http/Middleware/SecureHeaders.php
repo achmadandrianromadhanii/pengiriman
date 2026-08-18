@@ -13,7 +13,13 @@ class SecureHeaders
         /** @var Response $response */
         $response = $next($request);
 
-        $response->headers->set('X-Frame-Options', 'DENY');
+        // [UPDATE: PERBAIKAN X-FRAME-OPTIONS]
+        // Fungsi: Mengubah 'DENY' menjadi 'SAMEORIGIN'.
+        // Cara Kerja: Sebelumnya di-set 'DENY' yang membuat website ini sama sekali tidak bisa
+        // dimasukkan ke dalam iframe (seperti simulator Lighthouse/DevTools).
+        // Dengan 'SAMEORIGIN', website tetap aman dari Clickjacking untuk domain luar, tapi 
+        // tetap bisa dipreview melalui iframe atau simulator di domain/localhost yang sama.
+        $response->headers->set('X-Frame-Options', 'SAMEORIGIN');
         $response->headers->set('X-Content-Type-Options', 'nosniff');
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
         $response->headers->set('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');

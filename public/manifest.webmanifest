@@ -2,7 +2,7 @@
     "name": "SoftSend — Enterprise Logistics",
     "short_name": "SoftSend",
     "description": "Sistem Manajemen Pengiriman Enterprise. Kelola resi, tracking, laporan, dan tarif dalam satu platform.",
-    "start_url": "/dashboard",
+    "start_url": "/",
     "scope": "/",
     "display": "standalone",
     "orientation": "portrait-primary",

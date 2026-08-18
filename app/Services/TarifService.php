@@ -83,7 +83,10 @@ class TarifService
     private function hitungJarak(float $lat1, float $lon1, float $lat2, float $lon2): float
     {
         if ($lat1 === $lat2 && $lon1 === $lon2) {
-            return 0.0; // Jarak 0 jika koordinat persis sama
+            // [UPDATE: INTRA-CITY DISTANCE FIX]
+            // Jika koordinat persis sama (berarti di kota yang sama), berikan jarak default minimum
+            // agar pengiriman dalam kota tetap valid dan memiliki harga yang murah & realistis.
+            return 5.0; // Jarak default 5 km untuk dalam kota
         }
 
         $earthRadius = 6371; // Radius bumi dalam kilometer
