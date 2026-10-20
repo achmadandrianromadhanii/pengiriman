@@ -41,7 +41,7 @@ import {
     X
 } from 'lucide-vue-next';
 
-import { Switch } from '@headlessui/vue';
+
 
 // ── Props dari backend (data asli dari database) ─────────────────────────
 const props = defineProps({
@@ -79,7 +79,7 @@ const loginNotification = computed(() => !!props.security_settings.login_notific
 const autoLogout = computed(() => !!props.security_settings.auto_logout);
 const biometricEnabled = computed(() => !!props.security_settings.biometric_enabled);
 const biometricSupported = ref(false);
-const isUpdatingSetting = ref(false);
+const isUpdatingSetting = ref(null);
 
 // ── WebAuthn Bottom Sheet state ──────────────────────────────────────────
 // Fungsi: Mengontrol tampilan dan status bottom sheet registrasi biometrik.
@@ -100,7 +100,7 @@ onMounted(async () => {
     await initEcho();
     const adminId = page.props.auth?.user?.id;
     if (adminId && window.Echo) {
-        echoChannel = window.Echo.private(`Admin.${adminId}`);
+        echoChannel = window.Echo.private(`App.Models.Admin.${adminId}`);
         echoChannel.listen('SessionUpdated', () => {
             // Ketika ada sesi login baru atau device logout, update data tanpa full refresh
             router.reload({ only: ['active_sessions', 'login_histories'] });
@@ -111,7 +111,7 @@ onMounted(async () => {
 onUnmounted(() => {
     if (echoChannel && window.Echo) {
         const adminId = page.props.auth?.user?.id;
-        window.Echo.leave(`Admin.${adminId}`);
+        window.Echo.leave(`App.Models.Admin.${adminId}`);
     }
 });
 
@@ -120,7 +120,7 @@ onUnmounted(() => {
 // watch ini tidak mengubah "state visual" toggle; hanya mengakhiri
 // mode disable ketika props backend sudah tersinkron.
 watch(() => props.security_settings, () => {
-    isUpdatingSetting.value = false;
+    isUpdatingSetting.value = null;
 }, { deep: true });
 
 // =====================================================================
@@ -147,21 +147,17 @@ async function toggleSetting(key, newValue) {
     // --- Khusus Biometrik: alur khusus WebAuthn ---
     if (key === 'biometric_enabled') {
         if (newValue) {
-            // Mengaktifkan → buka bottom sheet registrasi WebAuthn.
-            // Toggle tidak berubah sampai props backend tersinkron (setelah WebAuthn sukses).
-            isUpdatingSetting.value = true; // mencegah double/ghost click
+            isUpdatingSetting.value = key;
             showBiometricSheet.value = true;
             return;
         }
-
-        // Menonaktifkan → hapus kredensial biometrik.
-        isUpdatingSetting.value = true;
+        isUpdatingSetting.value = key;
         disableBiometric();
         return;
     }
 
     // --- Toggle biasa: Notifikasi Login / Auto Logout ---
-    isUpdatingSetting.value = true;
+    isUpdatingSetting.value = key;
 
     // POST ke database
     router.post(route('security.toggle-setting'), {
@@ -169,11 +165,8 @@ async function toggleSetting(key, newValue) {
         value: newValue,
     }, {
         preserveScroll: true,
-        // onSuccess tidak mematikan disable di sini; biarkan watch props backend yang sinkron.
         onError: async () => {
-            isUpdatingSetting.value = false;
-
-            // Tampilkan notifikasi error
+            isUpdatingSetting.value = null;
             const Swal = (await import('sweetalert2')).default;
             Swal.fire({
                 toast: true,
@@ -183,6 +176,9 @@ async function toggleSetting(key, newValue) {
                 icon: 'error',
                 title: 'Gagal menyimpan pengaturan'
             });
+        },
+        onSuccess: () => {
+            isUpdatingSetting.value = null;
         }
     });
 }
@@ -216,7 +212,7 @@ async function registerBiometric() {
                 confirmButtonColor: '#2F54EB'
             });
             biometricRegistering.value = false;
-            isUpdatingSetting.value = false;
+            isUpdatingSetting.value = null;
             return;
         }
 
@@ -285,7 +281,7 @@ async function registerBiometric() {
             },
             onError: async () => {
                 biometricRegistering.value = false;
-                isUpdatingSetting.value = false;
+            isUpdatingSetting.value = null;
                 const Swal = (await import('sweetalert2')).default;
                 Swal.fire({
                     title: 'Pendaftaran biometrik gagal.',
@@ -307,7 +303,7 @@ async function registerBiometric() {
             biometricError.value = 'Gagal registrasi biometrik. Pastikan perangkat mendukung sidik jari atau Face ID.';
         }
         biometricRegistering.value = false;
-        isUpdatingSetting.value = false;
+            isUpdatingSetting.value = null;
     }
 }
 
@@ -316,7 +312,7 @@ function disableBiometric() {
     router.delete(route('security.webauthn.remove'), {
         preserveScroll: true,
         onError: async () => {
-            isUpdatingSetting.value = false;
+            isUpdatingSetting.value = null;
             const Swal = (await import('sweetalert2')).default;
             Swal.fire({
                 toast: true,
@@ -502,7 +498,7 @@ function goBack() { window.history.back(); }
                     <button @click="goBack" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-gray-100 dark:active:bg-gray-800 transition-colors outline-none" aria-label="Kembali">
                         <ChevronLeft :size="24" class="text-slate-700 dark:text-gray-200" />
                     </button>
-                    <h1 class="text-lg font-bold text-slate-800 dark:text-white tracking-tight">Keamanan</h1>
+                    <h1 class="text-lg font-bold text-slate-800 dark:text-white tracking-tight">{{ t('security.title') }}</h1>
                 </div>
             </div>
         </header>
@@ -649,7 +645,7 @@ function goBack() { window.history.back(); }
                             </span>
                             <span class="text-[10px] text-slate-300 dark:text-gray-600 font-medium">{{ formatDateTime(history.logged_in_at) }}</span>
                         </div>
-                        <div class="px-2 py-0.5 rounded-full bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-[9px] font-bold tracking-wider uppercase shrink-0">Berhasil</div>
+                        <div class="px-2 py-0.5 rounded-full bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-[9px] font-bold tracking-wider uppercase shrink-0">{{ t('common.success') }}</div>
                     </div>
                 </div>
             </div>
@@ -684,24 +680,19 @@ function goBack() { window.history.back(); }
                                 <span class="text-[11px] text-slate-400 dark:text-gray-500 font-medium">Beritahu saat ada login baru</span>
                             </div>
                         </div>
-                        <!-- [UPDATE: HEADLESS UI SWITCH — SPEC FINAL] -->
-                        <!-- Track: 46x26px, Thumb: 20x20px, Padding: 3px -->
-                        <!-- OFF: #DCE4EF, ON: #2F54EB, Thumb: #FFFFFF -->
-                        <!-- Translasi: track(46) - thumb(20) - padding(6) = 20px -->
-                        <Switch
-                            :modelValue="loginNotification"
-                            @update:modelValue="(val) => toggleSetting('login_notification', val)"
-                            :disabled="isUpdatingSetting"
-                            :class="loginNotification ? 'bg-[#2F54EB]' : 'bg-[#DCE4EF] dark:bg-gray-600'"
-                            class="relative inline-flex h-[26px] w-[46px] shrink-0 cursor-pointer items-center rounded-full p-[3px] transition-colors duration-200 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2F54EB]/50 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        <!-- [UPDATE: BRACKET BUTTONS] -->
+                        <button
+                            type="button"
+                            @click="toggleSetting('login_notification', !loginNotification)"
+                            :disabled="isUpdatingSetting === 'login_notification'"
+                            :aria-label="'Notifikasi Login, saat ini ' + (loginNotification ? 'aktif' : 'nonaktif')"
+                            :aria-pressed="loginNotification"
+                            class="focus:outline-none active:scale-95 transition-transform duration-150 ease-out"
                         >
-                            <span class="sr-only">Notifikasi Login</span>
-                            <span
-                                aria-hidden="true"
-                                :class="loginNotification ? 'translate-x-[20px]' : 'translate-x-0'"
-                                class="pointer-events-none inline-block h-[20px] w-[20px] rounded-full bg-white shadow-sm ring-0 transition-transform duration-200 ease-out"
-                            />
-                        </Switch>
+                            <span v-if="isUpdatingSetting === 'login_notification'" class="text-slate-400 dark:text-gray-500 font-bold text-[11px] tracking-wide">[ ... ]</span>
+                            <span v-else-if="loginNotification" class="text-[#15803D] dark:text-green-400 font-bold text-[11px] tracking-wide">[● Aktif]</span>
+                            <span v-else class="text-slate-400 dark:text-gray-500 font-bold text-[11px] tracking-wide">[○ Nonaktif]</span>
+                        </button>
                     </div>
 
                     <!-- ============================================================ -->
@@ -715,21 +706,19 @@ function goBack() { window.history.back(); }
                                 <span class="text-[11px] text-slate-400 dark:text-gray-500 font-medium">Logout otomatis saat idle</span>
                             </div>
                         </div>
-                        <!-- [UPDATE: HEADLESS UI SWITCH — SPEC FINAL] -->
-                        <Switch
-                            :modelValue="autoLogout"
-                            @update:modelValue="(val) => toggleSetting('auto_logout', val)"
-                            :disabled="isUpdatingSetting"
-                            :class="autoLogout ? 'bg-[#2F54EB]' : 'bg-[#DCE4EF] dark:bg-gray-600'"
-                            class="relative inline-flex h-[26px] w-[46px] shrink-0 cursor-pointer items-center rounded-full p-[3px] transition-colors duration-200 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2F54EB]/50 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        <!-- [UPDATE: BRACKET BUTTONS] -->
+                        <button
+                            type="button"
+                            @click="toggleSetting('auto_logout', !autoLogout)"
+                            :disabled="isUpdatingSetting === 'auto_logout'"
+                            :aria-label="'Auto Logout, saat ini ' + (autoLogout ? 'aktif' : 'nonaktif')"
+                            :aria-pressed="autoLogout"
+                            class="focus:outline-none active:scale-95 transition-transform duration-150 ease-out"
                         >
-                            <span class="sr-only">Auto Logout</span>
-                            <span
-                                aria-hidden="true"
-                                :class="autoLogout ? 'translate-x-[20px]' : 'translate-x-0'"
-                                class="pointer-events-none inline-block h-[20px] w-[20px] rounded-full bg-white shadow-sm ring-0 transition-transform duration-200 ease-out"
-                            />
-                        </Switch>
+                            <span v-if="isUpdatingSetting === 'auto_logout'" class="text-slate-400 dark:text-gray-500 font-bold text-[11px] tracking-wide">[ ... ]</span>
+                            <span v-else-if="autoLogout" class="text-[#15803D] dark:text-green-400 font-bold text-[11px] tracking-wide">[● Aktif]</span>
+                            <span v-else class="text-slate-400 dark:text-gray-500 font-bold text-[11px] tracking-wide">[○ Nonaktif]</span>
+                        </button>
                     </div>
 
                     <!-- ============================================================ -->
@@ -748,21 +737,20 @@ function goBack() { window.history.back(); }
                                 </span>
                             </div>
                         </div>
-                        <!-- [UPDATE: HEADLESS UI SWITCH — SPEC FINAL] -->
-                        <Switch
-                            :modelValue="biometricEnabled"
-                            @update:modelValue="(val) => toggleSetting('biometric_enabled', val)"
-                            :disabled="!biometricSupported || isUpdatingSetting"
-                            :class="biometricEnabled ? 'bg-[#2F54EB]' : 'bg-[#DCE4EF] dark:bg-gray-600'"
-                            class="relative inline-flex h-[26px] w-[46px] shrink-0 cursor-pointer items-center rounded-full p-[3px] transition-colors duration-200 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2F54EB]/50 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        <!-- [UPDATE: BRACKET BUTTONS] -->
+                        <button
+                            type="button"
+                            @click="toggleSetting('biometric_enabled', !biometricEnabled)"
+                            :disabled="!biometricSupported || isUpdatingSetting === 'biometric_enabled'"
+                            :aria-label="'Biometrik, saat ini ' + (biometricEnabled ? 'aktif' : 'nonaktif')"
+                            :aria-pressed="biometricEnabled"
+                            class="focus:outline-none active:scale-95 transition-transform duration-150 ease-out"
+                            :class="!biometricSupported ? 'opacity-50 pointer-events-none' : ''"
                         >
-                            <span class="sr-only">Biometrik</span>
-                            <span
-                                aria-hidden="true"
-                                :class="biometricEnabled ? 'translate-x-[20px]' : 'translate-x-0'"
-                                class="pointer-events-none inline-block h-[20px] w-[20px] rounded-full bg-white shadow-sm ring-0 transition-transform duration-200 ease-out"
-                            />
-                        </Switch>
+                            <span v-if="isUpdatingSetting === 'biometric_enabled'" class="text-slate-400 dark:text-gray-500 font-bold text-[11px] tracking-wide">[ ... ]</span>
+                            <span v-else-if="biometricEnabled" class="text-[#15803D] dark:text-green-400 font-bold text-[11px] tracking-wide">[● Aktif]</span>
+                            <span v-else class="text-slate-400 dark:text-gray-500 font-bold text-[11px] tracking-wide">[○ Nonaktif]</span>
+                        </button>
                     </div>
                 </div>
             </div>

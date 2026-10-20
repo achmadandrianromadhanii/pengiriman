@@ -1,4 +1,6 @@
 <script setup>
+    import { useI18n } from '@/composables/useI18n.js';
+    const { t } = useI18n();
     import AppLayout from '@/Layouts/AppLayout.vue';
     import Modal from '@/Components/Modal.vue';
     import { Head, router, useForm } from '@inertiajs/vue3';
@@ -128,7 +130,7 @@
             preserveScroll: true,
             onError: async () => {
                 const Swal = await getSwal();
-                Swal.fire({ icon: 'error', title: 'Validasi gagal', text: 'Periksa input kota.' });
+                Swal.fire({ icon: 'error', title: t('settings.validationFailed'), text: t('settings.checkCityInput') });
             },
             onSuccess: () => {
                 kotaModalOpen.value = false;
@@ -475,7 +477,7 @@
                 <div class="md:col-span-5">
                     <label
                         class="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-1"
-                        >CARI KOTA/KAB</label
+                        >{{ t("settings.searchCity") }}</label
                     >
                     <!-- [UPDATE: PENCARIAN SEAMLESS (NEUMORPHIC)] -->
                     <!-- Fungsi: Kolom pencarian kota dengan desain yang lebih menyatu dengan background (tanpa border kaku). -->
@@ -490,7 +492,7 @@
                             v-model="kotaSearch"
                             class="input-field pl-10 bg-slate-100 dark:bg-slate-800/50 border-none rounded-full md:rounded-lg shadow-none focus:ring-2 focus:ring-primary/20 h-11 w-full text-sm font-medium transition"
                             type="text"
-                            placeholder="Ketik nama kota, provinsi..."
+                            :placeholder="t('settings.typeCityProvince')"
                         />
                     </div>
                 </div>
@@ -542,7 +544,7 @@
                             @click="doImport"
                         >
                             <i class="bi bi-cloud-upload md:mr-1"></i>
-                            <span class="hidden md:inline">Simpan</span>
+                            <span class="hidden md:inline">{{ t('common.save') }}</span>
                         </button>
                     </div>
 
@@ -572,8 +574,8 @@
                         <thead class="text-gray-500 dark:text-gray-400">
                             <tr>
                                 <th class="text-left py-2">Nama</th>
-                                <th class="text-left py-2">Provinsi</th>
-                                <th class="text-left py-2">Kode Pos</th>
+                                <th class="text-left py-2">{{ t("settings.provinceName") }}</th>
+                                <th class="text-left py-2">{{ t("settings.postalCodeName") }}</th>
                                 <th class="text-right py-2">Lat</th>
                                 <th class="text-right py-2">Lng</th>
                                 <th class="text-left py-2">Status</th>
@@ -611,7 +613,7 @@
                     <table class="min-w-[980px] w-full text-sm">
                         <thead class="text-gray-500 dark:text-gray-400">
                             <tr>
-                                <th class="text-left py-2">Nama Kota</th>
+                                <th class="text-left py-2">{{ t("settings.cityName") }}</th>
                                 <th class="text-left py-2">Provinsi</th>
                                 <th class="text-left py-2">Kode Pos</th>
                                 <th class="text-right py-2">Lat</th>
@@ -711,7 +713,7 @@
                             <div>
                                 <span
                                     class="font-bold text-[9px] uppercase tracking-widest block text-slate-400 mb-1"
-                                    >Latitude</span
+                                    >{{ t("settings.latitude") }}</span
                                 >
                                 <span
                                     class="font-mono text-sm font-bold text-slate-700 dark:text-slate-300"
@@ -721,7 +723,7 @@
                             <div>
                                 <span
                                     class="font-bold text-[9px] uppercase tracking-widest block text-slate-400 mb-1"
-                                    >Longitude</span
+                                    >{{ t("settings.longitude") }}</span
                                 >
                                 <span
                                     class="font-mono text-sm font-bold text-slate-700 dark:text-slate-300"
@@ -807,8 +809,8 @@
                             >Status</label
                         >
                         <select v-model="kotaForm.status" class="input-field mt-1">
-                            <option value="aktif">aktif</option>
-                            <option value="nonaktif">nonaktif</option>
+                            <option value="aktif">{{ t("settings.statusActive") }}</option>
+                            <option value="nonaktif">{{ t("settings.statusInactive") }}</option>
                         </select>
                         <div v-if="kotaForm.errors.status" class="text-xs text-red-500 mt-1">
                             {{ kotaForm.errors.status }}
@@ -888,7 +890,7 @@
                 <div class="md:col-span-12 lg:col-span-4">
                     <label
                         class="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-2"
-                        >FILTER LAYANAN</label
+                        >{{ t("settings.filterService") }}</label
                     >
                     <!-- [UPDATE: HORIZONTAL SCROLLABLE CHIPS (MOBILE)] -->
                     <!-- Fungsi: Mengganti Select Dropdown menjadi tombol geser horizontal agar sangat cepat diakses jempol di layar HP. -->
@@ -918,7 +920,7 @@
                         v-model="layananFilter"
                         class="hidden md:block input-field bg-slate-100 dark:bg-slate-800/50 border-none rounded-lg focus:ring-2 focus:ring-primary/20 h-11 w-full text-sm font-medium"
                     >
-                        <option value="all">Semua</option>
+                        <option value="all">{{ t("settings.allService") }}</option>
                         <option value="reguler">Reguler</option>
                         <option value="express">Express</option>
                         <option value="kargo">Kargo</option>
@@ -929,7 +931,7 @@
                 <div class="md:col-span-12 lg:col-span-8">
                     <label
                         class="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-1"
-                        >CARI TARIF</label
+                        >{{ t("settings.searchTariff") }}</label
                     >
                     <div class="relative group">
                         <div
@@ -941,7 +943,7 @@
                             v-model="searchTarif"
                             type="text"
                             class="input-field pl-10 bg-slate-100 dark:bg-slate-800/50 border-none rounded-full md:rounded-lg shadow-none focus:ring-2 focus:ring-primary/20 h-11 w-full text-sm font-medium transition"
-                            placeholder="Cari layanan, harga, estimasi..."
+                            :placeholder="t('settings.searchTariffPlaceholder')"
                         />
                     </div>
                 </div>
@@ -955,7 +957,7 @@
                         <thead class="text-gray-500 dark:text-gray-400">
                             <tr>
                                 <th class="text-left py-2">Layanan</th>
-                                <th class="text-right py-2">Harga Dasar</th>
+                                <th class="text-right py-2">{{ t("settings.basePriceLabel") }}</th>
                                 <th class="text-right py-2">Harga/km</th>
                                 <th class="text-right py-2">Harga/kg</th>
                                 <th class="text-right py-2">Est (hari)</th>
@@ -1142,7 +1144,7 @@
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
                         <label class="text-sm font-medium text-gray-700 dark:text-gray-200"
-                            >Jenis Layanan</label
+                            >{{ t("settings.serviceType") }}</label
                         >
                         <select v-model="tarifForm.jenis_layanan" class="input-field mt-1">
                             <option value="reguler">reguler</option>
@@ -1188,7 +1190,7 @@
 
                     <div>
                         <label class="text-sm font-medium text-gray-700 dark:text-gray-200"
-                            >Harga per Km</label
+                            >{{ t("settings.pricePerKm") }}</label
                         >
                         <input
                             v-model="tarifForm.harga_per_km"
@@ -1203,7 +1205,7 @@
 
                     <div>
                         <label class="text-sm font-medium text-gray-700 dark:text-gray-200"
-                            >Harga per Kg</label
+                            >{{ t("settings.pricePerKg") }}</label
                         >
                         <input
                             v-model="tarifForm.harga_per_kg"
@@ -1218,7 +1220,7 @@
 
                     <div>
                         <label class="text-sm font-medium text-gray-700 dark:text-gray-200"
-                            >Estimasi (hari)</label
+                            >{{ t("settings.estimateDaysLabel") }}</label
                         >
                         <input
                             v-model="tarifForm.estimasi_hari"

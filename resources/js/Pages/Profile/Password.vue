@@ -3,21 +3,21 @@
      =========================================================================
      Fungsi: Form ubah password dengan validasi, strength meter visual,
      show/hide toggle, dan animasi sukses tanpa reload halaman.
-     Cara Kerja: Menggunakan Inertia router.patch() ke route profile.update
-     yang sudah ada di backend (ProfileController@update).
      ========================================================================= -->
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
 import {
     ChevronLeft,
     Eye,
     EyeOff,
-    KeyRound,
-    Lock,
+    LockKeyhole,
     CheckCircle2,
-    ShieldCheck
+    TriangleAlert
 } from 'lucide-vue-next';
+import { useI18n } from '@/composables/useI18n';
+
+const { t } = useI18n();
 
 // ── Form State ───────────────────────────────────────────────────────────
 const form = ref({
@@ -33,36 +33,6 @@ const showConfirm = ref(false);
 const isSubmitting = ref(false);
 const success = ref(false);
 const errors = ref({});
-
-// ── Password Strength Meter ──────────────────────────────────────────────
-// Cara Kerja: Menghitung kekuatan berdasarkan panjang, huruf besar/kecil,
-// angka, dan simbol. Skala 0-4 (Sangat Lemah → Sangat Kuat).
-const strength = computed(() => {
-    const pw = form.value.password;
-    if (!pw) return 0;
-    let score = 0;
-    if (pw.length >= 6) score++;
-    if (pw.length >= 10) score++;
-    if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) score++;
-    if (/[0-9]/.test(pw)) score++;
-    if (/[^A-Za-z0-9]/.test(pw)) score++;
-    return Math.min(score, 4);
-});
-
-const strengthLabel = computed(() => {
-    const labels = ['', 'Lemah', 'Cukup', 'Kuat', 'Sangat Kuat'];
-    return labels[strength.value] || '';
-});
-
-const strengthColor = computed(() => {
-    const colors = ['', 'bg-red-500', 'bg-orange-500', 'bg-blue-500', 'bg-emerald-500'];
-    return colors[strength.value] || '';
-});
-
-const strengthTextColor = computed(() => {
-    const colors = ['', 'text-red-500', 'text-orange-500', 'text-blue-500', 'text-emerald-500'];
-    return colors[strength.value] || '';
-});
 
 // ── Submit Form ──────────────────────────────────────────────────────────
 function submitPassword() {
@@ -91,124 +61,161 @@ function goBack() {
 </script>
 
 <template>
-    <Head title="Ubah Password" />
-    <div class="min-h-screen bg-slate-50 dark:bg-[#080B14] text-slate-900 dark:text-white flex flex-col font-sans pb-10">
-        <!-- Header -->
-        <header class="sticky top-0 z-50 bg-white/80 dark:bg-[#0A1128]/80 backdrop-blur-xl border-b border-gray-100 dark:border-gray-800/60">
-            <div class="flex items-center justify-between px-4 h-16">
-                <div class="flex items-center gap-3">
-                    <button @click="goBack" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-gray-100 dark:active:bg-gray-800 transition-colors outline-none" aria-label="Kembali">
-                        <ChevronLeft :size="24" class="text-slate-700 dark:text-gray-200" />
-                    </button>
-                    <h1 class="text-lg font-bold text-slate-800 dark:text-white tracking-tight">Ubah Password</h1>
+    <Head :title="t('menu.changePassword')" />
+    
+    <div class="min-h-screen bg-slate-50 dark:bg-[#080B14] text-slate-900 dark:text-white flex flex-col font-sans relative overflow-x-hidden">
+        
+        <!-- ============================================================ -->
+        <!-- BACKGROUND PATTERN & SEMI-CIRCLE (DEEP BLUE -> INDIGO)       -->
+        <!-- ============================================================ -->
+        <div class="absolute top-0 left-0 w-full h-[280px] z-0 overflow-hidden rounded-b-[40px] bg-gradient-to-br from-[#1E3A8A] via-[#2563EB] to-[#4F46E5] shadow-lg">
+            <!-- Pattern 1: Curved Horizontal Lines -->
+            <svg class="absolute inset-0 w-full h-full opacity-20" preserveAspectRatio="none" viewBox="0 0 1440 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M0 120C320 180 640 60 960 120C1280 180 1440 120 1440 120V0H0V120Z" fill="url(#paint0_linear)"/>
+                <path d="M0 240C400 320 800 160 1200 240C1360 272 1440 240 1440 240V0H0V240Z" fill="url(#paint1_linear)"/>
+                <defs>
+                    <linearGradient id="paint0_linear" x1="720" y1="0" x2="720" y2="150" gradientUnits="userSpaceOnUse">
+                        <stop stop-color="white" stop-opacity="0.8"/>
+                        <stop offset="1" stop-color="white" stop-opacity="0"/>
+                    </linearGradient>
+                    <linearGradient id="paint1_linear" x1="720" y1="0" x2="720" y2="280" gradientUnits="userSpaceOnUse">
+                        <stop stop-color="white" stop-opacity="0.5"/>
+                        <stop offset="1" stop-color="white" stop-opacity="0"/>
+                    </linearGradient>
+                </defs>
+            </svg>
+            <!-- Pattern 2: Diagonal Lines -->
+            <div class="absolute inset-0 opacity-[0.05]" style="background-image: repeating-linear-gradient(45deg, #ffffff 0, #ffffff 1px, transparent 1px, transparent 10px);"></div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- HEADER                                                       -->
+        <!-- ============================================================ -->
+        <header class="relative z-10 pt-6 pb-4 px-6 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <button @click="goBack" class="w-10 h-10 flex items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-md active:bg-white/20 transition-colors outline-none" aria-label="Kembali">
+                    <ChevronLeft :size="24" stroke-width="2.5" />
+                </button>
+                <div>
+                    <h1 class="text-xl font-bold text-white tracking-tight">{{ t('menu.changePassword') }}</h1>
+                    <p class="text-[12px] text-white/80 font-medium">Amankan akun Anda</p>
                 </div>
             </div>
         </header>
 
-        <!-- Content -->
-        <main class="flex-1 px-5 pt-8 space-y-6">
-            <!-- Icon Header -->
-            <div class="flex flex-col items-center justify-center text-center mb-2">
-                <div class="w-20 h-20 rounded-[24px] bg-gradient-to-br from-[#2349F5] to-[#886BFF] flex items-center justify-center shadow-lg shadow-blue-500/20 mb-4">
-                    <Lock :size="36" stroke-width="2" class="text-white" />
-                </div>
-                <h2 class="text-xl font-black tracking-tight">Ganti Password</h2>
-                <p class="text-[12px] text-slate-400 dark:text-gray-500 mt-1 font-medium">Pastikan password baru Anda kuat dan unik.</p>
-            </div>
-
-            <!-- Form Card -->
-            <div class="bg-white dark:bg-[#11131A] rounded-[24px] p-5 shadow-[0_8px_30px_-10px_rgba(0,0,0,0.06)] border border-slate-100 dark:border-gray-800/60 space-y-5">
-                <!-- Password Lama -->
-                <div>
-                    <label class="text-[12px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest mb-2 block">Password Lama</label>
-                    <div class="relative">
-                        <input
-                            v-model="form.current_password"
-                            :type="showOld ? 'text' : 'password'"
-                            class="w-full h-12 px-4 pr-12 rounded-[16px] bg-slate-50 dark:bg-gray-800/50 border border-slate-200 dark:border-gray-700 text-[14px] font-medium text-slate-800 dark:text-gray-200 outline-none focus:ring-2 focus:ring-[#2349F5]/30 focus:border-[#2349F5] transition-all placeholder:text-slate-300 dark:placeholder:text-gray-600"
-                            placeholder="Masukkan password lama"
-                        />
-                        <button @click="showOld = !showOld" type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 p-1 outline-none">
-                            <Eye v-if="!showOld" :size="18" />
-                            <EyeOff v-else :size="18" />
-                        </button>
-                    </div>
-                    <p v-if="errors.current_password" class="text-red-500 text-[11px] mt-1.5 font-semibold">{{ errors.current_password }}</p>
-                </div>
-
-                <!-- Password Baru -->
-                <div>
-                    <label class="text-[12px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest mb-2 block">Password Baru</label>
-                    <div class="relative">
-                        <input
-                            v-model="form.password"
-                            :type="showNew ? 'text' : 'password'"
-                            class="w-full h-12 px-4 pr-12 rounded-[16px] bg-slate-50 dark:bg-gray-800/50 border border-slate-200 dark:border-gray-700 text-[14px] font-medium text-slate-800 dark:text-gray-200 outline-none focus:ring-2 focus:ring-[#2349F5]/30 focus:border-[#2349F5] transition-all placeholder:text-slate-300 dark:placeholder:text-gray-600"
-                            placeholder="Masukkan password baru"
-                        />
-                        <button @click="showNew = !showNew" type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 p-1 outline-none">
-                            <Eye v-if="!showNew" :size="18" />
-                            <EyeOff v-else :size="18" />
-                        </button>
-                    </div>
-                    <p v-if="errors.password" class="text-red-500 text-[11px] mt-1.5 font-semibold">{{ errors.password }}</p>
-
-                    <!-- Strength Meter -->
-                    <div v-if="form.password" class="mt-3 space-y-1.5">
-                        <div class="flex gap-1">
-                            <div v-for="i in 4" :key="i" class="flex-1 h-1.5 rounded-full transition-all duration-300" :class="i <= strength ? strengthColor : 'bg-slate-200 dark:bg-gray-700'"></div>
+        <!-- ============================================================ -->
+        <!-- FORM CONTENT                                                 -->
+        <!-- ============================================================ -->
+        <main class="relative z-10 px-6 pt-4 pb-12 flex-1">
+            <div class="bg-white dark:bg-[#11131A] rounded-3xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:border dark:border-gray-800/60 mt-4">
+                <form @submit.prevent="submitPassword" class="space-y-6">
+                    
+                    <!-- SUCCESS MESSAGE -->
+                    <transition enter-active-class="transition duration-300 ease-out" enter-from-class="opacity-0 -translate-y-2" enter-to-class="opacity-100 translate-y-0" leave-active-class="transition duration-200 ease-in" leave-from-class="opacity-100" leave-to-class="opacity-0">
+                        <div v-if="success" class="flex items-center gap-3 p-4 rounded-2xl bg-green-50 dark:bg-green-500/10 border border-green-100 dark:border-green-900/30">
+                            <CheckCircle2 :size="20" class="text-green-500" />
+                            <p class="text-[13px] font-semibold text-green-700 dark:text-green-400">Password berhasil diperbarui!</p>
                         </div>
-                        <p class="text-[11px] font-bold" :class="strengthTextColor">{{ strengthLabel }}</p>
-                    </div>
-                </div>
+                    </transition>
 
-                <!-- Konfirmasi Password -->
-                <div>
-                    <label class="text-[12px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest mb-2 block">Konfirmasi Password</label>
-                    <div class="relative">
-                        <input
-                            v-model="form.password_confirmation"
-                            :type="showConfirm ? 'text' : 'password'"
-                            class="w-full h-12 px-4 pr-12 rounded-[16px] bg-slate-50 dark:bg-gray-800/50 border border-slate-200 dark:border-gray-700 text-[14px] font-medium text-slate-800 dark:text-gray-200 outline-none focus:ring-2 focus:ring-[#2349F5]/30 focus:border-[#2349F5] transition-all placeholder:text-slate-300 dark:placeholder:text-gray-600"
-                            placeholder="Ulangi password baru"
-                        />
-                        <button @click="showConfirm = !showConfirm" type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 p-1 outline-none">
-                            <Eye v-if="!showConfirm" :size="18" />
-                            <EyeOff v-else :size="18" />
+                    <!-- CURRENT PASSWORD -->
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-2 text-[13px] font-bold text-slate-700 dark:text-gray-300">
+                            <LockKeyhole :size="16" class="text-blue-500" />
+                            Password Saat Ini
+                        </label>
+                        <div class="relative group">
+                            <input
+                                :type="showOld ? 'text' : 'password'"
+                                v-model="form.current_password"
+                                class="w-full bg-slate-50 dark:bg-gray-800/50 border border-slate-200 dark:border-gray-700 rounded-2xl h-14 pl-5 pr-12 text-[14px] font-medium focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder-slate-400"
+                                placeholder="•••••••••••••"
+                                required
+                            />
+                            <button type="button" @click="showOld = !showOld" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 active:scale-90 transition-transform">
+                                <Eye v-if="!showOld" :size="20" />
+                                <EyeOff v-else :size="20" />
+                            </button>
+                        </div>
+                        <p v-if="errors.current_password" class="text-red-500 text-[12px] font-medium flex items-center gap-1 mt-1">
+                            <TriangleAlert :size="12" /> {{ errors.current_password }}
+                        </p>
+                    </div>
+
+                    <!-- NEW PASSWORD -->
+                    <div class="space-y-2 pt-2">
+                        <label class="flex items-center gap-2 text-[13px] font-bold text-slate-700 dark:text-gray-300">
+                            <LockKeyhole :size="16" class="text-blue-500" />
+                            Password Baru
+                        </label>
+                        <div class="relative group">
+                            <input
+                                :type="showNew ? 'text' : 'password'"
+                                v-model="form.password"
+                                class="w-full bg-slate-50 dark:bg-gray-800/50 border border-slate-200 dark:border-gray-700 rounded-2xl h-14 pl-5 pr-12 text-[14px] font-medium focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder-slate-400"
+                                placeholder="•••••••••••••"
+                                required
+                            />
+                            <button type="button" @click="showNew = !showNew" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 active:scale-90 transition-transform">
+                                <Eye v-if="!showNew" :size="20" />
+                                <EyeOff v-else :size="20" />
+                            </button>
+                        </div>
+                        <p v-if="errors.password" class="text-red-500 text-[12px] font-medium flex items-center gap-1 mt-1">
+                            <TriangleAlert :size="12" /> {{ errors.password }}
+                        </p>
+                        
+                        <!-- Validation Indicators -->
+                        <div class="mt-3 space-y-2 px-1">
+                            <div class="flex items-center gap-2 text-[11px] font-medium" :class="form.password.length >= 8 ? 'text-green-500' : 'text-slate-400'">
+                                <CheckCircle2 :size="14" /> Minimal 8 karakter
+                            </div>
+                            <div class="flex items-center gap-2 text-[11px] font-medium" :class="/[A-Z]/.test(form.password) ? 'text-green-500' : 'text-slate-400'">
+                                <CheckCircle2 :size="14" /> Ada huruf besar
+                            </div>
+                            <div class="flex items-center gap-2 text-[11px] font-medium" :class="/[0-9]/.test(form.password) ? 'text-green-500' : 'text-slate-400'">
+                                <CheckCircle2 :size="14" /> Ada angka
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CONFIRM PASSWORD -->
+                    <div class="space-y-2 pt-2">
+                        <label class="flex items-center gap-2 text-[13px] font-bold text-slate-700 dark:text-gray-300">
+                            <LockKeyhole :size="16" class="text-blue-500" />
+                            Konfirmasi Password
+                        </label>
+                        <div class="relative group">
+                            <input
+                                :type="showConfirm ? 'text' : 'password'"
+                                v-model="form.password_confirmation"
+                                class="w-full bg-slate-50 dark:bg-gray-800/50 border border-slate-200 dark:border-gray-700 rounded-2xl h-14 pl-5 pr-12 text-[14px] font-medium focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder-slate-400"
+                                placeholder="•••••••••••••"
+                                required
+                            />
+                            <button type="button" @click="showConfirm = !showConfirm" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 active:scale-90 transition-transform">
+                                <Eye v-if="!showConfirm" :size="20" />
+                                <EyeOff v-else :size="20" />
+                            </button>
+                        </div>
+                        <p v-if="form.password && form.password_confirmation && form.password !== form.password_confirmation" class="text-red-500 text-[12px] font-medium flex items-center gap-1 mt-1">
+                            <TriangleAlert :size="12" /> Password tidak sama
+                        </p>
+                    </div>
+
+                    <!-- SUBMIT BUTTON -->
+                    <div class="pt-4">
+                        <button
+                            type="submit"
+                            :disabled="isSubmitting || (form.password !== form.password_confirmation && form.password_confirmation !== '')"
+                            class="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-[14px] tracking-wide shadow-[0_8px_20px_-6px_rgba(79,70,229,0.5)] active:scale-[0.98] transition-all disabled:opacity-50 disabled:active:scale-100"
+                        >
+                            <span v-if="isSubmitting" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                            <span v-else>Ubah Password</span>
                         </button>
                     </div>
-                    <p v-if="errors.password_confirmation" class="text-red-500 text-[11px] mt-1.5 font-semibold">{{ errors.password_confirmation }}</p>
-                </div>
+                </form>
             </div>
-
-            <!-- Submit Button -->
-            <button
-                @click="submitPassword"
-                :disabled="isSubmitting || !form.current_password || !form.password || !form.password_confirmation"
-                class="w-full h-14 rounded-[20px] flex items-center justify-center font-bold text-[15px] transition-all duration-300 outline-none"
-                :class="(!form.current_password || !form.password || !form.password_confirmation) ? 'bg-slate-200 dark:bg-gray-800 text-slate-400 dark:text-gray-500' : 'bg-[#2349F5] dark:bg-[#886BFF] text-white active:scale-[0.98] shadow-lg shadow-blue-500/30'"
-            >
-                <template v-if="isSubmitting">
-                    <RefreshCcw :size="18" stroke-width="2.5" class="animate-spin mr-2" /> Menyimpan...
-                </template>
-                <template v-else>
-                    <ShieldCheck :size="18" stroke-width="2.5" class="mr-2" /> Simpan Password Baru
-                </template>
-            </button>
-
-            <!-- Toast -->
-            <transition
-                enter-active-class="transition duration-300 ease-out"
-                enter-from-class="transform translate-y-4 opacity-0"
-                enter-to-class="transform translate-y-0 opacity-100"
-                leave-active-class="transition duration-200 ease-in"
-                leave-from-class="transform translate-y-0 opacity-100"
-                leave-to-class="transform translate-y-4 opacity-0"
-            >
-                <div v-if="success" class="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-5 py-3 rounded-full bg-emerald-500 text-white font-bold text-[13px] shadow-lg shadow-emerald-500/30 w-max whitespace-nowrap">
-                    <CheckCircle2 :size="18" stroke-width="3" /> Password berhasil diubah!
-                </div>
-            </transition>
         </main>
     </div>
 </template>

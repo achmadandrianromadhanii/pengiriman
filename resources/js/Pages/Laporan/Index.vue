@@ -1,4 +1,6 @@
 <script setup>
+    import { useI18n } from '@/composables/useI18n.js';
+    const { t } = useI18n();
     /**
      * HALAMAN LAPORAN DATA TERPADU
      * ============================
@@ -206,7 +208,7 @@
     async function exportPdf() {
         if (form.periode === 'custom' && (!form.dari || !form.sampai)) {
             const Swal = await getSwal();
-            Swal.fire({ icon: 'warning', title: 'Tanggal belum lengkap' });
+            Swal.fire({ icon: 'warning', title: t('report.dateIncomplete') });
             return;
         }
 
@@ -433,7 +435,7 @@
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <div class="text-[10px] text-white/60 font-medium uppercase tracking-wider mb-0.5">Periode</div>
+                            <div class="text-[10px] text-white/60 font-medium uppercase tracking-wider mb-0.5">{{ t("report.period") }}</div>
                             <div class="text-xs font-bold">{{ periodeLabel }}</div>
                         </div>
                         <div>
@@ -461,11 +463,11 @@
                 </label>
                 <div class="relative">
                     <select v-model="form.periode" class="w-full h-14 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-4 font-bold text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-primary/20 appearance-none shadow-sm">
-                        <option value="hari_ini">Hari Ini</option>
-                        <option value="minggu_ini">Minggu Ini</option>
-                        <option value="bulan_ini">Bulan Ini</option>
-                        <option value="tahun_ini">Tahun Ini</option>
-                        <option value="custom">Kustom</option>
+                        <option value="hari_ini">{{ t("report.today") }}</option>
+                        <option value="minggu_ini">{{ t("report.thisWeek") }}</option>
+                        <option value="bulan_ini">{{ t("report.thisMonth") }}</option>
+                        <option value="tahun_ini">{{ t("report.thisYear") }}</option>
+                        <option value="custom">{{ t("report.custom") }}</option>
                     </select>
                     <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
                         <ChevronDown class="w-5 h-5" />
@@ -722,7 +724,7 @@
                     title="Cetak / Export PDF"
                 >
                     <i class="bi bi-file-earmark-pdf text-lg md:text-base md:me-1.5"></i>
-                    <span class="hidden md:inline">Cetak / Export PDF</span>
+                    <span class="hidden md:inline">{{ t("report.exportPdf") }}</span>
                 </button>
             </div>
         </div>
@@ -737,7 +739,7 @@
                     <div class="flex justify-between items-center mb-1.5">
                         <label
                             class="text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400"
-                            >Pencarian Data</label
+                            >{{ t("report.searchData") }}</label
                         >
                     </div>
                     <div class="relative">
@@ -746,7 +748,7 @@
                             v-model="form.search"
                             type="text"
                             class="peer input-field w-full pl-10 h-12 md:h-11 bg-white md:bg-gray-50 dark:bg-slate-800 border-none md:border-gray-200 rounded-xl md:rounded-lg focus:ring-2 focus:ring-primary/20 shadow-sm md:shadow-none transition text-sm pr-10"
-                            placeholder="Resi / Nama..."
+                            :placeholder="t('report.searchPlaceholder')"
                         />
                         <div
                             class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-400 peer-focus:text-primary transition-colors"
@@ -779,9 +781,9 @@
                             <option value="hari_ini">Hari Ini</option>
                             <option value="minggu_ini">Minggu Ini</option>
                             <option value="bulan_ini">Bulan Ini</option>
-                            <option value="bulan_lalu">Bulan Lalu</option>
+                            <option value="bulan_lalu">{{ t("report.lastMonth") }}</option>
                             <option value="tahun_ini">Tahun Ini</option>
-                            <option value="custom">Pilih Tanggal...</option>
+                            <option value="custom">{{ t("report.selectDate") }}</option>
                         </select>
                         <div
                             class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-400 peer-focus:text-primary transition-colors"
@@ -799,7 +801,7 @@
                 <div v-if="form.periode === 'custom'">
                     <label
                         class="text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1.5"
-                        >Tgl Mulai</label
+                        >{{ t("report.startDate") }}</label
                     >
                     <input
                         v-model="form.dari"
@@ -811,7 +813,7 @@
                 <div v-if="form.periode === 'custom'">
                     <label
                         class="text-[10px] md:text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1.5"
-                        >Tgl Akhir</label
+                        >{{ t("report.endDate") }}</label
                     >
                     <input
                         v-model="form.sampai"
@@ -900,8 +902,7 @@
                                 <td
                                     class="py-3 pr-4 font-mono font-medium text-gray-900 dark:text-white whitespace-nowrap"
                                 >
-                                    <Link
-                                        :href="route('pengiriman.show', p.id)"
+                                    <Link prefetch cacheFor="1m" :href="route('pengiriman.show', p.id)"
                                         class="text-indigo-600 dark:text-indigo-400 hover:underline"
                                     >
                                         {{ p.nomor_resi }}
@@ -990,8 +991,7 @@
                     <div
                         class="inline-flex bg-white dark:bg-slate-800 rounded-full p-1 shadow-sm border border-slate-200 dark:border-slate-700/60 gap-1"
                     >
-                        <Link
-                            v-for="(l, i) in pengiriman.links"
+                        <Link prefetch cacheFor="1m" v-for="(l, i) in pengiriman.links"
                             :key="i"
                             :href="l.url || '#'"
                             preserve-scroll

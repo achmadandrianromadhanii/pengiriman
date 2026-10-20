@@ -53,7 +53,7 @@ function goBack() {
                     <button @click="goBack" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-gray-100 dark:active:bg-gray-800 transition-colors outline-none" aria-label="Kembali">
                         <ChevronLeft :size="24" class="text-slate-700 dark:text-gray-200" />
                     </button>
-                    <h1 class="text-lg font-bold text-slate-800 dark:text-white tracking-tight">Tentang Aplikasi</h1>
+                    <h1 class="text-lg font-bold text-slate-800 dark:text-white tracking-tight">{{ t('system.about') }}</h1>
                 </div>
             </div>
         </header>
@@ -244,7 +244,7 @@ function goBack() {
 
             <!-- Copyright -->
             <p class="text-center text-[10px] text-gray-400 font-medium px-4 mt-8 uppercase tracking-widest leading-relaxed">
-                &copy; 2026 NOCTRYNX CORP.<br/>Hak cipta dilindungi undang-undang.<br/>
+                &copy; 2026 NOCTRYNX CORP.<br/>{{ t("system.copyright") }}<br/>
                 Lisensi Eksklusif Enterprise.
             </p>
         </main>

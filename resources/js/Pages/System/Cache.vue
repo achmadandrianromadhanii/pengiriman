@@ -303,7 +303,7 @@ const iconMap = {
                     <button @click="goBack" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-gray-100 dark:active:bg-gray-800 transition-colors outline-none" aria-label="Kembali">
                         <ChevronLeft :size="24" class="text-slate-700 dark:text-gray-200" />
                     </button>
-                    <h1 class="text-lg font-bold text-slate-800 dark:text-white tracking-tight">Manajemen Cache</h1>
+                    <h1 class="text-lg font-bold text-slate-800 dark:text-white tracking-tight">{{ t("system.cache") }}</h1>
                 </div>
                 <!-- Tombol Refresh -->
                 <button @click="measureAllCaches" :disabled="isLoading" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-gray-100 dark:active:bg-gray-800 transition-colors outline-none" aria-label="Refresh cache">

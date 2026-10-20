@@ -32,6 +32,9 @@ NProgress.configure({
 
 import AppLayout from '@/Layouts/AppLayout.vue';
 
+// [UPDATE: i18n] Import composable untuk inisialisasi bahasa saat startup
+import { useI18n } from '@/composables/useI18n.js';
+
 createInertiaApp({
     title: (title) => appName,
     resolve: async (name) => {
@@ -39,11 +42,10 @@ createInertiaApp({
         
         // [UPDATE: PERSISTENT LAYOUT FIX]
         // Fungsi: Pastikan AppLayout hanya di-assign pada halaman yang memerlukannya.
-        // Cara Kerja: Halaman Auth/ dan Splash bersifat standalone (tanpa navbar/sidebar),
-        //             sehingga dikecualikan dari pembungkusan AppLayout.
-        // Catatan: Splash menggunakan defineOptions({ layout: false }) sebagai fallback,
-        //          tetapi pengecekan nama di sini lebih aman dan eksplisit.
-        const isStandalone = name.startsWith('Auth/') || name === 'Splash';
+        // Cara Kerja: Halaman Auth/, Splash, dan Settings/Language bersifat standalone
+        //             (tanpa navbar/sidebar), sehingga dikecualikan dari pembungkusan AppLayout.
+        // [UPDATE: i18n] Settings/Language ditambahkan agar halaman bahasa fullscreen di mobile
+        const isStandalone = name.startsWith('Auth/') || name === 'Splash' || name === 'Settings/Language';
         if (page.default.layout === undefined && !isStandalone) {
             page.default.layout = AppLayout;
         }
@@ -51,10 +53,22 @@ createInertiaApp({
         return page;
     },
     setup({ el, App, props, plugin }) {
-        createApp({ render: () => h(App, props) })
+        const app = createApp({ render: () => h(App, props) })
             .use(plugin)
-            .use(ZiggyVue)
-            .mount(el);
+            .use(ZiggyVue);
+
+        // [UPDATE: GLOBAL i18n]
+        // Menyediakan fungsi t() ke seluruh komponen Vue secara global (template only)
+        app.config.globalProperties.t = useI18n().t;
+
+        app.mount(el);
+
+        // [UPDATE: i18n] Inisialisasi bahasa dari localStorage saat app startup
+        // Cara Kerja: Membaca preferensi 'app_locale' dari localStorage,
+        //             jika ada locale tersimpan selain id-ID, lazy-load file tersebut.
+        //             Ini memastikan bahasa sudah benar sebelum user berinteraksi.
+        const { initI18n } = useI18n();
+        initI18n();
     },
     progress: {
         delay: 0, // [UPDATE: PERFORMA - Ubah delay ke 0 agar ada feedback visual instan saat klik]
@@ -63,3 +77,4 @@ createInertiaApp({
         includeCSS: true, // [UPDATE: PERFORMA - Aktifkan CSS agar bar loading terlihat!]
     },
 });
+

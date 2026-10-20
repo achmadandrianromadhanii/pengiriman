@@ -1,4 +1,6 @@
 <script setup>
+    import { useI18n } from '@/composables/useI18n.js';
+    const { t } = useI18n();
     import AppLayout from '@/Layouts/AppLayout.vue';
     import SkeletonLoader from '@/Components/SkeletonLoader.vue';
     import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
@@ -107,18 +109,17 @@
         return map[s] || 'badge-gray';
     }
     function statusLabel(s) {
-        return (
-            {
-                pending: 'Menunggu',
-                diproses: 'Diproses',
-                dalam_perjalanan: 'Dalam Perjalanan',
-                tiba_di_kota_tujuan: 'Tiba di Kota Tujuan',
-                sedang_diantar: 'Sedang Diantar',
-                terkirim: 'Terkirim',
-                gagal: 'Gagal',
-                dibatalkan: 'Dibatalkan',
-            }[s] || s
-        );
+        const map = {
+            pending: t('shipment.pending'),
+            diproses: t('shipment.processing'),
+            dalam_perjalanan: t('shipment.inTransit'),
+            tiba_di_kota_tujuan: t('shipment.arrivedCity'),
+            sedang_diantar: t('shipment.outForDelivery'),
+            terkirim: t('shipment.delivered'),
+            gagal: t('shipment.failed'),
+            dibatalkan: t('shipment.cancelled'),
+        };
+        return map[s] || s;
     }
 
     function applyFilters() {
@@ -205,14 +206,12 @@
     <div class="hidden md:block space-y-6 animate-fade-in">
         <div class="flex items-center justify-between gap-4">
             <div>
-                <h1 class="font-heading font-extrabold text-2xl text-gray-900 dark:text-white">
-                    Data Pengiriman
-                </h1>
+                <h1 class="font-heading font-extrabold text-2xl text-gray-900 dark:text-white"><template v-if="true">{{ t("shipment.title") }}</template></h1>
                 <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
                     Kelola semua data pengiriman
                 </p>
             </div>
-            <Link :href="route('pengiriman.create')" class="btn-primary">
+            <Link prefetch cacheFor="1m" :href="route('pengiriman.create')" class="btn-primary">
                 <i class="bi bi-plus-lg"></i>
                 Input Data
             </Link>
@@ -223,7 +222,7 @@
             <div class="grid grid-cols-4 gap-3">
                 <div>
                     <label class="text-xs font-semibold text-gray-600 dark:text-gray-300"
-                        >Status</label
+                        >{{ t("shipment.status") }}</label
                     >
                     <select v-model="form.status" class="input-field mt-1.5 h-[44px]">
                         <option v-for="o in statusOptions" :key="o.value" :value="o.value">
@@ -278,10 +277,10 @@
                                 class="text-left text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700/70"
                             >
                                 <th class="py-3 pr-4">#</th>
-                                <th class="py-3 pr-4">Nomor Resi</th>
-                                <th class="py-3 pr-4">Pengirim</th>
+                                <th class="py-3 pr-4">{{ t("shipment.colReceipt") }}</th>
+                                <th class="py-3 pr-4"><template v-if="true">{{ t("shipment.colSender") }}</template></th>
                                 <th class="py-3 pr-4">Tujuan Kota</th>
-                                <th class="py-3 pr-4">Layanan</th>
+                                <th class="py-3 pr-4"><template v-if="true">{{ t("shipment.colService") }}</template></th>
                                 <th class="py-3 pr-4">Status</th>
                                 <th class="py-3 pr-4">Estimasi Tiba</th>
                                 <th class="py-3 pr-2">Aksi</th>
@@ -316,8 +315,7 @@
                             >
                                 <td class="py-3 pr-4">{{ (pengiriman.from || 1) + idx }}</td>
                                 <td class="py-3 pr-4">
-                                    <Link
-                                        class="font-semibold text-primary hover:underline"
+                                    <Link prefetch cacheFor="1m" class="font-semibold text-primary hover:underline"
                                         :href="route('pengiriman.show', p.id)"
                                         >{{ p.nomor_resi }}</Link
                                     >
@@ -343,8 +341,7 @@
                                     >
                                 </td>
                                 <td class="py-3 pr-2">
-                                    <Link
-                                        :href="route('pengiriman.show', p.id)"
+                                    <Link prefetch cacheFor="1m" :href="route('pengiriman.show', p.id)"
                                         class="btn-secondary px-3 py-2"
                                         ><i class="bi bi-eye"></i> Detail</Link
                                     >
@@ -406,9 +403,7 @@
         <div class="bg-primary px-5 pt-10 pb-20 rounded-b-[2.5rem] shadow-lg relative z-10">
             <div class="flex items-center justify-between text-white">
                 <div>
-                    <h1 class="font-heading font-black text-2xl tracking-tight drop-shadow-md">
-                        Data Pengiriman
-                    </h1>
+                    <h1 class="font-heading font-black text-2xl tracking-tight drop-shadow-md"><template v-if="true">{{ t("shipment.title") }}</template></h1>
                     <p class="text-xs text-white/80 mt-1 font-medium">
                         Kelola semua resi & pengiriman
                     </p>
@@ -446,8 +441,7 @@
 
             <div v-else class="optimasi-daftar-mobile">
                 <!-- Loop Kartu Pengiriman -->
-                <Link
-                    v-for="p in pengiriman.data"
+                <Link prefetch cacheFor="1m" v-for="p in pengiriman.data"
                     :key="'mob-' + p.id"
                     :href="route('pengiriman.show', p.id)"
                     class="block p-4 mb-4 rounded-[1.5rem] border border-gray-100 dark:border-gray-800 bg-white dark:bg-card-dark shadow-lg shadow-gray-200/50 dark:shadow-black/30 hover:shadow-xl transition active:scale-[0.98]"
@@ -490,7 +484,7 @@
                                 <i class="bi bi-person-fill text-[10px]"></i>
                                 <span
                                     class="text-[9px] uppercase font-bold tracking-widest opacity-80"
-                                    >Dari</span
+                                    >{{ t("shipment.origin") }}</span
                                 >
                             </div>
                             <div
@@ -510,7 +504,7 @@
                             <div class="flex items-center justify-end gap-1 mb-1 text-gray-400">
                                 <span
                                     class="text-[9px] uppercase font-bold tracking-widest opacity-80"
-                                    >Tujuan</span
+                                    >{{ t("shipment.destination") }}</span
                                 >
                                 <i class="bi bi-geo-alt-fill text-[10px]"></i>
                             </div>
@@ -593,7 +587,7 @@
                     <div class="px-6 flex flex-col items-center justify-center min-w-[100px]">
                         <span
                             class="text-[9px] font-extrabold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] leading-none mb-1"
-                            >Halaman</span
+                            >{{ t("common.page") }}</span
                         >
                         <div
                             class="text-[13px] font-black text-gray-800 dark:text-gray-100 leading-none"
@@ -738,8 +732,7 @@
             Dikombinasikan dengan padding bawah (pb-32) pada container halaman, tombol ini tidak akan pernah menimpa Pagination meski di-scroll hingga paling bawah.
             Ukuran disempurnakan (w-13 h-13) agar sangat ergonomis bagi ibu jari.
         -->
-        <Link
-            :href="route('pengiriman.create')"
+        <Link prefetch cacheFor="1m" :href="route('pengiriman.create')"
             class="fixed bottom-[90px] right-4 z-[70] w-13 h-13 bg-primary text-white rounded-full flex items-center justify-center shadow-[0_8px_25px_rgba(45,51,107,0.4)] hover:scale-105 active:scale-95 transition duration-300 border border-white/20"
             style="width: 52px; height: 52px"
             title="Input Data"

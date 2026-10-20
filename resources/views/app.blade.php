@@ -22,18 +22,15 @@
     <meta property="og:image" content="/images/softsend-logo.png">
     <meta property="og:title" content="{{ config('app.name', 'SoftSend') }}">
 
-    <!-- [UPDATE: FONT LOADING — KONSOLIDASI & NON-BLOCKING]
-         Fungsi: Memuat Google Fonts dalam SATU request tunggal tanpa memblokir render.
-         Perubahan: 
-         - Menggabungkan 5 font family (sebelumnya 2 request terpisah) menjadi 1 request.
-         - Menghapus Fira Code (monospace) karena jarang dipakai, menghemat ~20KB download.
-         - Menggunakan media="print" + onload trick agar browser tetap menampilkan
-           halaman instan dengan font fallback, lalu font cantik menyusul ~0.5 detik.
-         Hasil: Network request berkurang dari 3 menjadi 1, halaman tampil lebih cepat. -->
+    <!-- [UPDATE: FONT LOADING — KONSOLIDASI & OPTIMASI]
+         Fungsi: Memuat Google Fonts (hanya yang terpakai) untuk menghindari FOUT (Flash of Unstyled Text) yang menyebabkan CLS merah.
+         Perubahan:
+         - Hanya memuat Plus Jakarta Sans dan Outfit (Inter dan Sora dihapus karena hanya fallback).
+         - Menggunakan rel="stylesheet" standar agar tidak terjadi CLS lompat-lompat saat font dimuat.
+         - Preconnect dipertahankan untuk mempercepat download. -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Sora:wght@600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Sora:wght@600;700&display=swap" rel="stylesheet"></noscript>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- [UPDATE: PWA V1] Web App Manifest -->
     <!-- Fungsi: Mendaftarkan aplikasi sebagai PWA (Progressive Web App). -->

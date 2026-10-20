@@ -96,6 +96,10 @@ Route::middleware(['auth', 'admin.active'])->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+    // Account Deletion Mobile
+    Route::get('/profile/delete-account', [ProfileController::class, 'deleteAccountPage'])->name('profile.delete-account');
+    Route::post('/profile/delete-account', [ProfileController::class, 'deleteAccountSubmit'])->name('profile.delete-account.submit');
+
     // =========================================================================
     // MENU MOBILE / SYSTEM — DATA ASLI DARI BACKEND
     // =========================================================================
@@ -218,6 +222,18 @@ Route::middleware(['auth', 'admin.active'])->group(function () {
             'total_records' => $totalRecords,
         ]);
     })->name('system.storage');
+
+    // =========================================================================
+    // BAHASA / LANGUAGE CENTER (Mobile Web)
+    // =========================================================================
+    // Fungsi: Menampilkan halaman pemilihan bahasa untuk mobile web.
+    // Cara Kerja: Render komponen Settings/Language.vue.
+    //             Semua data bahasa dikelola di frontend (registry.js).
+    //             Tidak memerlukan data dari server.
+    // =========================================================================
+    Route::get('/settings/language', function () {
+        return Inertia\Inertia::render('Settings/Language');
+    })->name('settings.language');
 
     // =====================================================================
     // KEAMANAN AKUN — DATA ASLI DARI DATABASE [UPDATE: SECURITY V2]

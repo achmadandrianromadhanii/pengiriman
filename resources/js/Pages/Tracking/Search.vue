@@ -1,4 +1,6 @@
 <script setup>
+    import { useI18n } from '@/composables/useI18n.js';
+    const { t } = useI18n();
     import { Head, router, usePage } from '@inertiajs/vue3';
     import { onMounted, ref, watch } from 'vue';
     // [UPDATE: LAZY-LOAD SWEETALERT2 — PERFORMA MOBILE]
@@ -65,7 +67,7 @@
                 class="inline-flex items-center gap-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 px-4 py-2 rounded-xl shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:scale-105 transition duration-200 font-medium text-sm"
             >
                 <i class="bi bi-arrow-left text-base"></i>
-                <span>Kembali</span>
+                <span>{{ t('common.back') }}</span>
             </button>
         </div>
 
@@ -76,9 +78,7 @@
                 >
                     <i class="bi bi-search text-2xl"></i>
                 </div>
-                <h1 class="mt-3 font-heading text-3xl text-gray-900 dark:text-gray-100">
-                    Lacak Pengiriman
-                </h1>
+                <h1 class="mt-3 font-heading text-3xl text-gray-900 dark:text-gray-100"><template v-if="true">{{ t("tracking.search") }}</template></h1>
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
                     Masukkan nomor resi untuk melihat status pengiriman.
                 </p>
@@ -97,7 +97,7 @@
                             v-model="resi"
                             type="text"
                             class="input-field mt-1 text-base"
-                            placeholder="contoh: SS-250131-0001"
+                            :placeholder="t('tracking.placeholder')"
                             autocomplete="off"
                         />
                     </div>
@@ -105,7 +105,7 @@
                     <div class="sm:col-span-3 flex items-end">
                         <button type="submit" class="btn-primary w-full justify-center">
                             <i class="bi bi-geo-alt"></i>
-                            <span>Lacak</span>
+                            <span>{{ t("tracking.trackBtn") }}</span>
                         </button>
                     </div>
                 </form>
@@ -136,7 +136,7 @@
                 class="inline-flex items-center gap-2 text-white/90 hover:text-white transition-colors self-start mb-6 font-medium active:scale-95"
             >
                 <i class="bi bi-arrow-left text-lg"></i>
-                <span>Kembali</span>
+                <span>{{ t('common.back') }}</span>
             </button>
 
             <!-- Teks Hero -->
@@ -146,7 +146,7 @@
                 >
                     <i class="bi bi-search text-2xl drop-shadow-md"></i>
                 </div>
-                <h1 class="font-heading text-3xl font-bold tracking-tight">Lacak Pengiriman</h1>
+                <h1 class="font-heading text-3xl font-bold tracking-tight">{{ t('tracking.search') }}</h1>
                 <p class="mt-2 text-sm text-white/80 max-w-[250px] mx-auto leading-relaxed">
                     Masukkan nomor resi untuk melihat status pengiriman seketika.
                 </p>
@@ -176,7 +176,7 @@
                         class="w-full bg-primary hover:bg-primary-hover text-white rounded-2xl py-3.5 font-bold text-[15px] flex items-center justify-center gap-2 transition active:scale-[0.98] shadow-md shadow-primary/20"
                     >
                         <i class="bi bi-search stroke-2"></i>
-                        <span>Lacak Sekarang</span>
+                        <span>{{ t("tracking.trackBtn") }}</span>
                     </button>
                 </form>
 

@@ -1,4 +1,6 @@
 <script setup>
+    import { useI18n } from '@/composables/useI18n.js';
+    const { t } = useI18n();
     import AppLayout from '@/Layouts/AppLayout.vue';
     import SkeletonLoader from '@/Components/SkeletonLoader.vue';
     import { computed, onMounted, reactive, ref, watch } from 'vue';
@@ -574,13 +576,13 @@
                             <label
                                 class="text-sm font-semibold text-gray-700 dark:text-gray-200"
                                 :class="{ 'opacity-100': true }"
-                                >Nama Pengirim *</label
+                                >{{ t("shipment.senderNameReq") }}</label
                             >
                             <input
                                 v-model="pengirim.nama"
                                 type="text"
                                 class="input-field mt-2"
-                                placeholder="Masukkan nama..."
+                                :placeholder="t('shipment.inputName')"
                             />
                         </div>
 
@@ -614,14 +616,14 @@
                                 :class="{
                                     'opacity-50': !pengirim.hp || pengirim.hp.trim().length <= 8,
                                 }"
-                                >Alamat Lengkap *</label
+                                >{{ t("shipment.fullAddressReq") }}</label
                             >
                             <textarea
                                 v-model="pengirim.alamat"
                                 :disabled="!pengirim.hp || pengirim.hp.trim().length <= 8"
                                 rows="3"
                                 class="input-field mt-2 disabled:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                                placeholder="Jalan..."
+                                :placeholder="t('shipment.street')"
                             ></textarea>
                             <div
                                 v-if="pengirim.alamat && pengirim.alamat.trim().length < 15"
@@ -639,7 +641,7 @@
                                     'opacity-50':
                                         !pengirim.alamat || pengirim.alamat.trim().length === 0,
                                 }"
-                                >Pilih Kota *</label
+                                >{{ t("shipment.selectCityReq") }}</label
                             >
 
                             <div class="relative mt-2">
@@ -652,7 +654,7 @@
                                     @blur="hidePengirimDropdown"
                                     type="text"
                                     class="input-field w-full disabled:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                                    placeholder="Ketik nama kota..."
+                                    :placeholder="t('shipment.typeCity')"
                                 />
                                 <i class="bi bi-search absolute right-3 top-3 text-gray-400"></i>
                             </div>
@@ -737,7 +739,7 @@
                             <label
                                 class="text-sm font-semibold text-gray-700 dark:text-gray-200"
                                 :class="{ 'opacity-100': true }"
-                                >Nama Penerima *</label
+                                >{{ t("shipment.receiverNameReq") }}</label
                             >
                             <input
                                 v-model="penerima.nama"
@@ -923,7 +925,7 @@
                                 <div class="md:col-span-2">
                                     <label
                                         class="text-xs font-semibold text-gray-600 dark:text-gray-300"
-                                        >Nama Barang *</label
+                                        >{{ t("shipment.itemNameReq") }}</label
                                     >
                                     <input
                                         v-model="b.nama_barang"
@@ -935,7 +937,7 @@
                                 <div>
                                     <label
                                         class="text-xs font-semibold text-gray-600 dark:text-gray-300"
-                                        >Berat (kg) *</label
+                                        >{{ t("shipment.weightReq") }}</label
                                     >
                                     <input
                                         v-model.number="b.berat_kg"
@@ -949,7 +951,7 @@
                                 <div>
                                     <label
                                         class="text-xs font-semibold text-gray-600 dark:text-gray-300"
-                                        >Panjang (cm) *</label
+                                        >{{ t("shipment.lengthReq") }}</label
                                     >
                                     <input
                                         v-model.number="b.panjang_cm"
@@ -963,7 +965,7 @@
                                 <div>
                                     <label
                                         class="text-xs font-semibold text-gray-600 dark:text-gray-300"
-                                        >Lebar (cm) *</label
+                                        >{{ t("shipment.widthReq") }}</label
                                     >
                                     <input
                                         v-model.number="b.lebar_cm"
@@ -977,7 +979,7 @@
                                 <div>
                                     <label
                                         class="text-xs font-semibold text-gray-600 dark:text-gray-300"
-                                        >Tinggi (cm) *</label
+                                        >{{ t("shipment.heightReq") }}</label
                                     >
                                     <input
                                         v-model.number="b.tinggi_cm"
@@ -1007,7 +1009,7 @@
                                         />
                                         <span
                                             class="text-xs font-semibold text-gray-600 dark:text-gray-300"
-                                            >Tambah Keterangan Barang (Opsional)</span
+                                            >{{ t("shipment.addNotesOpt") }}</span
                                         >
                                     </label>
                                     <transition name="fade">
@@ -1016,7 +1018,7 @@
                                                 v-model="b.keterangan"
                                                 type="text"
                                                 class="input-field"
-                                                placeholder="Masukkan keterangan..."
+                                                :placeholder="t('shipment.inputNotes')"
                                             />
                                         </div>
                                     </transition>
@@ -1065,7 +1067,7 @@
                                 class="rounded text-primary border-gray-300 focus:ring-primary w-4 h-4"
                             />
                             <span class="text-sm font-semibold text-gray-700 dark:text-gray-200"
-                                >Tambah Catatan Umum (Opsional)</span
+                                >{{ t("shipment.addGeneralNotesOpt") }}</span
                             >
                         </label>
                         <transition name="fade">
@@ -1074,7 +1076,7 @@
                                     v-model="catatan"
                                     rows="3"
                                     class="input-field"
-                                    placeholder="Ketik catatan umum untuk seluruh pengiriman..."
+                                    :placeholder="t('shipment.inputGeneralNotes')"
                                 ></textarea>
                             </div>
                         </transition>
@@ -1112,7 +1114,7 @@
                             </div>
                             <div>
                                 <span class="text-gray-500 dark:text-gray-400"
-                                    >Berat Volumetrik:</span
+                                    >{{ t("shipment.volumetricWeightLabel") }}</span
                                 >
                                 <span class="font-semibold"
                                     >{{ formatKg(beratVolumetrik) }} kg</span
@@ -1120,7 +1122,7 @@
                             </div>
                             <div>
                                 <span class="text-gray-500 dark:text-gray-400"
-                                    >Berat Ditagihkan:</span
+                                    >{{ t("shipment.chargedWeightLabel") }}</span
                                 >
                                 <span class="font-semibold text-primary"
                                     >{{ formatKg(beratDitagihkan) }} kg</span
@@ -1198,12 +1200,12 @@
                                         <span
                                             v-if="t.jenis_layanan === tercepatJenis"
                                             class="badge-amber"
-                                            >TERCEPAT</span
+                                            >{{ t("tariff.fastest") }}</span
                                         >
                                         <span
                                             v-if="t.jenis_layanan === hematJenis"
                                             class="badge-green"
-                                            >HEMAT</span
+                                            >{{ t("tariff.cheapest") }}</span
                                         >
                                     </div>
                                 </div>
@@ -1214,7 +1216,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                         <div>
                             <label class="text-sm font-semibold text-gray-700 dark:text-gray-200"
-                                >Biaya Tambahan (packaging dll)</label
+                                >{{ t("shipment.additionalFeePackaging") }}</label
                             >
                             <input
                                 v-model.number="biayaTambahan"
@@ -1227,7 +1229,7 @@
 
                         <div>
                             <label class="text-sm font-semibold text-gray-700 dark:text-gray-200"
-                                >Biaya Asuransi</label
+                                >{{ t("shipment.insuranceFeeLabel") }}</label
                             >
                             <input
                                 v-model.number="biayaAsuransi"
@@ -1476,7 +1478,7 @@
                                     >
                                         <i class="bi bi-exclamation-circle text-base"></i>
                                         <span class="font-medium"
-                                            >Format: harus diawali 08 atau 62.</span
+                                            >{{ t("shipment.formatPhone") }}</span
                                         >
                                     </div>
                                 </transition>
@@ -1767,7 +1769,7 @@
                                     <div>
                                         <label
                                             class="text-[10px] uppercase font-bold tracking-widest text-gray-500 block mb-1"
-                                            >Berat Aktual (kg) *</label
+                                            >{{ t("shipment.actualWeightReq") }}</label
                                         >
                                         <input
                                             v-model.number="b.berat_kg"
@@ -1905,7 +1907,7 @@
                                     </div>
                                     <span
                                         class="text-xs font-semibold text-gray-700 dark:text-gray-300 select-none"
-                                        >Catatan Umum Pengiriman</span
+                                        >{{ t("shipment.generalNotesShipment") }}</span
                                     >
                                 </label>
                                 <transition name="fade">
@@ -1914,7 +1916,7 @@
                                             v-model="catatan"
                                             rows="3"
                                             class="w-full bg-slate-50 dark:bg-gray-800/50 border-none rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary/30 shadow-sm"
-                                            placeholder="Pesan untuk kurir..."
+                                            :placeholder="t('shipment.messageForCourier')"
                                         ></textarea>
                                     </div>
                                 </transition>
@@ -2068,7 +2070,7 @@
                                 <div>
                                     <label
                                         class="text-[10px] uppercase font-bold tracking-widest text-gray-500 block mb-1"
-                                        >Asuransi</label
+                                        >{{ t("shipment.insurance") }}</label
                                     >
                                     <div class="relative flex items-center">
                                         <div
@@ -2110,7 +2112,7 @@
                                             class="hidden"
                                         />
                                         <span class="text-[11px] tracking-wide relative z-20"
-                                            >PENGIRIM</span
+                                            >{{ t("shipment.senderBadge") }}</span
                                         >
                                     </label>
                                     <label
@@ -2128,7 +2130,7 @@
                                             class="hidden"
                                         />
                                         <span class="text-[11px] tracking-wide relative z-20"
-                                            >PENERIMA</span
+                                            >{{ t("shipment.receiverBadge") }}</span
                                         >
                                     </label>
                                     <label
@@ -2181,7 +2183,7 @@
                                 >
                                     <span
                                         class="text-[10px] font-bold text-blue-200 uppercase tracking-[0.2em] mb-1"
-                                        >Total Tagihan</span
+                                        >{{ t("shipment.totalBilled") }}</span
                                     >
                                     <div
                                         class="font-black text-white text-[2.5rem] leading-none tracking-tight drop-shadow-md"

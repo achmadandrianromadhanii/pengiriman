@@ -66,9 +66,14 @@ class DashboardController extends Controller
             // Kode ini membuat sistem pintar mendeteksi driver sehingga aman dari error "Undefined column"
             // baik di server lokal (MySQL/PgSQL) maupun di Vercel Neon (PostgreSQL).
             $dbDriver = DB::connection()->getDriverName();
-            $dateFormatRaw = $dbDriver === 'pgsql'
-                ? "TO_CHAR(created_at, 'YYYY-MM')"
-                : "DATE_FORMAT(created_at, '%Y-%m')";
+            if ($dbDriver === 'pgsql') {
+                $dateFormatRaw = "TO_CHAR(created_at, 'YYYY-MM')";
+            } elseif ($dbDriver === 'sqlite') {
+                // SQLite digunakan saat proses Testing (PHPUnit) in-memory
+                $dateFormatRaw = "strftime('%Y-%m', created_at)";
+            } else {
+                $dateFormatRaw = "DATE_FORMAT(created_at, '%Y-%m')";
+            }
 
             $shipmentsByMonth = Pengiriman::selectRaw("$dateFormatRaw as ym, COUNT(*) as total")
                 ->whereBetween('created_at', [$start, $end])

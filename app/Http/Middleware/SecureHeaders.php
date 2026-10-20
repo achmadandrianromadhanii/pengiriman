@@ -24,6 +24,18 @@ class SecureHeaders
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
         $response->headers->set('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
 
+        // [UPDATE: CONTENT SECURITY POLICY]
+        // Fungsi: Meng-override CSP yang terlalu ketat (script-src 'none') yang disuntikkan
+        // oleh Simulator/Iframe pihak ketiga.
+        // Cara Kerja: Kita secara eksplisit mengizinkan 'unsafe-inline' dan 'unsafe-eval'
+        // agar Vue.js, Vite (dev), dan WebSocket (Pusher) bisa berjalan sempurna tanpa terblokir.
+        $response->headers->set(
+            'Content-Security-Policy', 
+            "default-src * data: blob: 'unsafe-inline' 'unsafe-eval'; " .
+            "script-src * data: blob: 'unsafe-inline' 'unsafe-eval'; " .
+            "connect-src * data: blob: 'unsafe-inline' wss: ws:;"
+        );
+
         // HSTS hanya kalau HTTPS (biar tidak ganggu lokal)
         if ($request->isSecure()) {
             $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');

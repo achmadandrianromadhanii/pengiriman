@@ -1,4 +1,6 @@
 <script setup>
+    import { useI18n } from '@/composables/useI18n.js';
+    const { t } = useI18n();
     import { Head, Link, router } from '@inertiajs/vue3';
     import { computed, onMounted, onUnmounted } from 'vue';
     // [UPDATE: LAZY-LOAD SWEETALERT2 — PERFORMA MOBILE]
@@ -54,16 +56,16 @@
 
     const statusLabel = computed(() => {
         const map = {
-            pending: 'PENDING',
-            diproses: 'DIPROSES',
-            dalam_perjalanan: 'DALAM PERJALANAN',
-            tiba_di_kota_tujuan: 'TIBA DI KOTA TUJUAN',
-            sedang_diantar: 'SEDANG DIANTAR',
-            terkirim: 'TERKIRIM',
-            gagal: 'GAGAL',
-            dibatalkan: 'DIBATALKAN',
+            pending: t('shipment.pending'),
+            diproses: t('shipment.processing'),
+            dalam_perjalanan: t('shipment.inTransit'),
+            tiba_di_kota_tujuan: t('shipment.arrivedCity'),
+            sedang_diantar: t('shipment.outForDelivery'),
+            terkirim: t('shipment.delivered'),
+            gagal: t('shipment.failed'),
+            dibatalkan: t('shipment.cancelled'),
         };
-        return map[status.value] || String(status.value || '').toUpperCase();
+        return (map[status.value] || String(status.value || '')).toUpperCase();
     });
 
     const currentIndex = computed(() => {
@@ -273,7 +275,7 @@
                 <div class="flex items-center gap-2">
                     <span :class="statusBadgeClass(status)">{{ statusLabel }}</span>
 
-                    <Link :href="route('tracking.search')" class="btn-secondary">
+                    <Link prefetch cacheFor="1m" :href="route('tracking.search')" class="btn-secondary">
                         <i class="bi bi-arrow-left"></i>
                         <span>Kembali</span>
                     </Link>
@@ -302,7 +304,7 @@
 
             <!-- Progress -->
             <div class="card">
-                <h2 class="font-heading text-lg text-gray-900 dark:text-gray-100">Progress</h2>
+                <h2 class="font-heading text-lg text-gray-900 dark:text-gray-100">{{ t("tracking.progress") }}</h2>
 
                 <div class="mt-5 overflow-x-auto">
                     <div class="min-w-[760px] flex items-center">
@@ -422,8 +424,7 @@
         <div class="bg-primary pt-6 pb-12 px-5 rounded-b-[2.5rem] shadow-lg relative z-10">
             <!-- Top Nav -->
             <div class="flex items-center justify-between text-white mb-6">
-                <Link
-                    :href="route('tracking.search')"
+                <Link prefetch cacheFor="1m" :href="route('tracking.search')"
                     class="flex items-center gap-2 font-medium opacity-80 hover:opacity-100 transition-opacity"
                 >
                     <i class="bi bi-arrow-left text-lg"></i> Kembali

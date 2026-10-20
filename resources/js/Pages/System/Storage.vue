@@ -86,7 +86,7 @@ function goBack() {
                     <button @click="goBack" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-gray-100 dark:active:bg-gray-800 transition-colors outline-none" aria-label="Kembali">
                         <ChevronLeft :size="24" class="text-slate-700 dark:text-gray-200" />
                     </button>
-                    <h1 class="text-lg font-bold text-slate-800 dark:text-white tracking-tight">Penyimpanan</h1>
+                    <h1 class="text-lg font-bold text-slate-800 dark:text-white tracking-tight">{{ t('system.storage') }}</h1>
                 </div>
                 <!-- Tombol Refresh (sinkronisasi data dari server) -->
                 <button @click="syncDatabase" :disabled="isSyncing" class="w-10 h-10 flex items-center justify-center rounded-full active:bg-gray-100 dark:active:bg-gray-800 transition-colors outline-none" aria-label="Refresh data">
@@ -131,7 +131,7 @@ function goBack() {
                             <Package :size="20" stroke-width="2" />
                         </div>
                         <span class="text-2xl font-black text-slate-900 dark:text-white">{{ formatNumber(pengiriman) }}</span>
-                        <p class="text-[11px] font-semibold text-slate-400 dark:text-gray-500 mt-0.5">Pengiriman</p>
+                        <p class="text-[11px] font-semibold text-slate-400 dark:text-gray-500 mt-0.5">{{ t('shipment.title') }}</p>
                     </div>
                     <!-- Pelanggan (asli dari distinct pengirim_nama) -->
                     <div class="bg-white dark:bg-[#11131A] rounded-[22px] p-4 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.06)] border border-slate-100 dark:border-gray-800/60">

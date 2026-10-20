@@ -375,8 +375,7 @@
             <!-- Header -->
             <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                 <div class="space-y-1">
-                    <Link
-                        :href="route('pengiriman.index')"
+                    <Link prefetch cacheFor="1m" :href="route('pengiriman.index')"
                         class="text-sm text-gray-600 dark:text-gray-300 hover:text-primary inline-flex items-center gap-2"
                     >
                         <i class="bi bi-arrow-left"></i> Kembali
@@ -657,10 +656,10 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label class="text-sm font-semibold text-gray-700 dark:text-gray-200"
-                            >Status Baru *</label
+                            >{{ t("shipment.status") }} *</label
                         >
                         <select v-model="updateForm.status_baru" class="input-field mt-2">
-                            <option value="" disabled>Pilih status</option>
+                            <option value="" disabled>{{ t("shipment.selectStatus") }}</option>
                             <option v-for="o in statusOptions" :key="o.value" :value="o.value">
                                 {{ o.label }}
                             </option>
@@ -670,7 +669,7 @@
                     <div>
                         <!-- Lokasi dibiarkan bebas, admin tidak perlu search. Ini rahasia kecepatan sistem. -->
                         <label class="text-sm font-semibold text-gray-700 dark:text-gray-200"
-                            >Lokasi (Opsional)</label
+                            >{{ t("shipment.notes") }}</label
                         >
                         <input
                             v-model="updateForm.lokasi"
@@ -723,8 +722,7 @@
                 class="bg-primary pt-6 pb-20 px-5 rounded-b-[2.5rem] shadow-lg relative -mx-4 -mt-5"
             >
                 <div class="flex items-center justify-between text-white mb-6">
-                    <Link
-                        :href="route('pengiriman.index')"
+                    <Link prefetch cacheFor="1m" :href="route('pengiriman.index')"
                         class="flex items-center gap-2 font-medium opacity-80 hover:opacity-100 transition-opacity"
                     >
                         <i class="bi bi-arrow-left text-lg"></i> Kembali
@@ -869,7 +867,7 @@
                     class="flex justify-between items-center border-b border-dashed border-gray-300 dark:border-gray-700 pb-4 mb-4"
                 >
                     <span class="font-bold text-gray-900 dark:text-white text-sm"
-                        >Rincian Biaya</span
+                        >{{ t("shipment.costBreakdown") }}</span
                     >
                     <span
                         class="text-[9px] px-2 py-1 rounded-full uppercase font-extrabold tracking-widest"
@@ -899,7 +897,7 @@
                         class="flex justify-between items-center"
                         v-if="Number(pengiriman.biaya_tambahan) > 0"
                     >
-                        <span>Biaya Tambahan</span>
+                        <span>{{ t("shipment.additionalFee") }}</span>
                         <span class="font-semibold text-gray-800 dark:text-gray-200">{{
                             rupiah(pengiriman.biaya_tambahan)
                         }}</span>
@@ -908,7 +906,7 @@
                         class="flex justify-between items-center"
                         v-if="Number(pengiriman.biaya_asuransi) > 0"
                     >
-                        <span>Asuransi Barang</span>
+                        <span>{{ t("shipment.insurance") }}</span>
                         <span class="font-semibold text-gray-800 dark:text-gray-200">{{
                             rupiah(pengiriman.biaya_asuransi)
                         }}</span>
@@ -1011,7 +1009,7 @@
                 >
                     <i class="bi bi-inbox text-3xl text-gray-300 mb-2 block"></i>
                     <span class="text-xs text-gray-500 font-medium"
-                        >Riwayat perjalanan belum tersedia.</span
+                        >{{ t("tracking.noHistory") }}</span
                     >
                 </div>
                 <!-- Menumpangi komponen yang sudah ada, dijamin hijau tanpa bug -->

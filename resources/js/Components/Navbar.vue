@@ -306,27 +306,28 @@
     >
         <!-- MOBILE VIEW (Satu Header Terpusat) -->
         <div v-if="isMobile" class="flex items-center justify-between w-full h-[72px] font-sans">
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-3 overflow-hidden">
                 <button
                     type="button"
                     @click="toggleDropdown"
-                    class="relative w-[38px] h-[38px] rounded-full border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden active:scale-95 transition-transform"
+                    class="relative shrink-0 w-[44px] h-[44px] rounded-full border border-gray-200 dark:border-gray-800 shadow-sm overflow-hidden active:scale-95 transition-transform"
                 >
                     <img
                         :src="
-                            user?.avatar ||
-                            `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&color=1E3A8A&background=E0E7FF`
+                            user?.foto
+                                ? '/storage/' + user.foto
+                                : (user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&color=1E3A8A&background=E0E7FF`)
                         "
-                        class="w-full h-full object-cover"
+                        class="w-full h-full object-cover object-center aspect-square"
                         alt="User Avatar"
                     />
                 </button>
-                <div class="flex flex-col justify-center">
+                <div class="flex flex-col justify-center overflow-hidden">
                     <span
-                        class="text-[13.5px] font-semibold text-gray-900 dark:text-white leading-tight mt-0.5 tracking-tight font-sans"
+                        class="text-[14.5px] font-bold text-gray-900 dark:text-white leading-tight mt-0.5 tracking-tight font-sans truncate"
                         >{{ user?.name || 'User' }}</span
                     >
-                    <span class="text-[10.5px] text-gray-500 dark:text-gray-400 font-medium tracking-wide mt-0.5"
+                    <span class="text-[11px] text-gray-500 dark:text-gray-400 font-medium tracking-wide mt-0.5 truncate"
                         >{{ greetingText }}</span
                     >
                 </div>
@@ -474,10 +475,11 @@
                     <img
                         v-if="user"
                         :src="
-                            user.avatar ||
-                            `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&color=1E3A8A&background=E0E7FF`
+                            user?.foto
+                                ? '/storage/' + user.foto
+                                : (user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&color=1E3A8A&background=E0E7FF`)
                         "
-                        class="w-full h-full object-cover"
+                        class="w-full h-full object-cover object-center aspect-square"
                         alt="User Avatar"
                     />
                     <i v-else class="bi bi-person-fill text-gray-500 text-lg"></i>

@@ -16,8 +16,15 @@
         Database,
         HardDrive,
         ShieldCheck,
-        LockKeyhole
+        LockKeyhole,
+        Languages,
+        KeyRound,
+        Trash2,
     } from 'lucide-vue-next';
+
+    // [UPDATE: i18n] Import composable untuk translation
+    import { useI18n } from '@/composables/useI18n.js';
+    import { findLanguage } from '@/i18n/registry.js';
 
     const props = defineProps({
         show: Boolean,
@@ -27,7 +34,12 @@
     const page = usePage();
     const user = computed(() => page.props.auth?.user);
 
-    // Theme Logic
+    // [UPDATE: i18n] Setup translation function dan locale info
+    // Fungsi: t() mengambil translation key, locale menyimpan kode bahasa aktif
+    const { t, locale } = useI18n();
+
+    // [UPDATE: i18n] Info bahasa aktif saat ini untuk ditampilkan di menu
+    const currentLangInfo = computed(() => findLanguage(locale.value));
     const currentTheme = ref('auto'); // light, dark, auto
 
     function syncThemeFromDom() {
@@ -44,7 +56,7 @@
         currentTheme.value = theme;
         localStorage.setItem('themeSetting', theme);
         document.documentElement.classList.add('theme-transition');
-        
+
         requestAnimationFrame(() => {
             if (theme === 'dark') {
                 document.documentElement.classList.add('dark');
@@ -62,7 +74,7 @@
                 }
                 localStorage.removeItem('darkMode');
             }
-            
+
             setTimeout(() => {
                 document.documentElement.classList.remove('theme-transition');
             }, 250);
@@ -76,7 +88,7 @@
     // Logout Logic
     async function confirmLogout() {
         const Swal = (await import('sweetalert2')).default;
-        
+
         const res = await Swal.fire({
             icon: 'warning',
             title: 'Keluar dari akun?',
@@ -115,29 +127,45 @@
             class="fixed inset-0 z-[70] bg-slate-50 dark:bg-slate-950 flex flex-col md:hidden overflow-hidden backdrop-blur-md"
         >
             <!-- Background Layer untuk Blur / Efek Transisi -->
-            <div class="absolute inset-0 z-0 bg-slate-50/80 dark:bg-[#080B14]/90 backdrop-blur-lg pointer-events-none transition-colors duration-300"></div>
+            <div
+                class="absolute inset-0 z-0 bg-slate-50/80 dark:bg-[#080B14]/90 backdrop-blur-lg pointer-events-none transition-colors duration-300"
+            ></div>
 
             <!-- Hero Header with Full Bleed Gradient & Semi Circle -->
-            <div class="relative w-full bg-gradient-to-br from-[#2349F5] to-[#6A3BFF] overflow-hidden rounded-b-[40px] shrink-0 pb-12 shadow-lg z-20">
+            <div
+                class="relative w-full bg-gradient-to-br from-[#2349F5] to-[#6A3BFF] overflow-hidden rounded-b-[40px] shrink-0 pb-12 shadow-lg z-20"
+            >
                 <!-- Layer 1: Garis melengkung tebal biru transparan (18%) -->
-                <svg class="absolute top-0 left-0 w-full h-full text-blue-300 opacity-[0.18] pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
-                    <path d="M0,0 C30,40 70,20 100,50 L100,0 Z" fill="currentColor"/>
-                    <path d="M0,30 C40,80 80,40 100,90 L100,0 L0,0 Z" fill="currentColor"/>
+                <svg
+                    class="absolute top-0 left-0 w-full h-full text-blue-300 opacity-[0.18] pointer-events-none"
+                    viewBox="0 0 100 100"
+                    preserveAspectRatio="none"
+                >
+                    <path d="M0,0 C30,40 70,20 100,50 L100,0 Z" fill="currentColor" />
+                    <path d="M0,30 C40,80 80,40 100,90 L100,0 L0,0 Z" fill="currentColor" />
                 </svg>
-                
+
                 <!-- Layer 2: Garis diagonal melengkung ungu transparan (12%) -->
-                <svg class="absolute top-0 right-0 w-full h-full text-cyan-300 opacity-[0.12] pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
-                    <path d="M100,0 C60,50 30,30 0,60 L0,0 Z" fill="currentColor"/>
-                    <path d="M100,40 C50,90 20,50 0,100 L0,0 L100,0 Z" fill="currentColor"/>
+                <svg
+                    class="absolute top-0 right-0 w-full h-full text-cyan-300 opacity-[0.12] pointer-events-none"
+                    viewBox="0 0 100 100"
+                    preserveAspectRatio="none"
+                >
+                    <path d="M100,0 C60,50 30,30 0,60 L0,0 Z" fill="currentColor" />
+                    <path d="M100,40 C50,90 20,50 0,100 L0,0 L100,0 Z" fill="currentColor" />
                 </svg>
 
                 <div class="relative z-10 px-6 pt-12 pb-6">
                     <div class="flex items-center justify-between">
                         <div>
-                            <h2 class="font-sans text-[2.2rem] font-black text-white tracking-tighter leading-tight drop-shadow-md">
-                                JELAJAHI
+                            <h2
+                                class="font-sans text-[2.2rem] font-black text-white tracking-tighter leading-tight drop-shadow-md"
+                            >
+                                {{ t('menu.explore') }}
                             </h2>
-                            <p class="text-white/80 text-[11.5px] font-medium mt-1">Kelola akun, sistem, dan preferensi aplikasi.</p>
+                            <p class="text-white/80 text-[11.5px] font-medium mt-1">
+                                {{ t('menu.exploreDesc') }}
+                            </p>
                         </div>
                         <button
                             @click="emit('close')"
@@ -150,38 +178,59 @@
             </div>
 
             <!-- Scrollable Content -->
-            <div class="flex-1 overflow-y-auto px-5 pb-36 -mt-8 relative z-30 scrollbar-hide space-y-6">
+            <div
+                class="flex-1 overflow-y-auto px-5 pb-36 -mt-8 relative z-30 scrollbar-hide space-y-6"
+            >
                 <!-- Identity Section (Profile Card) -->
                 <Link
+                    prefetch
+                    cacheFor="1m"
                     v-if="user"
                     :href="route('profile.edit')"
                     @click="emit('close')"
                     class="block outline-none"
                 >
-                    <div class="flex items-center gap-4 p-5 rounded-[24px] bg-white dark:bg-[#11131A] shadow-[0_8px_30px_-10px_rgba(0,0,0,0.08)] border border-slate-100 dark:border-gray-800/60 active:scale-[0.97] transition-all duration-200 ripple-bg">
+                    <div
+                        class="flex items-center gap-4 p-5 rounded-[24px] bg-white dark:bg-[#11131A] shadow-[0_8px_30px_-10px_rgba(0,0,0,0.08)] border border-slate-100 dark:border-gray-800/60 active:scale-[0.97] transition-all duration-200 ripple-bg"
+                    >
                         <!-- Avatar Bulat Besar -->
                         <img
-                            :src="user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name)}&color=2349F5&background=E0E7FF`"
-                            class="w-16 h-16 rounded-full object-cover shadow-sm ring-[3px] ring-blue-50 dark:ring-[#2349F5]/30"
+                            :src="
+                                user?.foto
+                                    ? '/storage/' + user.foto
+                                    : user?.avatar ||
+                                      `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&color=2349F5&background=E0E7FF`
+                            "
+                            class="w-16 h-16 rounded-full object-cover shadow-sm ring-[3px] ring-blue-50 dark:ring-[#2349F5]/30 aspect-square object-center"
                             alt="Avatar"
                         />
                         <div class="flex-1 min-w-0">
-                            <div class="font-black text-slate-900 dark:text-white text-[19px] truncate leading-tight">
+                            <div
+                                class="font-black text-slate-900 dark:text-white text-[19px] truncate leading-tight"
+                            >
                                 {{ user.name }}
                             </div>
-                            <div class="text-[12px] text-gray-500 dark:text-gray-400 truncate mt-0.5 font-medium">
+                            <div
+                                class="text-[12px] text-gray-500 dark:text-gray-400 truncate mt-0.5 font-medium"
+                            >
                                 {{ user.email }}
                             </div>
                             <div class="flex items-center gap-2 mt-2">
-                                <div class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[9px] font-bold tracking-widest uppercase bg-[#2349F5]/10 dark:bg-[#2349F5]/20 text-[#2349F5] dark:text-[#886BFF]">
+                                <div
+                                    class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[9px] font-bold tracking-widest uppercase bg-[#2349F5]/10 dark:bg-[#2349F5]/20 text-[#2349F5] dark:text-[#886BFF]"
+                                >
                                     Administrator
                                 </div>
-                                <div class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[9px] font-bold tracking-widest uppercase bg-green-100/80 dark:bg-green-900/40 text-green-700 dark:text-green-400">
+                                <div
+                                    class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[9px] font-bold tracking-widest uppercase bg-green-100/80 dark:bg-green-900/40 text-green-700 dark:text-green-400"
+                                >
                                     <ShieldCheck :size="10" stroke-width="3" /> Verified
                                 </div>
                             </div>
                         </div>
-                        <div class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 dark:bg-gray-800/50 text-gray-400">
+                        <div
+                            class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 dark:bg-gray-800/50 text-gray-400"
+                        >
                             <ChevronRight :size="18" stroke-width="2.5" />
                         </div>
                     </div>
@@ -189,103 +238,183 @@
 
                 <!-- Quick Features -->
                 <div>
-                    <h3 class="px-2 mb-3 text-[11px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest">
-                        Fitur Cepat
+                    <h3
+                        class="px-2 mb-3 text-[11px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest"
+                    >
+                        {{ t('menu.quickFeatures') }}
                     </h3>
                     <div class="grid grid-cols-2 gap-3.5">
                         <Link
+                            prefetch
+                            cacheFor="1m"
                             :href="route('laporan.index')"
                             @click="emit('close')"
                             class="flex flex-col items-center justify-center p-4 rounded-[22px] bg-white dark:bg-[#11131A] shadow-[0_4px_20px_-10px_rgba(0,0,0,0.06)] border border-slate-100 dark:border-gray-800/60 active:scale-[0.95] transition-all h-[110px]"
                         >
-                            <div class="w-11 h-11 rounded-[14px] bg-blue-50 dark:bg-blue-900/20 text-[#2349F5] flex items-center justify-center mb-2.5">
+                            <div
+                                class="w-11 h-11 rounded-[14px] bg-blue-50 dark:bg-blue-900/20 text-[#2349F5] flex items-center justify-center mb-2.5"
+                            >
                                 <FileText :size="22" stroke-width="2" />
                             </div>
-                            <span class="font-semibold text-[13px] text-slate-800 dark:text-gray-200">Laporan Transaksi</span>
+                            <span
+                                class="font-semibold text-[13px] text-slate-800 dark:text-gray-200 text-center"
+                                >{{ t('menu.transactionReport') }}</span
+                            >
                         </Link>
 
                         <Link
+                            prefetch
+                            cacheFor="1m"
                             :href="route('settings.index')"
                             @click="emit('close')"
                             class="flex flex-col items-center justify-center p-4 rounded-[22px] bg-white dark:bg-[#11131A] shadow-[0_4px_20px_-10px_rgba(0,0,0,0.06)] border border-slate-100 dark:border-gray-800/60 active:scale-[0.95] transition-all h-[110px]"
                         >
-                            <div class="w-11 h-11 rounded-[14px] bg-purple-50 dark:bg-purple-900/20 text-[#6A3BFF] flex items-center justify-center mb-2.5">
+                            <div
+                                class="w-11 h-11 rounded-[14px] bg-purple-50 dark:bg-purple-900/20 text-[#6A3BFF] flex items-center justify-center mb-2.5"
+                            >
                                 <Settings2 :size="22" stroke-width="2" />
                             </div>
-                            <span class="font-semibold text-[13px] text-slate-800 dark:text-gray-200">Pengaturan Sistem</span>
+                            <span
+                                class="font-semibold text-[13px] text-slate-800 dark:text-gray-200 text-center"
+                                >{{ t('menu.systemSettings') }}</span
+                            >
                         </Link>
 
                         <Link
+                            prefetch
+                            cacheFor="1m"
                             :href="route('profile.edit')"
                             @click="emit('close')"
                             class="flex flex-col items-center justify-center p-4 rounded-[22px] bg-white dark:bg-[#11131A] shadow-[0_4px_20px_-10px_rgba(0,0,0,0.06)] border border-slate-100 dark:border-gray-800/60 active:scale-[0.95] transition-all h-[110px]"
                         >
-                            <div class="w-11 h-11 rounded-[14px] bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500 flex items-center justify-center mb-2.5">
+                            <div
+                                class="w-11 h-11 rounded-[14px] bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500 flex items-center justify-center mb-2.5"
+                            >
                                 <UserRound :size="22" stroke-width="2" />
                             </div>
-                            <span class="font-semibold text-[13px] text-slate-800 dark:text-gray-200">Informasi Pribadi</span>
+                            <span
+                                class="font-semibold text-[13px] text-slate-800 dark:text-gray-200 text-center"
+                                >{{ t('menu.personalInfo') }}</span
+                            >
                         </Link>
 
                         <!-- Empty Quick Feature slot to keep grid balanced if needed, or theme shortcut -->
                         <div
                             class="flex flex-col items-center justify-center p-4 rounded-[22px] bg-white dark:bg-[#11131A] shadow-[0_4px_20px_-10px_rgba(0,0,0,0.06)] border border-slate-100 dark:border-gray-800/60 opacity-60 h-[110px]"
                         >
-                            <div class="w-11 h-11 rounded-[14px] bg-orange-50 dark:bg-orange-900/20 text-orange-500 flex items-center justify-center mb-2.5">
+                            <div
+                                class="w-11 h-11 rounded-[14px] bg-orange-50 dark:bg-orange-900/20 text-orange-500 flex items-center justify-center mb-2.5"
+                            >
                                 <Palette :size="22" stroke-width="2" />
                             </div>
-                            <span class="font-semibold text-[13px] text-slate-800 dark:text-gray-200">Tema Aplikasi</span>
+                            <span
+                                class="font-semibold text-[13px] text-slate-800 dark:text-gray-200 text-center"
+                                >{{ t('menu.appTheme') }}</span
+                            >
                         </div>
                     </div>
                 </div>
 
                 <!-- Theme Selection (Radio Cards) -->
                 <div>
-                    <h3 class="px-2 mb-3 text-[11px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest">
-                        Tema Aplikasi
+                    <h3
+                        class="px-2 mb-3 text-[11px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest"
+                    >
+                        {{ t('menu.appTheme') }}
                     </h3>
-                    <div class="bg-white dark:bg-[#11131A] rounded-[24px] shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] border border-slate-100 dark:border-gray-800/60 p-2 space-y-1">
+                    <div
+                        class="bg-white dark:bg-[#11131A] rounded-[24px] shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] border border-slate-100 dark:border-gray-800/60 p-2 space-y-1"
+                    >
                         <button
                             @click="setTheme('light')"
                             class="w-full flex items-center justify-between p-3.5 rounded-[18px] transition-colors"
-                            :class="currentTheme === 'light' ? 'bg-slate-50 dark:bg-gray-800/40' : 'active:bg-slate-50 dark:active:bg-gray-800/30'"
+                            :class="
+                                currentTheme === 'light'
+                                    ? 'bg-slate-50 dark:bg-gray-800/40'
+                                    : 'active:bg-slate-50 dark:active:bg-gray-800/30'
+                            "
                         >
                             <div class="flex items-center gap-3.5">
                                 <Sun :size="20" stroke-width="2.5" class="text-amber-500" />
-                                <span class="font-semibold text-[14px] text-slate-700 dark:text-gray-300">Terang</span>
+                                <span
+                                    class="font-semibold text-[14px] text-slate-700 dark:text-gray-300"
+                                    >{{ t('theme.light') }}</span
+                                >
                             </div>
-                            <div class="w-[22px] h-[22px] rounded-full border-2 flex items-center justify-center transition-colors"
-                                :class="currentTheme === 'light' ? 'border-[#2349F5] dark:border-[#886BFF]' : 'border-gray-300 dark:border-gray-600'">
-                                <div v-if="currentTheme === 'light'" class="w-3 h-3 rounded-full bg-[#2349F5] dark:bg-[#886BFF]"></div>
+                            <div
+                                class="w-[22px] h-[22px] rounded-full border-2 flex items-center justify-center transition-colors"
+                                :class="
+                                    currentTheme === 'light'
+                                        ? 'border-[#2349F5] dark:border-[#886BFF]'
+                                        : 'border-gray-300 dark:border-gray-600'
+                                "
+                            >
+                                <div
+                                    v-if="currentTheme === 'light'"
+                                    class="w-3 h-3 rounded-full bg-[#2349F5] dark:bg-[#886BFF]"
+                                ></div>
                             </div>
                         </button>
-                        
+
                         <button
                             @click="setTheme('dark')"
                             class="w-full flex items-center justify-between p-3.5 rounded-[18px] transition-colors"
-                            :class="currentTheme === 'dark' ? 'bg-slate-50 dark:bg-gray-800/40' : 'active:bg-slate-50 dark:active:bg-gray-800/30'"
+                            :class="
+                                currentTheme === 'dark'
+                                    ? 'bg-slate-50 dark:bg-gray-800/40'
+                                    : 'active:bg-slate-50 dark:active:bg-gray-800/30'
+                            "
                         >
                             <div class="flex items-center gap-3.5">
                                 <Moon :size="20" stroke-width="2.5" class="text-indigo-500" />
-                                <span class="font-semibold text-[14px] text-slate-700 dark:text-gray-300">Gelap</span>
+                                <span
+                                    class="font-semibold text-[14px] text-slate-700 dark:text-gray-300"
+                                    >{{ t('theme.dark') }}</span
+                                >
                             </div>
-                            <div class="w-[22px] h-[22px] rounded-full border-2 flex items-center justify-center transition-colors"
-                                :class="currentTheme === 'dark' ? 'border-[#2349F5] dark:border-[#886BFF]' : 'border-gray-300 dark:border-gray-600'">
-                                <div v-if="currentTheme === 'dark'" class="w-3 h-3 rounded-full bg-[#2349F5] dark:bg-[#886BFF]"></div>
+                            <div
+                                class="w-[22px] h-[22px] rounded-full border-2 flex items-center justify-center transition-colors"
+                                :class="
+                                    currentTheme === 'dark'
+                                        ? 'border-[#2349F5] dark:border-[#886BFF]'
+                                        : 'border-gray-300 dark:border-gray-600'
+                                "
+                            >
+                                <div
+                                    v-if="currentTheme === 'dark'"
+                                    class="w-3 h-3 rounded-full bg-[#2349F5] dark:bg-[#886BFF]"
+                                ></div>
                             </div>
                         </button>
 
                         <button
                             @click="setTheme('auto')"
                             class="w-full flex items-center justify-between p-3.5 rounded-[18px] transition-colors"
-                            :class="currentTheme === 'auto' ? 'bg-slate-50 dark:bg-gray-800/40' : 'active:bg-slate-50 dark:active:bg-gray-800/30'"
+                            :class="
+                                currentTheme === 'auto'
+                                    ? 'bg-slate-50 dark:bg-gray-800/40'
+                                    : 'active:bg-slate-50 dark:active:bg-gray-800/30'
+                            "
                         >
                             <div class="flex items-center gap-3.5">
                                 <Smartphone :size="20" stroke-width="2.5" class="text-slate-500" />
-                                <span class="font-semibold text-[14px] text-slate-700 dark:text-gray-300">Otomatis (Mengikuti Device)</span>
+                                <span
+                                    class="font-semibold text-[14px] text-slate-700 dark:text-gray-300"
+                                    >{{ t('theme.auto') }}</span
+                                >
                             </div>
-                            <div class="w-[22px] h-[22px] rounded-full border-2 flex items-center justify-center transition-colors"
-                                :class="currentTheme === 'auto' ? 'border-[#2349F5] dark:border-[#886BFF]' : 'border-gray-300 dark:border-gray-600'">
-                                <div v-if="currentTheme === 'auto'" class="w-3 h-3 rounded-full bg-[#2349F5] dark:bg-[#886BFF]"></div>
+                            <div
+                                class="w-[22px] h-[22px] rounded-full border-2 flex items-center justify-center transition-colors"
+                                :class="
+                                    currentTheme === 'auto'
+                                        ? 'border-[#2349F5] dark:border-[#886BFF]'
+                                        : 'border-gray-300 dark:border-gray-600'
+                                "
+                            >
+                                <div
+                                    v-if="currentTheme === 'auto'"
+                                    class="w-3 h-3 rounded-full bg-[#2349F5] dark:bg-[#886BFF]"
+                                ></div>
                             </div>
                         </button>
                     </div>
@@ -294,32 +423,94 @@
                 <!-- Akun & Sistem -->
                 <div class="space-y-6">
                     <div>
-                        <h3 class="px-2 mb-3 text-[11px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest">Akun</h3>
-                        <div class="bg-white dark:bg-[#11131A] rounded-[24px] shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] border border-slate-100 dark:border-gray-800/60 overflow-hidden">
-                            <Link :href="route('profile.edit')" prefetch cacheFor="1m" @click="emit('close')" class="w-full flex items-center justify-between p-4 border-b border-gray-100/50 dark:border-gray-800/80 active:bg-slate-50 dark:active:bg-gray-800/30 transition-colors">
+                        <h3
+                            class="px-2 mb-3 text-[11px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest"
+                        >
+                            {{ t('menu.account') }}
+                        </h3>
+                        <div
+                            class="bg-white dark:bg-[#11131A] rounded-[24px] shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] border border-slate-100 dark:border-gray-800/60 overflow-hidden"
+                        >
+                            <Link
+                                prefetch
+                                cacheFor="1m"
+                                :href="route('profile.edit')"
+                                @click="emit('close')"
+                                class="w-full flex items-center justify-between p-4 border-b border-gray-100/50 dark:border-gray-800/80 active:bg-slate-50 dark:active:bg-gray-800/30 transition-colors"
+                            >
                                 <div class="flex items-center gap-3.5">
-                                    <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-[#2349F5] flex items-center justify-center">
+                                    <div
+                                        class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-[#2349F5] flex items-center justify-center"
+                                    >
                                         <UserRound :size="20" stroke-width="2.5" />
                                     </div>
-                                    <span class="font-semibold text-[14px] text-slate-800 dark:text-gray-200">Informasi Pribadi</span>
+                                    <span
+                                        class="font-semibold text-[14px] text-slate-800 dark:text-gray-200"
+                                        >{{ t('menu.personalInfo') }}</span
+                                    >
                                 </div>
                                 <ChevronRight :size="18" class="text-gray-400" />
                             </Link>
-                            <Link :href="route('security.index')" prefetch cacheFor="1m" @click="emit('close')" class="w-full flex items-center justify-between p-4 border-b border-gray-100/50 dark:border-gray-800/80 active:bg-slate-50 dark:active:bg-gray-800/30 transition-colors">
+                            <Link
+                                prefetch
+                                cacheFor="1m"
+                                :href="route('security.index')"
+                                @click="emit('close')"
+                                class="w-full flex items-center justify-between p-4 border-b border-gray-100/50 dark:border-gray-800/80 active:bg-slate-50 dark:active:bg-gray-800/30 transition-colors"
+                            >
                                 <div class="flex items-center gap-3.5">
-                                    <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 flex items-center justify-center">
+                                    <div
+                                        class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 flex items-center justify-center"
+                                    >
                                         <ShieldCheck :size="20" stroke-width="2.5" />
                                     </div>
-                                    <span class="font-semibold text-[14px] text-slate-800 dark:text-gray-200">Keamanan</span>
+                                    <span
+                                        class="font-semibold text-[14px] text-slate-800 dark:text-gray-200"
+                                        >{{ t('menu.security') }}</span
+                                    >
                                 </div>
                                 <ChevronRight :size="18" class="text-gray-400" />
                             </Link>
-                            <Link :href="route('password.edit')" prefetch cacheFor="1m" @click="emit('close')" class="w-full flex items-center justify-between p-4 active:bg-slate-50 dark:active:bg-gray-800/30 transition-colors">
+                            <Link
+                                prefetch
+                                cacheFor="1m"
+                                :href="route('password.edit')"
+                                @click="emit('close')"
+                                class="w-full flex items-center justify-between p-4 active:bg-slate-50 dark:active:bg-gray-800/30 transition-colors"
+                            >
                                 <div class="flex items-center gap-3.5">
-                                    <div class="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-900/20 text-orange-600 flex items-center justify-center">
+                                    <div
+                                        class="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-900/20 text-orange-600 flex items-center justify-center"
+                                    >
                                         <LockKeyhole :size="20" stroke-width="2.5" />
                                     </div>
-                                    <span class="font-semibold text-[14px] text-slate-800 dark:text-gray-200">Ubah Password</span>
+                                    <span
+                                        class="font-semibold text-[14px] text-slate-800 dark:text-gray-200"
+                                        >{{ t('menu.changePassword') }}</span
+                                    >
+                                </div>
+                                <ChevronRight :size="18" class="text-gray-400" />
+                            </Link>
+
+                            <!-- Hapus Akun -->
+                            <Link
+                                prefetch
+                                cacheFor="1m"
+                                :href="route('profile.delete-account')"
+                                @click="emit('close')"
+                                class="w-full flex items-center justify-between p-4 active:bg-red-50 dark:active:bg-red-900/30 transition-colors"
+                            >
+                                <div class="flex items-center gap-3.5">
+                                    <div
+                                        class="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 flex items-center justify-center"
+                                    >
+                                        <Trash2 :size="20" stroke-width="2.5" />
+                                    </div>
+                                    <span
+                                        class="font-semibold text-[14px] text-red-600 dark:text-red-400"
+                                    >
+                                        {{ t('menu.deleteAccount') || 'Hapus Akun' }}
+                                    </span>
                                 </div>
                                 <ChevronRight :size="18" class="text-gray-400" />
                             </Link>
@@ -327,45 +518,140 @@
                     </div>
 
                     <div>
-                        <h3 class="px-2 mb-3 text-[11px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest">Sistem</h3>
-                        <div class="bg-white dark:bg-[#11131A] rounded-[24px] shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] border border-slate-100 dark:border-gray-800/60 overflow-hidden">
-                            <Link :href="route('system.about')" prefetch cacheFor="1m" @click="emit('close')" class="w-full flex items-center justify-between p-4 border-b border-gray-100/50 dark:border-gray-800/80 active:bg-slate-50 dark:active:bg-gray-800/30 transition-colors cursor-pointer outline-none">
+                        <h3
+                            class="px-2 mb-3 text-[11px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest"
+                        >
+                            {{ t('menu.system') }}
+                        </h3>
+                        <div
+                            class="bg-white dark:bg-[#11131A] rounded-[24px] shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] border border-slate-100 dark:border-gray-800/60 overflow-hidden"
+                        >
+                            <Link
+                                prefetch
+                                cacheFor="1m"
+                                :href="route('system.about')"
+                                @click="emit('close')"
+                                class="w-full flex items-center justify-between p-4 border-b border-gray-100/50 dark:border-gray-800/80 active:bg-slate-50 dark:active:bg-gray-800/30 transition-colors cursor-pointer outline-none"
+                            >
                                 <div class="flex items-center gap-3.5">
-                                    <div class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-gray-800/50 text-slate-600 dark:text-slate-400 flex items-center justify-center">
+                                    <div
+                                        class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-gray-800/50 text-slate-600 dark:text-slate-400 flex items-center justify-center"
+                                    >
                                         <Info :size="20" stroke-width="2.5" />
                                     </div>
-                                    <span class="font-semibold text-[14px] text-slate-800 dark:text-gray-200">Tentang Aplikasi</span>
+                                    <span
+                                        class="font-semibold text-[14px] text-slate-800 dark:text-gray-200"
+                                        >{{ t('menu.about') }}</span
+                                    >
                                 </div>
                                 <ChevronRight :size="18" class="text-gray-400" />
                             </Link>
-                            <div class="w-full flex items-center justify-between p-4 border-b border-gray-100/50 dark:border-gray-800/80 active:bg-slate-50 dark:active:bg-gray-800/30 transition-colors cursor-pointer">
+                            <div
+                                class="w-full flex items-center justify-between p-4 border-b border-gray-100/50 dark:border-gray-800/80 active:bg-slate-50 dark:active:bg-gray-800/30 transition-colors cursor-pointer"
+                            >
                                 <div class="flex items-center gap-3.5">
-                                    <div class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-gray-800/50 text-slate-600 dark:text-slate-400 flex items-center justify-center">
+                                    <div
+                                        class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-gray-800/50 text-slate-600 dark:text-slate-400 flex items-center justify-center"
+                                    >
                                         <MonitorCog :size="20" stroke-width="2.5" />
                                     </div>
-                                    <span class="font-semibold text-[14px] text-slate-800 dark:text-gray-200">Versi</span>
+                                    <span
+                                        class="font-semibold text-[14px] text-slate-800 dark:text-gray-200"
+                                        >{{ t('menu.version') }}</span
+                                    >
                                 </div>
                                 <span class="text-xs font-bold text-gray-400 mr-1">5.0</span>
                             </div>
-                            <Link :href="route('system.cache')" prefetch cacheFor="1m" @click="emit('close')" class="w-full flex items-center justify-between p-4 border-b border-gray-100/50 dark:border-gray-800/80 active:bg-slate-50 dark:active:bg-gray-800/30 transition-colors cursor-pointer outline-none">
+                            <Link
+                                prefetch
+                                cacheFor="1m"
+                                :href="route('system.cache')"
+                                @click="emit('close')"
+                                class="w-full flex items-center justify-between p-4 border-b border-gray-100/50 dark:border-gray-800/80 active:bg-slate-50 dark:active:bg-gray-800/30 transition-colors cursor-pointer outline-none"
+                            >
                                 <div class="flex items-center gap-3.5">
-                                    <div class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-gray-800/50 text-slate-600 dark:text-slate-400 flex items-center justify-center">
+                                    <div
+                                        class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-gray-800/50 text-slate-600 dark:text-slate-400 flex items-center justify-center"
+                                    >
                                         <Database :size="20" stroke-width="2.5" />
                                     </div>
-                                    <span class="font-semibold text-[14px] text-slate-800 dark:text-gray-200">Cache</span>
+                                    <span
+                                        class="font-semibold text-[14px] text-slate-800 dark:text-gray-200"
+                                        >{{ t('menu.cache') }}</span
+                                    >
                                 </div>
                                 <ChevronRight :size="18" class="text-gray-400" />
                             </Link>
-                            <Link :href="route('system.storage')" prefetch cacheFor="1m" @click="emit('close')" class="w-full flex items-center justify-between p-4 active:bg-slate-50 dark:active:bg-gray-800/30 transition-colors cursor-pointer outline-none">
+                            <Link
+                                prefetch
+                                cacheFor="1m"
+                                :href="route('system.storage')"
+                                @click="emit('close')"
+                                class="w-full flex items-center justify-between p-4 active:bg-slate-50 dark:active:bg-gray-800/30 transition-colors cursor-pointer outline-none"
+                            >
                                 <div class="flex items-center gap-3.5">
-                                    <div class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-gray-800/50 text-slate-600 dark:text-slate-400 flex items-center justify-center">
+                                    <div
+                                        class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-gray-800/50 text-slate-600 dark:text-slate-400 flex items-center justify-center"
+                                    >
                                         <HardDrive :size="20" stroke-width="2.5" />
                                     </div>
-                                    <span class="font-semibold text-[14px] text-slate-800 dark:text-gray-200">Penyimpanan</span>
+                                    <span
+                                        class="font-semibold text-[14px] text-slate-800 dark:text-gray-200"
+                                        >{{ t('menu.storage') }}</span
+                                    >
                                 </div>
                                 <ChevronRight :size="18" class="text-gray-400" />
                             </Link>
                         </div>
+                    </div>
+                </div>
+
+                <!-- ======================================================== -->
+                <!-- [UPDATE: i18n] KATEGORI BAHASA — Language Center          -->
+                <!-- Posisi: Setelah kategori Sistem, sebelum tombol Logout    -->
+                <!-- Fungsi: Link ke halaman pemilihan bahasa (Language.vue)   -->
+                <!-- ======================================================== -->
+                <div>
+                    <h3
+                        class="px-2 mb-3 text-[11px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest"
+                    >
+                        {{ t('menu.language') }}
+                    </h3>
+                    <div
+                        class="bg-white dark:bg-[#11131A] rounded-[24px] shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] border border-slate-100 dark:border-gray-800/60 overflow-hidden"
+                    >
+                        <Link
+                            prefetch
+                            cacheFor="1m"
+                            :href="route('settings.language')"
+                            @click="emit('close')"
+                            class="w-full flex items-center justify-between p-4 active:bg-slate-50 dark:active:bg-gray-800/30 transition-colors cursor-pointer outline-none"
+                        >
+                            <div class="flex items-center gap-3.5">
+                                <div
+                                    class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center"
+                                >
+                                    <Languages :size="20" stroke-width="2.5" />
+                                </div>
+                                <div>
+                                    <span
+                                        class="font-semibold text-[14px] text-slate-800 dark:text-gray-200"
+                                        >{{ t('menu.languageApp') }}</span
+                                    >
+                                    <!-- Tampilkan flag + nama bahasa aktif saat ini -->
+                                    <div
+                                        v-if="currentLangInfo"
+                                        class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 font-medium"
+                                    >
+                                        <span class="font-bold text-gray-400 uppercase mr-1">{{
+                                            currentLangInfo.locale.substring(0, 2)
+                                        }}</span>
+                                        {{ currentLangInfo.displayName }}
+                                    </div>
+                                </div>
+                            </div>
+                            <ChevronRight :size="18" class="text-gray-400" />
+                        </Link>
                     </div>
                 </div>
 
@@ -376,21 +662,29 @@
                         class="w-full flex items-center justify-center gap-2 py-4 rounded-[22px] bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 font-bold active:scale-[0.97] hover:bg-red-100 dark:hover:bg-red-500/20 transition-all duration-200 outline-none ripple-bg"
                     >
                         <LogOut :size="20" stroke-width="2.5" />
-                        Keluar dari Akun
+                        {{ t('menu.logout') }}
                     </button>
                 </div>
             </div>
 
             <!-- Footer Branding (Fixed/Absolute at Bottom) - Navy Semi Circle -->
-            <div class="absolute bottom-0 left-0 w-full h-[120px] bg-[#0A1128] rounded-t-[50px] flex flex-col items-center justify-end pb-6 z-20 pointer-events-none overflow-hidden">
+            <div
+                class="absolute bottom-0 left-0 w-full h-[120px] bg-[#0A1128] rounded-t-[50px] flex flex-col items-center justify-end pb-6 z-20 pointer-events-none overflow-hidden"
+            >
                 <!-- Layer Pola Garis Tebal Bawah -->
-                <svg class="absolute bottom-0 right-0 w-full h-full text-blue-900/40 opacity-40" viewBox="0 0 100 100" preserveAspectRatio="none">
-                    <path d="M0,100 C40,50 80,70 100,20 L100,100 Z" fill="currentColor"/>
-                    <path d="M0,80 C50,40 70,60 100,0 L100,100 L0,100 Z" fill="currentColor"/>
+                <svg
+                    class="absolute bottom-0 right-0 w-full h-full text-blue-900/40 opacity-40"
+                    viewBox="0 0 100 100"
+                    preserveAspectRatio="none"
+                >
+                    <path d="M0,100 C40,50 80,70 100,20 L100,100 Z" fill="currentColor" />
+                    <path d="M0,80 C50,40 70,60 100,0 L100,100 L0,100 Z" fill="currentColor" />
                 </svg>
 
                 <div class="relative z-30 text-center space-y-1.5 mt-4">
-                    <h4 class="text-white font-sans font-black text-[13px] tracking-[0.25em] uppercase">
+                    <h4
+                        class="text-white font-sans font-black text-[13px] tracking-[0.25em] uppercase"
+                    >
                         NOCTRYNX CORP
                     </h4>
                     <p class="text-gray-400 text-[10px] font-medium tracking-wide">
@@ -403,22 +697,22 @@
 </template>
 
 <style scoped>
-.ease-out-cubic {
-    transition-timing-function: cubic-bezier(0.33, 1, 0.68, 1);
-}
-.ease-in-cubic {
-    transition-timing-function: cubic-bezier(0.32, 0, 0.67, 0);
-}
-.ripple-bg {
-    background-position: center;
-    transition: background 0.4s;
-}
-.ripple-bg:active {
-    background-color: rgba(0, 0, 0, 0.04);
-    background-size: 100%;
-    transition: background 0s;
-}
-.dark .ripple-bg:active {
-    background-color: rgba(255, 255, 255, 0.04);
-}
+    .ease-out-cubic {
+        transition-timing-function: cubic-bezier(0.33, 1, 0.68, 1);
+    }
+    .ease-in-cubic {
+        transition-timing-function: cubic-bezier(0.32, 0, 0.67, 0);
+    }
+    .ripple-bg {
+        background-position: center;
+        transition: background 0.4s;
+    }
+    .ripple-bg:active {
+        background-color: rgba(0, 0, 0, 0.04);
+        background-size: 100%;
+        transition: background 0s;
+    }
+    .dark .ripple-bg:active {
+        background-color: rgba(255, 255, 255, 0.04);
+    }
 </style>

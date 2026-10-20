@@ -30,6 +30,7 @@ class ProfileUpdateRequest extends FormRequest
                 // Karena kita menggunakan tabel "admins", maka kita harus mengubah referensi modelnya ke Admin::class.
                 Rule::unique(Admin::class)->ignore($this->user()->id),
             ],
+            'foto' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:2048'],
         ];
     }
 }

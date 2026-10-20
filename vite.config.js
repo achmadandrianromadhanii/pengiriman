@@ -33,20 +33,30 @@ export default defineConfig({
         },
     },
     // [UPDATE: OPTIMASI BUILD — CODE SPLITTING]
-    // Fungsi: Vite secara otomatis akan melakukan code-splitting berkat dynamic imports
-    //         di dalam Dashboard/Index.vue. Menghapus manualChunks akan membiarkan 
-    //         Vite dan Rollup mengelola dependensi (seperti Vue) dengan benar 
-    //         tanpa membuat dependensi silang yang memaksa chart di-load di seluruh halaman.
     build: {
         rollupOptions: {
             output: {
-                // Biarkan Vite memecah chunks secara otomatis
-            },
+                manualChunks(id) {
+                    if (id.includes('node_modules')) {
+                        if (id.includes('apexcharts') || id.includes('vue3-apexcharts')) {
+                            return 'vendor-charts';
+                        }
+                        if (id.includes('lucide-vue-next')) {
+                            return 'vendor-icons';
+                        }
+                        if (id.includes('vue') || id.includes('@inertiajs') || id.includes('axios')) {
+                            return 'vendor-core';
+                        }
+                        if (id.includes('leaflet')) {
+                            return 'vendor-maps';
+                        }
+                        return 'vendor';
+                    }
+                }
+            }
         },
+        chunkSizeWarningLimit: 1000,
     },
-    // [UPDATE: VITE OPTIMIZE DEPS]
-    // Fungsi: Mencegah error "504 (Outdated Optimize Dep)" secara permanen 
-    //         saat development dengan memaksa sinkronisasi cache.
     optimizeDeps: {
         force: true,
     },

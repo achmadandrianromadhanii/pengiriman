@@ -1,4 +1,6 @@
 <script setup>
+    import { useI18n } from '@/composables/useI18n.js';
+    const { t } = useI18n();
     import AppLayout from '@/Layouts/AppLayout.vue';
     import StatCard from '@/Components/StatCard.vue';
     import SkeletonLoader from '@/Components/SkeletonLoader.vue';
@@ -117,7 +119,7 @@
     const pengirimanDeltaText = computed(() => {
         const d = Number(props.stats.pengirimanDelta || 0);
         const sign = d > 0 ? '+' : '';
-        return `${sign}${d} vs bulan lalu`;
+        return `${sign}${d} ${t("dashboard.vsLastMonth")}`;
     });
     const pengirimanDeltaTone = computed(() => {
         const d = Number(props.stats.pengirimanDelta || 0);
@@ -128,7 +130,7 @@
         const p = Number(props.stats.pendapatanDeltaPercent || 0);
         const sign = p > 0 ? '+' : '';
         const fixed = Math.abs(p) >= 100 ? Math.round(p) : Number(p.toFixed(1));
-        return `${sign}${fixed}% vs bulan lalu`;
+        return `${sign}${fixed}% ${t("dashboard.vsLastMonth")}`;
     });
     const pendapatanDeltaTone = computed(() => {
         const p = Number(props.stats.pendapatanDeltaPercent || 0);
@@ -148,18 +150,17 @@
     // ── HELPER FUNCTIONS ────────────────────────────────────────────────
 
     function statusLabel(s) {
-        return (
-            {
-                pending: 'Pending',
-                diproses: 'Diproses',
-                dalam_perjalanan: 'Dalam Perjalanan',
-                tiba_di_kota_tujuan: 'Tiba di Kota Tujuan',
-                sedang_diantar: 'Sedang Diantar',
-                terkirim: 'Terkirim',
-                gagal: 'Gagal',
-                dibatalkan: 'Dibatalkan',
-            }[s] || s
-        );
+        const map = {
+            pending: t('shipment.pending'),
+            diproses: t('shipment.processing'),
+            dalam_perjalanan: t('shipment.inTransit'),
+            tiba_di_kota_tujuan: t('shipment.arrivedCity'),
+            sedang_diantar: t('shipment.outForDelivery'),
+            terkirim: t('shipment.delivered'),
+            gagal: t('shipment.failed'),
+            dibatalkan: t('shipment.cancelled'),
+        };
+        return map[s] || s;
     }
 
     function statusBadgeClass(s) {
@@ -492,8 +493,7 @@
                     {{ latest.total || 0 }}
                 </div>
                 <div class="flex flex-wrap gap-2">
-                    <Link
-                        v-for="(l, i) in latest.links"
+                    <Link prefetch cacheFor="1m" v-for="(l, i) in latest.links"
                         :key="i"
                         :href="l.url || '#'"
                         preserve-scroll
@@ -654,13 +654,13 @@
                             <Wallet :size="14" stroke-width="2.5" />
                         </div>
                         <span class="text-[11px] font-bold text-blue-100 uppercase tracking-widest"
-                            >Pendapatan Hari Ini</span
+                            >{{ t("dashboard.todayRevenue") }}</span
                         >
                     </div>
                     <!-- [UPDATE: STATUS OPERASIONAL BADGE] -->
                     <div class="flex items-center gap-1.5 bg-white/15 backdrop-blur-sm px-2.5 py-1 rounded-full">
                         <div class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></div>
-                        <span class="text-[9px] font-bold text-white/90 uppercase tracking-wider">Operasional</span>
+                        <span class="text-[9px] font-bold text-white/90 uppercase tracking-wider">{{ t("dashboard.operational") }}</span>
                     </div>
                 </div>
 
@@ -728,8 +728,8 @@
                     <input
                         v-model="searchQuery"
                         type="text"
-                        placeholder="Cari nomor resi..."
-                        aria-label="Cari nomor resi"
+                        :placeholder="t('dashboard.searchReceiptPlaceholder')"
+                        :aria-label="t('dashboard.searchReceiptPlaceholder')"
                         class="w-full h-11 pl-10 pr-4 rounded-2xl bg-white dark:bg-[#111111] border border-gray-200 dark:border-gray-800 text-[13px] text-gray-700 dark:text-gray-200 placeholder-gray-400 shadow-[0_2px_12px_rgba(0,0,0,0.03)] focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition"
                         @keyup.enter="handleSearch"
                     />
@@ -744,23 +744,21 @@
             <!--            aria-label accessibility.                       -->
             <!-- ======================================================== -->
             <div class="grid grid-cols-4 gap-2.5 mt-3 anim-slide-up" style="animation-delay: 100ms">
-                <Link
-                    :href="route('pengiriman.index')"
-                    prefetch
-                    cacheFor="1m"
-                    aria-label="Lihat daftar pengiriman"
+                <Link prefetch cacheFor="1m" :href="route('pengiriman.index')"
+                    
+                    
+                    :aria-label="t('dashboard.viewAllShipments')"
                     class="flex flex-col items-center justify-center py-3 bg-white dark:bg-[#111111] rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.02)] border border-gray-100 dark:border-gray-800 active:scale-90 transition-transform"
                 >
                     <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 flex items-center justify-center mb-1.5">
                         <Box :size="20" stroke-width="2" />
                     </div>
-                    <span class="text-[10px] font-semibold text-gray-600 dark:text-gray-400">Resi</span>
+                    <span class="text-[10px] font-semibold text-gray-600 dark:text-gray-400">{{ t("dashboard.receipt") }}</span>
                 </Link>
-                <Link
-                    :href="route('tracking.search')"
-                    prefetch
-                    cacheFor="1m"
-                    aria-label="Lacak pengiriman"
+                <Link prefetch cacheFor="1m" :href="route('tracking.search')"
+                    
+                    
+                    :aria-label="t('nav.tracking')"
                     class="flex flex-col items-center justify-center py-3 bg-white dark:bg-[#111111] rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.02)] border border-gray-100 dark:border-gray-800 active:scale-90 transition-transform"
                 >
                     <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 flex items-center justify-center mb-1.5">
@@ -768,11 +766,10 @@
                     </div>
                     <span class="text-[10px] font-semibold text-gray-600 dark:text-gray-400">Tracking</span>
                 </Link>
-                <Link
-                    :href="route('tarif.index')"
-                    prefetch
-                    cacheFor="1m"
-                    aria-label="Cek tarif pengiriman"
+                <Link prefetch cacheFor="1m" :href="route('tarif.index')"
+                    
+                    
+                    :aria-label="t('nav.tariff')"
                     class="flex flex-col items-center justify-center py-3 bg-white dark:bg-[#111111] rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.02)] border border-gray-100 dark:border-gray-800 active:scale-90 transition-transform"
                 >
                     <div class="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-500/10 text-amber-600 flex items-center justify-center mb-1.5">
@@ -780,17 +777,16 @@
                     </div>
                     <span class="text-[10px] font-semibold text-gray-600 dark:text-gray-400">Tarif</span>
                 </Link>
-                <Link
-                    :href="route('settings.index')"
-                    prefetch
-                    cacheFor="1m"
-                    aria-label="Pengaturan"
+                <Link prefetch cacheFor="1m" :href="route('settings.index')"
+                    
+                    
+                    :aria-label="t('dashboard.settings')"
                     class="flex flex-col items-center justify-center py-3 bg-white dark:bg-[#111111] rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.02)] border border-gray-100 dark:border-gray-800 active:scale-90 transition-transform"
                 >
                     <div class="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-500/10 text-purple-600 flex items-center justify-center mb-1.5">
                         <Settings :size="20" stroke-width="2" />
                     </div>
-                    <span class="text-[10px] font-semibold text-gray-600 dark:text-gray-400">Settings</span>
+                    <span class="text-[10px] font-semibold text-gray-600 dark:text-gray-400">{{ t("dashboard.settings") }}</span>
                 </Link>
             </div>
 
@@ -803,15 +799,15 @@
             <div class="mt-4 flex items-center gap-3 px-1 overflow-x-auto scrollbar-hide anim-slide-up" style="animation-delay: 150ms">
                 <div class="flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1.5 rounded-full border border-emerald-200/50 dark:border-emerald-800/50 shrink-0">
                     <Zap :size="11" class="text-emerald-500" />
-                    <span class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">API Online</span>
+                    <span class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">{{ t("dashboard.apiOnline") }}</span>
                 </div>
                 <div class="flex items-center gap-1.5 bg-blue-50 dark:bg-blue-500/10 px-3 py-1.5 rounded-full border border-blue-200/50 dark:border-blue-800/50 shrink-0">
                     <Truck :size="11" class="text-blue-500" />
-                    <span class="text-[10px] font-bold text-blue-600 dark:text-blue-400 whitespace-nowrap">Kurir Aktif</span>
+                    <span class="text-[10px] font-bold text-blue-600 dark:text-blue-400 whitespace-nowrap">{{ t("dashboard.activeCouriers") }}</span>
                 </div>
                 <div class="flex items-center gap-1.5 bg-violet-50 dark:bg-violet-500/10 px-3 py-1.5 rounded-full border border-violet-200/50 dark:border-violet-800/50 shrink-0">
                     <Server :size="11" class="text-violet-500" />
-                    <span class="text-[10px] font-bold text-violet-600 dark:text-violet-400 whitespace-nowrap">Server Stabil</span>
+                    <span class="text-[10px] font-bold text-violet-600 dark:text-violet-400 whitespace-nowrap">{{ t("dashboard.stableServer") }}</span>
                 </div>
             </div>
 
@@ -830,7 +826,7 @@
                     <!-- KPI: Total Kirim -->
                     <div class="bg-white dark:bg-[#111111] rounded-[22px] p-4 shadow-[0_2px_12px_rgba(0,0,0,0.02)] border border-gray-100 dark:border-gray-800">
                         <div class="flex items-center justify-between mb-2">
-                            <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Total Kirim</div>
+                            <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{{ t("dashboard.totalShipments") }}</div>
                             <div class="w-8 h-8 rounded-full bg-indigo-50 dark:bg-indigo-500/10 text-indigo-500 flex items-center justify-center">
                                 <Box :size="16" stroke-width="2" />
                             </div>
@@ -856,7 +852,7 @@
                     <!-- KPI: Success Rate -->
                     <div class="bg-white dark:bg-[#111111] rounded-[22px] p-4 shadow-[0_2px_12px_rgba(0,0,0,0.02)] border border-gray-100 dark:border-gray-800">
                         <div class="flex items-center justify-between mb-2">
-                            <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Success Rate</div>
+                            <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{{ t("dashboard.successRate") }}</div>
                             <div class="w-8 h-8 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
                                 <CheckCircle2 :size="16" stroke-width="2" />
                             </div>
@@ -868,7 +864,7 @@
                             {{ Number(animSuccess).toFixed(1) }}%
                         </div>
                         <!-- Subtitle -->
-                        <div class="text-[10px] text-gray-400 mt-1.5">Persentase pesanan sukses</div>
+                        <div class="text-[10px] text-gray-400 mt-1.5">{{ t("dashboard.successRateDesc") }}</div>
                     </div>
                 </div>
 
@@ -885,12 +881,12 @@
                             <span
                                 class="font-bold text-[12px] text-gray-800 dark:text-gray-200 uppercase tracking-wide"
                                 style="font-family: 'Plus Jakarta Sans', sans-serif"
-                                >Tren Pendapatan</span
+                                >{{ t("dashboard.revenueTrend") }}</span
                             >
                         </div>
                         <span
                             class="bg-gray-50 dark:bg-gray-800/50 text-gray-500 text-[9px] font-bold px-2 py-1 rounded-md uppercase"
-                            >12 Bulan</span
+                            >{{ t("dashboard.twelveMonths") }}</span
                         >
                     </div>
                     <div
@@ -919,7 +915,7 @@
                         <span
                             class="font-bold text-[12px] text-gray-800 dark:text-gray-200 uppercase tracking-wide"
                             style="font-family: 'Plus Jakarta Sans', sans-serif"
-                            >Status Pengiriman</span
+                            >{{ t("dashboard.shipmentStatus") }}</span
                         >
                     </div>
                     <div
@@ -957,7 +953,7 @@
                         <span
                             class="font-bold text-[12px] text-gray-800 dark:text-gray-200 uppercase tracking-wide"
                             style="font-family: 'Plus Jakarta Sans', sans-serif"
-                            >Distribusi Layanan</span
+                            >{{ t("dashboard.serviceDistribution") }}</span
                         >
                     </div>
                     <div
@@ -988,7 +984,7 @@
                         <span
                             class="font-bold text-[12px] text-gray-800 dark:text-gray-200 uppercase tracking-wide"
                             style="font-family: 'Plus Jakarta Sans', sans-serif"
-                            >Top 5 Kota Tujuan</span
+                            >{{ t("dashboard.topDestinations") }}</span
                         >
                     </div>
                     <div
@@ -1015,13 +1011,13 @@
                 <div class="flex items-center justify-between mb-4 px-1">
                     <div class="flex items-center gap-2">
                         <Activity :size="18" class="text-emerald-500" />
-                        <span class="font-bold text-[15px] text-gray-900 dark:text-white">Aktivitas Terbaru</span>
+                        <span class="font-bold text-[15px] text-gray-900 dark:text-white">{{ t("dashboard.recentActivity") }}</span>
                     </div>
                     <div
                         class="flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-900/30 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-800"
                     >
                         <div class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
-                        <span class="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Live</span>
+                        <span class="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">{{ t("dashboard.live") }}</span>
                     </div>
                 </div>
 

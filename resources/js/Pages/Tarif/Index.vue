@@ -1,4 +1,6 @@
 <script setup>
+    import { useI18n } from '@/composables/useI18n.js';
+    const { t } = useI18n();
     import AppLayout from '@/Layouts/AppLayout.vue';
     import { Head, router } from '@inertiajs/vue3';
     import { computed, reactive, ref } from 'vue';
@@ -128,7 +130,7 @@
                 'Gagal mengecek tarif. Coba lagi.';
 
             const Swal = await getSwal();
-            Swal.fire({ icon: 'error', title: 'Gagal', text: msg });
+            Swal.fire({ icon: 'error', title: t('common.error'), text: msg });
         } finally {
             loading.value = false;
         }
@@ -191,7 +193,7 @@
                 <div class="grid mt-5 grid-cols-12 gap-4 items-end mb-2">
                     <div class="col-span-3">
                         <label class="text-sm font-medium text-gray-700 dark:text-gray-200"
-                            >Kota Asal</label
+                            >{{ t("tariff.origin") }}</label
                         >
                         <select
                             v-model="form.kota_asal_id"
@@ -217,7 +219,7 @@
 
                     <div class="col-span-3">
                         <label class="text-sm font-medium text-gray-700 dark:text-gray-200"
-                            >Kota Tujuan</label
+                            >{{ t("tariff.destination") }}</label
                         >
                         <select
                             v-model="form.kota_tujuan_id"
@@ -232,7 +234,7 @@
 
                     <div class="col-span-2">
                         <label class="text-sm font-medium text-gray-700 dark:text-gray-200"
-                            >Berat (kg)</label
+                            >{{ t("tariff.weight") }}</label
                         >
                         <input
                             v-model="form.berat_kg"
@@ -240,7 +242,7 @@
                             min="0.01"
                             step="0.01"
                             class="input-field mt-1 text-sm h-[44px]"
-                            placeholder="contoh: 2"
+                            :placeholder="t('tariff.weightPlaceholder')"
                         />
                     </div>
 
@@ -405,7 +407,7 @@
                             <div
                                 class="flex justify-between items-center border-b border-dashed border-gray-100 dark:border-gray-800 pb-1"
                             >
-                                <span>Jarak tempuh</span>
+                                <span>{{ t("tariff.distance") }}</span>
                                 <span class="font-medium text-gray-700 dark:text-gray-300"
                                     >{{ item.jarak_km }} km</span
                                 >
@@ -413,7 +415,7 @@
                             <div
                                 class="flex justify-between items-center border-b border-dashed border-gray-100 dark:border-gray-800 pb-1"
                             >
-                                <span>Harga dasar</span>
+                                <span>{{ t("tariff.basePrice") }}</span>
                                 <span class="font-medium text-gray-700 dark:text-gray-300">{{
                                     rupiah(item.harga_dasar)
                                 }}</span>
@@ -430,7 +432,7 @@
                             <div
                                 class="flex justify-between items-center font-medium mt-0.5 text-gray-700 dark:text-gray-300"
                             >
-                                <span>Estimasi waktu</span>
+                                <span>{{ t("tariff.estimatedTime") }}</span>
                                 <span class="flex items-center gap-1 text-primary"
                                     ><i class="bi bi-stopwatch"></i>
                                     {{ item.estimasi_hari }} hari</span
@@ -445,7 +447,7 @@
                         @click="pilihTarif(item)"
                     >
                         <i class="bi bi-check2-circle"></i>
-                        <span>Pilih Ini</span>
+                        <span>{{ t("tariff.selectService") }}</span>
                     </button>
                 </div>
             </div>
