@@ -1,6 +1,6 @@
-import { defineConfig } from "vite";
-import laravel from "laravel-vite-plugin";
-import vue from "@vitejs/plugin-vue";
+import { defineConfig } from 'vite';
+import laravel from 'laravel-vite-plugin';
+import vue from '@vitejs/plugin-vue';
 
 export default defineConfig({
     server: {
@@ -16,7 +16,7 @@ export default defineConfig({
             // [UPDATE: SINGLE ENTRY POINT]
             // Fungsi: Hanya mendaftarkan satu entry point (app.js) karena app.css sudah di-import di dalamnya
             // Cara Kerja: Vite secara otomatis memproses CSS yang di-import oleh JS, menghindari duplikat preload
-            input: ["resources/js/app.js"],
+            input: ['resources/js/app.js'],
             refresh: true,
         }),
         vue({
@@ -33,7 +33,7 @@ export default defineConfig({
             // [UPDATE: ALIAS PATH UTAMA]
             // Fungsi: Shortcut "@" agar import komponen menjadi singkat dan rapi
             // Contoh: import Navbar from '@/Components/Navbar.vue'
-            "@": "/resources/js",
+            '@': '/resources/js',
             // [UPDATE: ZIGGY RESOLUSI OTOMATIS]
             // Fungsi: ziggy-js di-resolve dari node_modules (package.json) secara otomatis
             // Penjelasan: Tidak perlu alias manual ke vendor/ karena sudah ada di npm dependencies
@@ -52,7 +52,11 @@ export default defineConfig({
                         if (id.includes('lucide-vue-next')) {
                             return 'vendor-icons';
                         }
-                        if (id.includes('vue') || id.includes('@inertiajs') || id.includes('axios')) {
+                        if (
+                            id.includes('vue') ||
+                            id.includes('@inertiajs') ||
+                            id.includes('axios')
+                        ) {
                             return 'vendor-core';
                         }
                         if (id.includes('leaflet')) {
@@ -60,8 +64,8 @@ export default defineConfig({
                         }
                         return 'vendor';
                     }
-                }
-            }
+                },
+            },
         },
         chunkSizeWarningLimit: 1000,
     },
@@ -80,9 +84,6 @@ export default defineConfig({
             'pusher-js',
             'laravel-echo',
         ],
-        exclude: [
-            'alpinejs',
-            '@hotwired/turbo',
-        ],
+        exclude: ['alpinejs', '@hotwired/turbo'],
     },
 });
