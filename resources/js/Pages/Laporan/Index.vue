@@ -341,6 +341,14 @@
         if (!props.pengiriman?.data) return 0;
         return props.pengiriman.data.reduce((sum, p) => sum + Number(p.total_biaya || 0), 0);
     }
+
+    function goBack() {
+        if (window.history.length > 1) {
+            window.history.back();
+        } else {
+            router.visit(route('dashboard'));
+        }
+    }
 </script>
 
 <template>
@@ -427,6 +435,20 @@
             <!-- [HERO REPORT CENTER] -->
             <!-- Fungsi: Header utama Report Center dengan identitas user, badge status, dan periode aktif -->
             <div class="mb-4">
+                <!-- Top Back Navigation -->
+                <div class="flex items-center justify-between mb-3">
+                    <button
+                        @click="goBack"
+                        type="button"
+                        aria-label="Kembali"
+                        class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/20 text-white backdrop-blur-md border border-white/30 active:scale-95 transition-all text-xs font-semibold shadow-sm"
+                    >
+                        <i class="bi bi-arrow-left text-sm"></i>
+                        <span>Kembali</span>
+                    </button>
+                    <span class="text-[10px] font-extrabold tracking-widest text-white/70 uppercase">Laporan</span>
+                </div>
+
                 <!-- Operational Status Bar (Realtime) -->
                 <div class="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-4 mb-4 text-white">
                     <div class="flex items-center gap-2 mb-3">

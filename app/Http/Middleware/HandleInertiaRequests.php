@@ -40,7 +40,7 @@ class HandleInertiaRequests extends Middleware
                     'nama' => $user->nama,
                     'name' => $user->nama,
                     'email' => $user->email,
-                    'foto' => $user->foto,
+                    'foto' => ($user->foto && \Illuminate\Support\Facades\Storage::disk('public')->exists($user->foto)) ? $user->foto : null,
                     'status' => $user->status,
                 ] : null,
             ],
@@ -51,6 +51,8 @@ class HandleInertiaRequests extends Middleware
                 'info' => fn () => $request->session()->get('info'),
                 'warning' => fn () => $request->session()->get('warning'),
             ],
+
+            'isMobile' => (bool) preg_match('/Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i', $request->header('User-Agent') ?? ''),
         ];
     }
 }

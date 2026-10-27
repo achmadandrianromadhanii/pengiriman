@@ -3,6 +3,14 @@ import laravel from "laravel-vite-plugin";
 import vue from "@vitejs/plugin-vue";
 
 export default defineConfig({
+    server: {
+        host: '127.0.0.1',
+        port: 5173,
+        strictPort: true,
+        hmr: {
+            host: '127.0.0.1',
+        },
+    },
     plugins: [
         laravel({
             // [UPDATE: SINGLE ENTRY POINT]
@@ -58,6 +66,23 @@ export default defineConfig({
         chunkSizeWarningLimit: 1000,
     },
     optimizeDeps: {
-        force: true,
+        include: [
+            'vue',
+            '@inertiajs/vue3',
+            'axios',
+            'leaflet',
+            'lucide-vue-next',
+            'nprogress',
+            'sweetalert2',
+            'ziggy-js',
+            'vue3-apexcharts',
+            'apexcharts',
+            'pusher-js',
+            'laravel-echo',
+        ],
+        exclude: [
+            'alpinejs',
+            '@hotwired/turbo',
+        ],
     },
 });

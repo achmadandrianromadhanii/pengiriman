@@ -85,7 +85,11 @@ function scrollToLetter(letter) {
  * Cara Kerja: Menggunakan window.history untuk back navigation
  */
 function goBack() {
-    window.history.back();
+    if (window.history.length > 1) {
+        window.history.back();
+    } else {
+        router.visit(route('dashboard'));
+    }
 }
 </script>
 

@@ -72,7 +72,11 @@ function syncDatabase() {
 
 // ── Navigasi kembali ─────────────────────────────────────────────────────
 function goBack() {
-    window.history.back();
+    if (window.history.length > 1) {
+        window.history.back();
+    } else {
+        router.visit(route('dashboard'));
+    }
 }
 </script>
 

@@ -9,7 +9,7 @@
      dan file package.json. TIDAK ada data yang di-hardcode.
      ========================================================================= -->
 <script setup>
-import { Head } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import {
     ChevronLeft,
     CheckCircle2,
@@ -39,7 +39,11 @@ const props = defineProps({
 
 // ── Navigasi kembali ─────────────────────────────────────────────────────
 function goBack() {
-    window.history.back();
+    if (window.history.length > 1) {
+        window.history.back();
+    } else {
+        router.visit(route('dashboard'));
+    }
 }
 </script>
 

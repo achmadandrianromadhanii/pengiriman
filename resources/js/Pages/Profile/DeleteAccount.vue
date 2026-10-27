@@ -121,7 +121,11 @@ const canSubmit = computed(() => acknowledgement.value && isReasonValid.value);
 // Fungsi: Kembali ke halaman Menu / Jelajahi / Akun
 // Cara Kerja: Menggunakan window.history.back() (reuse existing pattern)
 function goBack() {
-    window.history.back();
+    if (window.history.length > 1) {
+        window.history.back();
+    } else {
+        router.visit(route('dashboard'));
+    }
 }
 
 // ── Confirmation Bottom Sheet ────────────────────────────────────────

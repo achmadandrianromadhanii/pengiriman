@@ -10,7 +10,7 @@
      ========================================================================= -->
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { Head } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import {
     ChevronLeft,
     Database,
@@ -284,7 +284,11 @@ onMounted(() => {
 
 // ── Navigasi kembali ─────────────────────────────────────────────────────
 function goBack() {
-    window.history.back();
+    if (window.history.length > 1) {
+        window.history.back();
+    } else {
+        router.visit(route('dashboard'));
+    }
 }
 
 // ── Mapping icon ─────────────────────────────────────────────────────────

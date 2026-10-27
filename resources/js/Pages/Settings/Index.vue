@@ -393,6 +393,14 @@
             router.delete(route('tarif-data.destroy', t.id), { preserveScroll: true });
         });
     }
+
+    function goBack() {
+        if (window.history.length > 1) {
+            window.history.back();
+        } else {
+            router.visit(route('dashboard'));
+        }
+    }
 </script>
 
 <template>
@@ -400,12 +408,20 @@
 
     <div class="space-y-6 animate-fade-in">
         <div class="card">
-            <div class="flex items-start justify-between gap-4 flex-wrap">
+            <div class="flex items-center gap-3">
+                <button
+                    @click="goBack"
+                    type="button"
+                    aria-label="Kembali"
+                    class="w-10 h-10 shrink-0 flex items-center justify-center rounded-2xl bg-slate-100 dark:bg-gray-800 text-slate-700 dark:text-gray-200 active:scale-90 transition-all border border-slate-200/60 dark:border-gray-700/60 shadow-sm md:hidden"
+                >
+                    <i class="bi bi-arrow-left text-lg"></i>
+                </button>
                 <div>
-                    <h1 class="font-heading text-2xl text-gray-900 dark:text-gray-100">
+                    <h1 class="font-heading text-2xl text-gray-900 dark:text-gray-100 leading-tight">
                         Pengaturan
                     </h1>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                         Kelola data kota dan tarif.
                     </p>
                 </div>

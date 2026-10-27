@@ -67,6 +67,7 @@ Route::middleware(['auth', 'admin.active'])->group(function () {
     // Resi
     Route::get('/resi/{pengiriman}/print', [ResiController::class, 'print'])->name('resi.print');
     Route::get('/resi/{pengiriman}/pdf', [ResiController::class, 'pdf'])->name('resi.pdf');
+    Route::get('/pengiriman/{pengiriman}/resi/pdf', [ResiController::class, 'pdf'])->name('pengiriman.resi.pdf');
 
     // Cek Tarif (publik form + API cek)
     Route::get('/tarif', [TarifController::class, 'index'])->name('tarif.index');

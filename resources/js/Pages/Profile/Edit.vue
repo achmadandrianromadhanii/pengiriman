@@ -44,6 +44,14 @@
 
     defineOptions({ layout: AppLayout });
 
+    function goBack() {
+        if (window.history.length > 1) {
+            window.history.back();
+        } else {
+            router.visit(route('dashboard'));
+        }
+    }
+
     defineProps({
         mustVerifyEmail: {
             type: Boolean,
@@ -57,9 +65,23 @@
 <template>
     <Head title="Profile" />
 
-    <div class="space-y-6 animate-fade-in relative">
+    <div class="space-y-5 animate-fade-in relative">
+        <!-- Top Back Navigation (Mobile view) -->
+        <div class="flex items-center justify-between pb-1 md:hidden">
+            <button
+                @click="goBack"
+                type="button"
+                aria-label="Kembali"
+                class="inline-flex items-center gap-2 px-3.5 py-2 rounded-2xl bg-white dark:bg-[#11131A] text-slate-700 dark:text-gray-200 shadow-sm border border-slate-200/70 dark:border-gray-800 active:scale-95 transition-all text-xs font-bold"
+            >
+                <i class="bi bi-arrow-left text-base"></i>
+                <span>Kembali</span>
+            </button>
+            <span class="text-xs font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest">Informasi Pribadi</span>
+        </div>
+
         <!-- Background semi-circle elegan -->
-        <div class="absolute top-0 inset-x-0 h-[250px] bg-gradient-to-br from-[#1E3A8A] to-[#312E81] rounded-b-[40px] opacity-10 -z-10 pattern-diagonal-lines"></div>
+        <div class="absolute top-12 md:top-0 inset-x-0 h-[250px] bg-gradient-to-br from-[#1E3A8A] to-[#312E81] rounded-b-[40px] opacity-10 -z-10 pattern-diagonal-lines"></div>
         <!-- Fungsi: Avatar Hero Section (Premium UI) -->
         <!-- Cara Kerja: Membentuk visualisasi aplikasi iOS dengan Avatar pengguna di atas secara elegan (khusus mobile style). -->
         <div
@@ -85,6 +107,7 @@
                     <img
                         v-else-if="$page.props.auth.user.foto"
                         :src="'/storage/' + $page.props.auth.user.foto"
+                        @error="(e) => { e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent($page.props.auth.user.name)}&background=f3f4f6&color=111827&size=200` }"
                         class="w-full h-full object-cover object-center"
                     />
                     <img

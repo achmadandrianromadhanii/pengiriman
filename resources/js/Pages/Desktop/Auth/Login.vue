@@ -1,0 +1,961 @@
+<!--
+  ============================================================================
+  LOGIN.VUE — SOFTSEND ADMIN DESKTOP LOGIN (REPLIKA 100% PERSIS IMAGE.PNG)
+  ============================================================================
+  Sesuai Dokumen : SoftSend_Admin_Login_UIUX_Execution_Prompt.md & image.png
+  Gaya           : Split-Screen Desktop Admin Login with Interactive Logistics Map
+  Proporsi       : Asymmetric Split (~62% Left, ~38% Right dengan Batas Diagonal)
+  Panel Kiri     : Brand, Quote, 4 Layanan, Peta Semarang, Gudang & Truk, Stats Bar
+  Panel Kanan    : Jaringan Indonesia, Mode Gelap, Minimalist Underline Form,
+                   Tombol Login Arrow Circle, dan 3 Trust Badges.
+  ============================================================================
+-->
+<script setup>
+import { Head, useForm, router } from '@inertiajs/vue3';
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import DetailMap from '@/Components/Map/DetailMap.vue';
+import {
+    User,
+    LockKeyhole,
+    Eye,
+    EyeOff,
+    Loader2,
+    AlertCircle,
+    CheckCircle2,
+    ShieldCheck,
+    Moon,
+    Sun,
+    ChevronRight,
+    Zap,
+    Users,
+    Compass,
+    Check,
+} from 'lucide-vue-next';
+
+const props = defineProps({
+    loginSuccess: { type: Boolean, default: false },
+    biometric_active: { type: Boolean, default: false },
+});
+
+// ── Form State ──────────────────────────────────────────────────────────
+const form = useForm({
+    email: '',
+    password: '',
+    remember: true,
+});
+
+// ── UI States ───────────────────────────────────────────────────────────
+const showPassword = ref(false);
+const localEmailError = ref('');
+const isSubmitting = ref(false);
+const showLoadingModal = ref(false);
+const loginStatus = ref('loading');
+const loginProgress = ref(0);
+const isDark = ref(false);
+const isInteractiveMap = ref(false);
+
+let progressTimer = null;
+let redirectTimer = null;
+
+// ── Dark Mode Toggle ────────────────────────────────────────────────────
+function toggleDarkMode() {
+    isDark.value = !isDark.value;
+    document.documentElement.classList.toggle('dark', isDark.value);
+    localStorage.setItem('darkMode', isDark.value ? 'true' : 'false');
+}
+
+// ── Progress Simulation ─────────────────────────────────────────────────
+function startProgressSimulation() {
+    loginProgress.value = 0;
+    loginStatus.value = 'loading';
+    showLoadingModal.value = true;
+    if (progressTimer) clearInterval(progressTimer);
+
+    progressTimer = setInterval(() => {
+        if (loginProgress.value < 88) {
+            loginProgress.value += Math.random() * 14 + 6;
+            if (loginProgress.value > 88) loginProgress.value = 88;
+        }
+    }, 250);
+}
+
+// ── Submit Form ─────────────────────────────────────────────────────────
+function submit() {
+    localEmailError.value = '';
+
+    let val = (form.email || '').trim();
+    if (!val) {
+        localEmailError.value = 'Masukkan username atau email Anda.';
+        return;
+    }
+
+    // Adaptasi fleksibel: Jika admin memasukkan username (misal 'admin'),
+    // backend Laravel memerlukan @gmail.com sesuai LoginRequest
+    if (!val.includes('@')) {
+        val = val + '@gmail.com';
+        form.email = val;
+    }
+
+    if (!/@gmail\.com$/i.test(val)) {
+        localEmailError.value = 'Email akun admin harus berekstensi @gmail.com.';
+        return;
+    }
+
+    isSubmitting.value = true;
+    startProgressSimulation();
+
+    form.post('/login', {
+        preserveScroll: true,
+        onFinish: () => {
+            isSubmitting.value = false;
+            form.reset('password');
+        },
+        onError: () => {
+            if (progressTimer) clearInterval(progressTimer);
+            showLoadingModal.value = false;
+        },
+    });
+}
+
+// ── Watch loginSuccess ──────────────────────────────────────────────────
+watch(
+    () => props.loginSuccess,
+    (success) => {
+        if (!success) return;
+        if (progressTimer) clearInterval(progressTimer);
+        loginProgress.value = 100;
+
+        setTimeout(() => {
+            loginStatus.value = 'success';
+            redirectTimer = setTimeout(() => {
+                router.visit(route('dashboard'), { replace: true });
+            }, 900);
+        }, 300);
+    },
+    { immediate: true }
+);
+
+onMounted(() => {
+    isDark.value = document.documentElement.classList.contains('dark');
+});
+
+onBeforeUnmount(() => {
+    if (progressTimer) clearInterval(progressTimer);
+    if (redirectTimer) clearTimeout(redirectTimer);
+});
+</script>
+
+<template>
+    <Head title="SoftSend — Admin Login" />
+
+    <div class="login-root">
+        <!-- ===================================================================== -->
+        <!-- PANEL KIRI: Logistics Map & Brand Panel (100% Persis image.png)       -->
+        <!-- ===================================================================== -->
+        <section class="login-left">
+            <!-- Mode 1: Tampilan Artwork Asli Persis image.png -->
+            <div v-show="!isInteractiveMap" class="absolute inset-0 z-0 pointer-events-none">
+                <img
+                    src="/images/left-panel-exact.png"
+                    alt="SoftSend Logistics Map & Brand"
+                    class="w-full h-full object-cover object-left-top select-none"
+                    fetchpriority="high"
+                />
+            </div>
+
+            <!-- Mode 2: Tampilan Peta Interaktif Leaflet (Zoom, Pan, OSRM Route) -->
+            <div v-if="isInteractiveMap" class="absolute inset-0 z-0 flex flex-col bg-[#EAEFF4] dark:bg-[#0A0E17]">
+                <div class="flex-1 w-full h-full">
+                    <DetailMap />
+                </div>
+            </div>
+
+            <!-- Tombol Switcher Mode Peta (Floating di sudut kanan atas panel kiri) -->
+            <div class="absolute top-5 right-6 z-30 pointer-events-auto">
+                <button
+                    type="button"
+                    @click="isInteractiveMap = !isInteractiveMap"
+                    class="flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold text-slate-800 dark:text-white bg-white/95 dark:bg-slate-900/95 hover:bg-white active:scale-95 backdrop-blur-md border border-slate-200 dark:border-slate-700 rounded-full shadow-md transition cursor-pointer"
+                    :title="isInteractiveMap ? 'Beralih ke Tampilan Asli' : 'Beralih ke Peta Interaktif'"
+                >
+                    <Compass class="w-3.5 h-3.5 text-[#0162FE]" />
+                    <span>{{ isInteractiveMap ? 'Tampilan Asli' : 'Peta Interaktif (Leaflet)' }}</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- ===================================================================== -->
+        <!-- PANEL KANAN: Admin Authentication Panel (100% Persis image.png)       -->
+        <!-- ===================================================================== -->
+        <main class="login-right">
+            <!-- Bar Atas: Jaringan Pengiriman Badge & Tombol Mode Gelap -->
+            <div class="right-top-bar">
+                <!-- Ilustrasi background peta jaringan kepulauan Indonesia -->
+                <div class="indonesia-map-bg">
+                    <img
+                        src="/images/indonesia-network.png"
+                        alt="Jaringan Pengiriman Indonesia"
+                        class="w-full h-full object-contain object-right-top"
+                    />
+                </div>
+
+                <div class="relative z-10 flex items-center justify-between">
+                    <!-- Badge Info Jaringan Indonesia -->
+                    <div class="badge-network">
+                        <span class="badge-dot"></span>
+                        <span>Jaringan pengiriman ke seluruh Indonesia</span>
+                    </div>
+
+                    <!-- Tombol Mode Gelap / Terang -->
+                    <button
+                        type="button"
+                        @click="toggleDarkMode"
+                        class="dark-mode-btn"
+                    >
+                        <Moon v-if="!isDark" class="w-4 h-4 text-slate-700" />
+                        <Sun v-else class="w-4 h-4 text-amber-400" />
+                        <span>{{ isDark ? 'Mode Terang' : 'Mode Gelap' }}</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Form Autentikasi Admin di Tengah Layar (Persis image.png) -->
+            <div class="login-form-wrapper">
+                <!-- Judul Selamat Datang & Login Admin -->
+                <div class="form-header">
+                    <p class="welcome-text">
+                        Selamat datang kembali
+                    </p>
+                    <h2 class="login-title">
+                        Login <span class="text-[#0162FE]">Admin</span>
+                    </h2>
+                    <p class="login-desc">
+                        Akses sistem untuk mengelola seluruh operasional pengiriman.
+                    </p>
+                </div>
+
+                <!-- Form dengan Underline Input (Minimalist Line Style dari image.png) -->
+                <form @submit.prevent="submit" class="login-form" novalidate>
+                    <!-- Input 1: Username / Email -->
+                    <div class="input-group">
+                        <div
+                            class="input-underline"
+                            :class="{ 'input-error': localEmailError || form.errors.email }"
+                        >
+                            <User class="input-icon" />
+                            <input
+                                id="admin-username"
+                                v-model="form.email"
+                                type="text"
+                                autocomplete="username"
+                                placeholder="Masukkan username"
+                                required
+                                class="input-field"
+                            />
+                        </div>
+                        <p v-if="localEmailError || form.errors.email" class="error-msg">
+                            <AlertCircle class="w-3.5 h-3.5 shrink-0" />
+                            <span>{{ localEmailError || form.errors.email }}</span>
+                        </p>
+                    </div>
+
+                    <!-- Input 2: Password -->
+                    <div class="input-group">
+                        <div
+                            class="input-underline"
+                            :class="{ 'input-error': form.errors.password }"
+                        >
+                            <LockKeyhole class="input-icon" />
+                            <input
+                                id="admin-password"
+                                v-model="form.password"
+                                :type="showPassword ? 'text' : 'password'"
+                                autocomplete="current-password"
+                                placeholder="Masukkan password"
+                                required
+                                class="input-field pr-9"
+                            />
+                            <button
+                                type="button"
+                                @click="showPassword = !showPassword"
+                                tabindex="-1"
+                                class="eye-btn"
+                                :title="showPassword ? 'Sembunyikan password' : 'Lihat password'"
+                            >
+                                <EyeOff v-if="showPassword" class="w-[18px] h-[18px] stroke-[1.8]" />
+                                <Eye v-else class="w-[18px] h-[18px] stroke-[1.8]" />
+                            </button>
+                        </div>
+                        <p v-if="form.errors.password" class="error-msg">
+                            <AlertCircle class="w-3.5 h-3.5 shrink-0" />
+                            <span>{{ form.errors.password }}</span>
+                        </p>
+                    </div>
+
+                    <!-- Baris Pilihan: Ingat Saya & Lupa Password -->
+                    <div class="remember-row">
+                        <label class="flex items-center gap-2.5 cursor-pointer select-none">
+                            <div
+                                @click="form.remember = !form.remember"
+                                class="checkbox-box"
+                                :class="form.remember ? 'checkbox-checked' : 'checkbox-unchecked'"
+                            >
+                                <Check v-if="form.remember" class="w-3.5 h-3.5 text-white stroke-[3]" />
+                            </div>
+                            <span class="remember-label">Ingat saya</span>
+                        </label>
+
+                        <button
+                            type="button"
+                            @click="localEmailError = 'Silakan hubungi Superadmin / IT Support SoftSend untuk reset password.'"
+                            class="forgot-link"
+                        >
+                            Lupa password?
+                        </button>
+                    </div>
+
+                    <!-- Tombol Utama Login dengan Arrow Circle (Persis image.png) -->
+                    <div class="login-btn-wrapper">
+                        <button
+                            type="submit"
+                            :disabled="form.processing || isSubmitting"
+                            class="login-btn"
+                        >
+                            <!-- Lingkaran putih berisi panah chevron di sebelah kiri -->
+                            <div class="arrow-circle">
+                                <ChevronRight class="w-5 h-5 stroke-[2.8]" />
+                            </div>
+
+                            <!-- Teks Login di tengah -->
+                            <div class="login-btn-text">
+                                <span v-if="!(form.processing || isSubmitting)">Login &rarr;</span>
+                                <span v-else class="flex items-center justify-center gap-2">
+                                    <Loader2 class="w-4 h-4 animate-spin" />
+                                    <span>Memverifikasi...</span>
+                                </span>
+                            </div>
+
+                            <!-- Spacer penyeimbang layout -->
+                            <div class="w-10 h-10 opacity-0 shrink-0"></div>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Footer: 3 Indikator Kepercayaan (Persis image.png) -->
+            <div class="trust-footer">
+                <div class="trust-badges">
+                    <!-- 1. Sistem Aman -->
+                    <div class="trust-item">
+                        <ShieldCheck class="trust-icon" />
+                        <div>
+                            <div class="trust-title">Sistem Aman</div>
+                            <div class="trust-sub">Data terenkripsi</div>
+                        </div>
+                    </div>
+
+                    <div class="trust-divider"></div>
+
+                    <!-- 2. Performa Stabil -->
+                    <div class="trust-item">
+                        <Zap class="trust-icon" />
+                        <div>
+                            <div class="trust-title">Performa Stabil</div>
+                            <div class="trust-sub">Siap 24/7</div>
+                        </div>
+                    </div>
+
+                    <div class="trust-divider"></div>
+
+                    <!-- 3. Untuk Profesional -->
+                    <div class="trust-item">
+                        <Users class="trust-icon" />
+                        <div>
+                            <div class="trust-title">Untuk Profesional</div>
+                            <div class="trust-sub">Dibuat untuk tim Anda</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- ===================================================================== -->
+        <!-- MODAL VERIFIKASI LOGIN ADMIN                                          -->
+        <!-- ===================================================================== -->
+        <Teleport to="body">
+            <Transition name="fade-modal">
+                <div
+                    v-if="showLoadingModal"
+                    class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs"
+                >
+                    <div class="relative w-full max-w-[340px] bg-white dark:bg-[#11131A] border border-slate-200/80 dark:border-slate-800/80 rounded-2xl p-6 text-center shadow-2xl">
+                        <div class="w-14 h-14 mx-auto mb-4 bg-gradient-to-tr from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/25">
+                            <span class="font-black text-xl text-white tracking-tighter">SS</span>
+                        </div>
+
+                        <div class="w-10 h-10 mx-auto mb-3 rounded-full flex items-center justify-center" :class="loginStatus === 'success' ? 'bg-emerald-100 dark:bg-emerald-950/60' : 'bg-blue-100 dark:bg-blue-950/60'">
+                            <CheckCircle2 v-if="loginStatus === 'success'" class="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                            <Loader2 v-else class="w-6 h-6 text-blue-600 dark:text-blue-400 animate-spin" />
+                        </div>
+
+                        <h3 class="font-bold text-base text-slate-900 dark:text-white">
+                            {{ loginStatus === 'success' ? 'Autentikasi Berhasil' : 'Memverifikasi Akses Admin...' }}
+                        </h3>
+
+                        <div v-if="loginStatus !== 'success'" class="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden mt-3 mb-2">
+                            <div
+                                class="h-full bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full transition-all duration-300 ease-out"
+                                :style="{ width: `${Math.round(loginProgress)}%` }"
+                            ></div>
+                        </div>
+
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                            {{ loginStatus === 'success' ? 'Mengarahkan ke Dashboard Operasional...' : 'Memeriksa kredensial sesi admin...' }}
+                        </p>
+                    </div>
+                </div>
+            </Transition>
+        </Teleport>
+    </div>
+</template>
+
+<style scoped>
+/* ═══════════════════════════════════════════════════════════════════════════
+   ROOT LAYOUT — Full viewport, no scroll, split-screen
+   Background = #F5F9FD (same as right panel) so the left panel image's
+   built-in alpha edge blends seamlessly into the right panel area
+   ═══════════════════════════════════════════════════════════════════════════ */
+.login-root {
+    display: flex;
+    flex-direction: row;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background-color: #F5F9FD;
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: #1e293b;
+    user-select: none;
+}
+:root.dark .login-root {
+    background-color: #0C101D;
+    color: #e2e8f0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LEFT PANEL — ~62% width, pristine image with exact diagonal edge
+   The image left-panel-exact.png has the mathematical diagonal boundary
+   from image.png. Beyond the diagonal, it is transparent, letting
+   .login-root background show through seamlessly.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.login-left {
+    position: relative;
+    width: 62%;
+    min-width: 0;
+    height: 100vh;
+    overflow: hidden;
+    background-color: transparent;
+    flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RIGHT PANEL — ~38% width, transparent background so .login-root
+   background (#F5F9FD or #0C101D) flows continuously across the whole page.
+   NO straight vertical box cutting off the image diagonal!
+   ═══════════════════════════════════════════════════════════════════════════ */
+.login-right {
+    position: relative;
+    width: 38%;
+    min-width: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 28px 48px 24px;
+    background-color: transparent;
+    overflow: hidden;
+    z-index: 20;
+}
+:root.dark .login-right {
+    background-color: transparent;
+}
+
+/* ── Top bar ─────────────────────────────────────────────────────────── */
+.right-top-bar {
+    position: relative;
+    width: 100%;
+    flex-shrink: 0;
+    z-index: 2;
+}
+
+.indonesia-map-bg {
+    position: absolute;
+    top: -20px;
+    right: -30px;
+    width: 340px;
+    height: 150px;
+    opacity: 0.35;
+    pointer-events: none;
+    user-select: none;
+    overflow: hidden;
+}
+:root.dark .indonesia-map-bg {
+    opacity: 0.2;
+}
+
+.badge-network {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 12px;
+    border-radius: 9999px;
+    background: rgba(248, 250, 252, 0.92);
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    font-size: 11px;
+    font-weight: 500;
+    color: #475569;
+    backdrop-filter: blur(4px);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+:root.dark .badge-network {
+    background: rgba(15, 23, 42, 0.9);
+    border-color: rgba(51, 65, 85, 0.8);
+    color: #94a3b8;
+}
+
+.badge-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 9999px;
+    background-color: #0162FE;
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.dark-mode-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #475569;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: color 0.15s;
+}
+.dark-mode-btn:hover {
+    color: #0162FE;
+}
+:root.dark .dark-mode-btn {
+    color: #94a3b8;
+}
+:root.dark .dark-mode-btn:hover {
+    color: #60a5fa;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   FORM WRAPPER — centered vertically in available space
+   ═══════════════════════════════════════════════════════════════════════════ */
+.login-form-wrapper {
+    width: 100%;
+    max-width: 380px;
+    margin: auto;
+    flex-shrink: 1;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    z-index: 2;
+}
+
+/* ── Form Header ─────────────────────────────────────────────────────── */
+.form-header {
+    margin-bottom: 36px;
+}
+
+.welcome-text {
+    font-size: 15px;
+    font-weight: 600;
+    color: #334155;
+    letter-spacing: 0.01em;
+}
+:root.dark .welcome-text {
+    color: #94a3b8;
+}
+
+.login-title {
+    font-size: 46px;
+    font-weight: 900;
+    color: #0F172A;
+    letter-spacing: -0.025em;
+    line-height: 1.05;
+    margin-top: 8px;
+}
+:root.dark .login-title {
+    color: #f1f5f9;
+}
+
+.login-desc {
+    font-size: 13.5px;
+    color: #64748B;
+    margin-top: 10px;
+    line-height: 1.6;
+}
+:root.dark .login-desc {
+    color: #94a3b8;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   FORM INPUTS — Underline style matching image.png exactly
+   ═══════════════════════════════════════════════════════════════════════════ */
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.input-group {
+    /* wrapper for each input + error */
+}
+
+.input-underline {
+    position: relative;
+    display: flex;
+    align-items: center;
+    border-bottom: 1.5px solid #CBD5E1;
+    padding-bottom: 12px;
+    transition: border-color 0.2s;
+}
+.input-underline:focus-within {
+    border-color: #0162FE;
+}
+:root.dark .input-underline {
+    border-color: #334155;
+}
+:root.dark .input-underline:focus-within {
+    border-color: #0162FE;
+}
+.input-underline.input-error {
+    border-color: #f43f5e !important;
+}
+
+.input-icon {
+    width: 20px;
+    height: 20px;
+    color: #475569;
+    flex-shrink: 0;
+    margin-right: 14px;
+    stroke-width: 1.8;
+}
+:root.dark .input-icon {
+    color: #94a3b8;
+}
+
+.input-field {
+    width: 100%;
+    background: transparent;
+    font-size: 14.5px;
+    font-weight: 500;
+    color: #0f172a;
+    border: none;
+    outline: none;
+    padding: 0;
+}
+.input-field::placeholder {
+    color: #94A3B8;
+    font-weight: 400;
+}
+:root.dark .input-field {
+    color: #f1f5f9;
+}
+:root.dark .input-field::placeholder {
+    color: #475569;
+}
+
+.eye-btn {
+    position: absolute;
+    right: 0;
+    bottom: 10px;
+    background: none;
+    border: none;
+    color: #94A3B8;
+    cursor: pointer;
+    padding: 2px;
+    transition: color 0.15s;
+}
+.eye-btn:hover {
+    color: #475569;
+}
+:root.dark .eye-btn:hover {
+    color: #e2e8f0;
+}
+
+.error-msg {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #f43f5e;
+    font-weight: 500;
+    margin-top: 6px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   REMEMBER ROW — Checkbox + Forgot password link
+   ═══════════════════════════════════════════════════════════════════════════ */
+.remember-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.checkbox-box {
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    flex-shrink: 0;
+}
+.checkbox-checked {
+    background-color: #0162FE;
+    border: 2px solid #0162FE;
+}
+.checkbox-unchecked {
+    background: transparent;
+    border: 2px solid #CBD5E1;
+}
+:root.dark .checkbox-unchecked {
+    border-color: #475569;
+}
+
+.remember-label {
+    font-size: 13.5px;
+    font-weight: 500;
+    color: #334155;
+}
+:root.dark .remember-label {
+    color: #cbd5e1;
+}
+
+.forgot-link {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #0162FE;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.15s;
+}
+.forgot-link:hover {
+    text-decoration: underline;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LOGIN BUTTON — Blue pill with white arrow circle (persis image.png)
+   ═══════════════════════════════════════════════════════════════════════════ */
+.login-btn-wrapper {
+    padding-top: 4px;
+}
+
+.login-btn {
+    width: 100%;
+    height: 56px;
+    padding: 0 20px 0 6px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #0162FE 0%, #3B82F6 50%, #60A5FA 100%);
+    color: white;
+    font-weight: 700;
+    font-size: 16px;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    box-shadow: 0 10px 30px -5px rgba(1, 98, 254, 0.35);
+    transition: transform 0.1s, box-shadow 0.2s, opacity 0.15s;
+    position: relative;
+    overflow: hidden;
+}
+.login-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 50%, transparent 100%);
+    pointer-events: none;
+}
+.login-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 14px 35px -5px rgba(1, 98, 254, 0.4);
+}
+.login-btn:active {
+    transform: scale(0.99);
+}
+.login-btn:disabled {
+    opacity: 0.75;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.arrow-circle {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: white;
+    color: #0162FE;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    margin-left: 2px;
+    position: relative;
+    z-index: 1;
+}
+
+.login-btn-text {
+    flex: 1;
+    text-align: center;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    position: relative;
+    z-index: 1;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TRUST FOOTER — 3 badges at absolute bottom
+   ═══════════════════════════════════════════════════════════════════════════ */
+.trust-footer {
+    width: 100%;
+    max-width: 380px;
+    margin: 0 auto;
+    padding-top: 16px;
+    border-top: 1px solid #e2e8f0;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 2;
+}
+:root.dark .trust-footer {
+    border-top-color: #1e293b;
+}
+
+.trust-badges {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+}
+
+.trust-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.trust-icon {
+    width: 22px;
+    height: 22px;
+    color: #0162FE;
+    flex-shrink: 0;
+    stroke-width: 1.8;
+}
+
+.trust-title {
+    font-size: 12.5px;
+    font-weight: 700;
+    color: #0F172A;
+    line-height: 1.2;
+}
+:root.dark .trust-title {
+    color: #e2e8f0;
+}
+
+.trust-sub {
+    font-size: 10.5px;
+    color: #64748B;
+    margin-top: 1px;
+}
+:root.dark .trust-sub {
+    color: #64748b;
+}
+
+.trust-divider {
+    width: 1px;
+    height: 32px;
+    background-color: #e2e8f0;
+    flex-shrink: 0;
+}
+:root.dark .trust-divider {
+    background-color: #1e293b;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MODAL TRANSITION
+   ═══════════════════════════════════════════════════════════════════════════ */
+.fade-modal-enter-active,
+.fade-modal-leave-active {
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.fade-modal-enter-from,
+.fade-modal-leave-to {
+    opacity: 0;
+    transform: scale(0.96);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   GLOBAL OVERRIDES — Hide any scrollbar on this page
+   ═══════════════════════════════════════════════════════════════════════════ */
+.login-root,
+.login-root * {
+    scrollbar-width: none;
+}
+.login-root::-webkit-scrollbar,
+.login-root *::-webkit-scrollbar {
+    display: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RESPONSIVE: XL screens (1440px+) — slightly wider right panel content
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (min-width: 1440px) {
+    .login-right {
+        padding: 32px 56px 28px;
+    }
+    .login-form-wrapper {
+        max-width: 400px;
+    }
+    .trust-footer {
+        max-width: 400px;
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RESPONSIVE: Smaller laptops (1024-1279px)
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 1279px) {
+    .login-left {
+        width: 60%;
+    }
+    .login-right {
+        width: 40%;
+        padding: 24px 32px 20px;
+    }
+    .login-title {
+        font-size: 40px;
+    }
+    .login-form-wrapper {
+        max-width: 330px;
+    }
+    .trust-footer {
+        max-width: 330px;
+    }
+}
+</style>

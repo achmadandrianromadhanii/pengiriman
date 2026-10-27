@@ -318,6 +318,7 @@
                                 ? '/storage/' + user.foto
                                 : (user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&color=1E3A8A&background=E0E7FF`)
                         "
+                        @error="(e) => { e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&color=1E3A8A&background=E0E7FF` }"
                         class="w-full h-full object-cover object-center aspect-square"
                         alt="User Avatar"
                     />
@@ -479,6 +480,7 @@
                                 ? '/storage/' + user.foto
                                 : (user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&color=1E3A8A&background=E0E7FF`)
                         "
+                        @error="(e) => { e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&color=1E3A8A&background=E0E7FF` }"
                         class="w-full h-full object-cover object-center aspect-square"
                         alt="User Avatar"
                     />

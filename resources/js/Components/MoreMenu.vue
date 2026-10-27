@@ -201,6 +201,7 @@
                                     : user?.avatar ||
                                       `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&color=2349F5&background=E0E7FF`
                             "
+                            @error="(e) => { e.target.src = user?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user?.name || 'User')}&color=2349F5&background=E0E7FF` }"
                             class="w-16 h-16 rounded-full object-cover shadow-sm ring-[3px] ring-blue-50 dark:ring-[#2349F5]/30 aspect-square object-center"
                             alt="Avatar"
                         />

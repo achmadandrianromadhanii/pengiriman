@@ -485,7 +485,13 @@ const passwordNeedsUpdate = computed(() => {
     return props.password_age !== null && props.password_age > 90;
 });
 
-function goBack() { window.history.back(); }
+function goBack() {
+    if (window.history.length > 1) {
+        window.history.back();
+    } else {
+        router.visit(route('dashboard'));
+    }
+}
 </script>
 
 <template>

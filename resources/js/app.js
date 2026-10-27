@@ -38,16 +38,35 @@ import { useI18n } from '@/composables/useI18n.js';
 createInertiaApp({
     title: (title) => appName,
     resolve: async (name) => {
-        const page = await resolvePageComponent(`./Pages/${name}.vue`, import.meta.glob('./Pages/**/*.vue'));
+        const pages = import.meta.glob('./Pages/**/*.vue');
+        
+        // [UPDATE: DEVICE DYNAMIC RESOLVER]
+        // Secara otomatis mengarahkan ke Pages/Mobile/ atau Pages/Desktop/ jika file khusus tersedia
+        let targetName = name;
+        if (!name.startsWith('Desktop/') && !name.startsWith('Mobile/')) {
+            const isMobile = window.innerWidth < 768 || /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            const prefix = isMobile ? 'Mobile' : 'Desktop';
+            const candidatePath = `./Pages/${prefix}/${name}.vue`;
+            if (pages[candidatePath]) {
+                targetName = `${prefix}/${name}`;
+            }
+        }
+
+        const page = await resolvePageComponent(`./Pages/${targetName}.vue`, pages);
         
         // [UPDATE: PERSISTENT LAYOUT FIX]
-        // Fungsi: Pastikan AppLayout hanya di-assign pada halaman yang memerlukannya.
-        // Cara Kerja: Halaman Auth/, Splash, dan Settings/Language bersifat standalone
-        //             (tanpa navbar/sidebar), sehingga dikecualikan dari pembungkusan AppLayout.
-        // [UPDATE: i18n] Settings/Language ditambahkan agar halaman bahasa fullscreen di mobile
-        const isStandalone = name.startsWith('Auth/') || name === 'Splash' || name === 'Settings/Language';
+        // Fungsi: Pastikan Layout yang sesuai di-assign pada halaman yang memerlukannya.
+        const isStandalone = targetName.includes('Auth/') || targetName.includes('Splash') || targetName.includes('Settings/Language');
         if (page.default.layout === undefined && !isStandalone) {
-            page.default.layout = AppLayout;
+            if (targetName.startsWith('Mobile/')) {
+                const layout = await import('@/Layouts/AppLayoutMobile.vue');
+                page.default.layout = layout.default;
+            } else if (targetName.startsWith('Desktop/')) {
+                const layout = await import('@/Layouts/AppLayoutDesktop.vue');
+                page.default.layout = layout.default;
+            } else {
+                page.default.layout = AppLayout;
+            }
         }
         
         return page;

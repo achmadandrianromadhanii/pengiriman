@@ -1,0 +1,1 @@
+import{f as e,k as t,pt as n}from"./vendor-charts-BqTN9jEV.js";var r={__name:`SkeletonLoader`,props:{className:{type:String,default:``}},setup(r){return(i,a)=>(t(),e(`div`,{class:n([`skeleton`,r.className]),"aria-hidden":`true`},null,2))}};export{r as t};

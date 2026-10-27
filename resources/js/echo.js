@@ -26,5 +26,21 @@ export async function initEcho() {
         key: import.meta.env.VITE_PUSHER_APP_KEY,
         cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER || 'ap1',
         forceTLS: true,
+        authorizer: (channel) => {
+            return {
+                authorize: (socketId, callback) => {
+                    window.axios.post('/broadcasting/auth', {
+                        socket_id: socketId,
+                        channel_name: channel.name,
+                    })
+                    .then(response => {
+                        callback(null, response.data);
+                    })
+                    .catch(error => {
+                        callback(error);
+                    });
+                },
+            };
+        },
     });
 }
