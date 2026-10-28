@@ -277,21 +277,23 @@
 
         setTimeout(() => {
             isRegisterSubmitting.value = false;
-            getSwal().then((Swal) => {
-                Swal.fire({
-                    title: 'Pendaftaran Berhasil Diajukan',
-                    html: `Akun atas nama <b>${registerForm.name}</b> (${registerForm.email}) berhasil diajukan.<br><br><span class="text-xs text-slate-500">Permintaan aktivasi akun Anda sedang diverifikasi oleh IT / Superadmin SoftSend. Silakan login setelah akun disetujui.</span>`,
-                    icon: 'success',
-                    confirmButtonText: 'Lanjut ke Login',
-                    confirmButtonColor: '#2563EB',
-                }).then(() => {
+            getSwal()
+                .then((Swal) => {
+                    Swal.fire({
+                        title: 'Pendaftaran Berhasil Diajukan',
+                        html: `Akun atas nama <b>${registerForm.name}</b> (${registerForm.email}) berhasil diajukan.<br><br><span class="text-xs text-slate-500">Permintaan aktivasi akun Anda sedang diverifikasi oleh IT / Superadmin SoftSend. Silakan login setelah akun disetujui.</span>`,
+                        icon: 'success',
+                        confirmButtonText: 'Lanjut ke Login',
+                        confirmButtonColor: '#2563EB',
+                    }).then(() => {
+                        form.email = registerForm.email;
+                        viewMode.value = 'login';
+                    });
+                })
+                .catch(() => {
                     form.email = registerForm.email;
                     viewMode.value = 'login';
                 });
-            }).catch(() => {
-                form.email = registerForm.email;
-                viewMode.value = 'login';
-            });
         }, 600);
     }
 
@@ -457,8 +459,12 @@
         <!-- HERO BACKGROUND — 4 Layer Decorative Canvas Full Bleed          -->
         <!-- ============================================================== -->
         <div
-            class="absolute top-0 left-0 right-0 h-[19vh] max-h-[130px] overflow-hidden pointer-events-none"
-            style="border-bottom-left-radius: 50% 28px; border-bottom-right-radius: 50% 28px"
+            class="absolute top-0 left-0 right-0 overflow-hidden pointer-events-none"
+            :style="{
+                height: 'var(--hero-bg-height, 22vh)',
+                borderBottomLeftRadius: '50% 32px',
+                borderBottomRightRadius: '50% 32px',
+            }"
         >
             <!-- Layer 1: Base Gradient — Warna enterprise SoftSend -->
             <div
@@ -467,7 +473,7 @@
 
             <!-- Layer 2: Soft Glow — Cahaya lembut di pojok kiri atas -->
             <div
-                class="absolute top-4 left-4 w-40 h-40 bg-white/[0.07] rounded-full blur-2xl"
+                class="absolute top-4 left-4 w-44 h-44 bg-white/[0.08] rounded-full blur-2xl"
             ></div>
 
             <!-- Layer 3: Contour Line — Garis konsentris (#818CF8, stroke 2.8px, 12%) -->
@@ -509,64 +515,97 @@
         <!-- ============================================================== -->
         <!-- HERO CONTENT — Logo + Brand di atas hero background             -->
         <!-- ============================================================== -->
-        <div class="relative z-10 w-full text-center px-4 pt-2 pb-0.5 flex flex-col items-center shrink-0">
+        <div
+            class="relative z-10 w-full text-center px-4 flex flex-col items-center shrink-0"
+            :style="{
+                paddingTop: 'var(--hero-pad-top, 14px)',
+                paddingBottom: 'var(--hero-pad-bottom, 8px)',
+            }"
+        >
             <!-- Logo SoftSend HD -->
             <img
                 src="/images/logo-softsend-hd.png"
                 alt="SoftSend Logo"
-                class="w-[36px] h-auto object-contain mb-0.5"
-                width="36"
-                height="36"
+                class="h-auto object-contain mb-1"
+                :style="{ width: 'var(--hero-logo-size, 44px)' }"
+                width="48"
+                height="48"
                 fetchpriority="high"
-                style="filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.15))"
+                style="filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.2))"
             />
 
             <!-- Nama Brand -->
-            <h1 class="font-bold text-[18px] text-white tracking-tight leading-tight">
+            <h1
+                class="font-bold text-white tracking-tight leading-tight"
+                :style="{ fontSize: 'var(--hero-title-size, 21px)' }"
+            >
                 SoftSend
             </h1>
 
             <!-- Tagline -->
-            <p class="text-[10px] text-white/85 font-normal mt-0.5">{{ t('auth.tagline') }}</p>
+            <p class="text-xs text-white/80 font-normal mt-0.5">{{ t('auth.tagline') }}</p>
         </div>
 
         <!-- ============================================================== -->
         <!-- MIDDLE CONTAINER — Auth Card Center & Responsively Fitted      -->
         <!-- ============================================================== -->
-        <div class="relative z-20 w-full flex-1 min-h-0 flex items-center justify-center px-3.5 py-0.5">
+        <div class="relative z-20 w-full flex-1 min-h-0 flex items-center justify-center px-4 py-1">
             <div
-                class="w-full max-w-[345px] bg-white dark:bg-slate-900 rounded-[22px] px-4 py-2.5 sm:px-5 sm:py-3 border border-slate-100/90 dark:border-slate-800 shrink-0 shadow-[0_4px_20px_rgba(0,0,0,0.06)]"
+                class="w-full bg-white dark:bg-slate-900 rounded-[26px] border border-slate-100/90 dark:border-slate-800 shrink-0 shadow-[0_6px_25px_rgba(0,0,0,0.07)] transition-all duration-200"
                 :class="[isShake ? 'animate-shake' : '']"
+                :style="{
+                    maxWidth: 'var(--card-max-width, 365px)',
+                    paddingLeft: 'var(--card-pad-x, 18px)',
+                    paddingRight: 'var(--card-pad-x, 18px)',
+                    paddingTop: 'var(--card-pad-y, 16px)',
+                    paddingBottom: 'var(--card-pad-y, 16px)',
+                }"
             >
                 <!-- ══════════════════════════════════════════════════════════ -->
                 <!-- TAMPILAN 1: FORM LOGIN                                    -->
                 <!-- ══════════════════════════════════════════════════════════ -->
                 <div v-if="viewMode === 'login'">
                     <!-- Header Form Login -->
-                    <div class="mb-2 text-left">
-                        <h2 class="text-[17px] font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight">
+                    <div :style="{ marginBottom: 'var(--card-header-mb, 12px)' }" class="text-left">
+                        <h2
+                            class="font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight"
+                            :style="{ fontSize: 'var(--card-title-size, 19px)' }"
+                        >
                             Form Login
                         </h2>
-                        <p class="text-[10.5px] text-slate-500 dark:text-slate-400 mt-0.5">
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                             Masuk ke akun untuk melanjutkan
                         </p>
                     </div>
 
-                    <form class="space-y-1.5" @submit.prevent="submit">
+                    <form
+                        class="flex flex-col"
+                        :style="{ gap: 'var(--input-row-gap, 10px)' }"
+                        @submit.prevent="submit"
+                    >
                         <!-- 1. Email Input Row -->
-                        <div class="flex items-center gap-2.5">
+                        <div class="flex items-center gap-3">
                             <div
-                                class="w-8 h-8 rounded-full bg-[#EBF3FF] dark:bg-blue-950/70 text-[#2563EB] flex items-center justify-center shrink-0"
+                                class="rounded-full bg-[#EBF3FF] dark:bg-blue-950/70 text-[#2563EB] flex items-center justify-center shrink-0"
+                                :style="{
+                                    width: 'var(--input-circle-size, 36px)',
+                                    height: 'var(--input-circle-size, 36px)',
+                                }"
                             >
-                                <Mail class="w-3.5 h-3.5 stroke-[2]" />
+                                <Mail class="w-4 h-4 stroke-[2]" />
                             </div>
                             <div
-                                class="flex-1 pb-0.5 transition-colors duration-200"
-                                :class="emailFocused ? 'border-b-2 border-[#2563EB]' : 'border-b border-slate-300 dark:border-slate-600'"
+                                class="flex-1 pb-1 transition-colors duration-200"
+                                :class="
+                                    emailFocused
+                                        ? 'border-b-2 border-[#2563EB]'
+                                        : 'border-b border-slate-300 dark:border-slate-700'
+                                "
                             >
                                 <label
                                     for="mobile-email"
-                                    class="block text-[10px] font-bold text-slate-800 dark:text-slate-100 leading-none mb-0.5"
+                                    class="block font-bold text-slate-800 dark:text-slate-100 leading-none mb-1"
+                                    :style="{ fontSize: 'var(--input-label-size, 11px)' }"
                                 >
                                     Email
                                 </label>
@@ -579,28 +618,41 @@
                                     @focus="emailFocused = true"
                                     @blur="emailFocused = false"
                                     required
-                                    class="mobile-custom-input text-[12.5px] font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 py-0.5"
+                                    class="mobile-custom-input font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 py-0.5"
+                                    :style="{ fontSize: 'var(--input-font-size, 13.5px)' }"
                                 />
                             </div>
                         </div>
-                        <p v-if="localEmailError || form.errors.email" class="text-[10px] text-red-500 font-medium pl-10 -mt-1">
+                        <p
+                            v-if="localEmailError || form.errors.email"
+                            class="text-xs text-red-500 font-medium pl-11 -mt-1"
+                        >
                             {{ localEmailError || form.errors.email }}
                         </p>
 
                         <!-- 2. Password Input Row -->
-                        <div class="flex items-center gap-2.5 pt-0.5">
+                        <div class="flex items-center gap-3">
                             <div
-                                class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-300 flex items-center justify-center shrink-0"
+                                class="rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-300 flex items-center justify-center shrink-0"
+                                :style="{
+                                    width: 'var(--input-circle-size, 36px)',
+                                    height: 'var(--input-circle-size, 36px)',
+                                }"
                             >
-                                <LockKeyhole class="w-3.5 h-3.5 stroke-[2]" />
+                                <LockKeyhole class="w-4 h-4 stroke-[2]" />
                             </div>
                             <div
-                                class="flex-1 pb-0.5 transition-colors duration-200"
-                                :class="passwordFocused ? 'border-b-2 border-[#2563EB]' : 'border-b border-slate-300 dark:border-slate-600'"
+                                class="flex-1 pb-1 transition-colors duration-200"
+                                :class="
+                                    passwordFocused
+                                        ? 'border-b-2 border-[#2563EB]'
+                                        : 'border-b border-slate-300 dark:border-slate-700'
+                                "
                             >
                                 <label
                                     for="mobile-password"
-                                    class="block text-[10px] font-bold text-slate-800 dark:text-slate-100 leading-none mb-0.5"
+                                    class="block font-bold text-slate-800 dark:text-slate-100 leading-none mb-1"
+                                    :style="{ fontSize: 'var(--input-label-size, 11px)' }"
                                 >
                                     Password
                                 </label>
@@ -614,52 +666,64 @@
                                         @focus="passwordFocused = true"
                                         @blur="passwordFocused = false"
                                         required
-                                        class="mobile-custom-input text-[12.5px] font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 py-0.5"
+                                        class="mobile-custom-input font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 py-0.5"
+                                        :style="{ fontSize: 'var(--input-font-size, 13.5px)' }"
                                     />
                                     <button
                                         type="button"
                                         tabindex="-1"
                                         @click="showPassword = !showPassword"
-                                        class="text-slate-500 dark:text-slate-300 hover:text-slate-700 dark:hover:text-white focus:outline-none p-0.5 shrink-0 -mr-1"
+                                        class="text-slate-500 dark:text-slate-300 hover:text-slate-700 dark:hover:text-white focus:outline-none p-1 shrink-0 -mr-1"
                                     >
-                                        <EyeOff v-if="showPassword" class="w-3.5 h-3.5 stroke-[2]" />
-                                        <Eye v-else class="w-3.5 h-3.5 stroke-[2]" />
+                                        <EyeOff v-if="showPassword" class="w-4 h-4 stroke-[2]" />
+                                        <Eye v-else class="w-4 h-4 stroke-[2]" />
                                     </button>
                                 </div>
                             </div>
                         </div>
-                        <p v-if="form.errors.password" class="text-[10px] text-red-500 font-medium pl-10 -mt-1">
+                        <p
+                            v-if="form.errors.password"
+                            class="text-xs text-red-500 font-medium pl-11 -mt-1"
+                        >
                             {{ form.errors.password }}
                         </p>
 
                         <!-- 3. Options Row (Tetap Masuk & Lupa password?) -->
                         <div class="flex items-center justify-between pt-0.5">
-                            <label class="flex items-center gap-1.5 cursor-pointer select-none">
-                                <div class="relative flex items-center justify-center w-4 h-4 shrink-0">
+                            <label class="flex items-center gap-2 cursor-pointer select-none">
+                                <div
+                                    class="relative flex items-center justify-center w-[18px] h-[18px] shrink-0"
+                                >
                                     <input
                                         v-model="form.remember"
                                         type="checkbox"
                                         class="sr-only peer"
                                     />
                                     <div
-                                        class="w-4 h-4 rounded-[4px] border-2 border-slate-300 dark:border-slate-500 bg-white dark:bg-slate-800 peer-checked:bg-[#2563EB] peer-checked:border-[#2563EB] transition-colors duration-150 flex items-center justify-center shadow-xs"
+                                        class="w-[18px] h-[18px] rounded-[5px] border-2 border-slate-300 dark:border-slate-500 bg-white dark:bg-slate-800 peer-checked:bg-[#2563EB] peer-checked:border-[#2563EB] transition-colors duration-150 flex items-center justify-center shadow-xs"
                                     >
                                         <svg
-                                            class="w-2.5 h-2.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity duration-150 stroke-[3.5]"
+                                            class="w-3 h-3 text-white opacity-0 peer-checked:opacity-100 transition-opacity duration-150 stroke-[3.5]"
                                             fill="none"
                                             viewBox="0 0 24 24"
                                             stroke="currentColor"
                                         >
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                d="M5 13l4 4L19 7"
+                                            />
                                         </svg>
                                     </div>
                                 </div>
-                                <span class="text-[11px] font-bold text-slate-800 dark:text-slate-200">Tetap Masuk</span>
+                                <span class="text-xs font-bold text-slate-800 dark:text-slate-200"
+                                    >Tetap Masuk</span
+                                >
                             </label>
                             <button
                                 type="button"
                                 @click="handleForgotPassword"
-                                class="text-[11px] font-bold text-[#2563EB] dark:text-blue-400 hover:underline focus:outline-none"
+                                class="text-xs font-bold text-[#2563EB] dark:text-blue-400 hover:underline focus:outline-none"
                             >
                                 Lupa password?
                             </button>
@@ -669,43 +733,71 @@
                         <button
                             type="submit"
                             :disabled="form.processing"
-                            class="w-full h-[37px] rounded-full text-white font-bold text-[13px] flex items-center justify-center transition-all duration-200 active:scale-[0.98] disabled:opacity-70 disabled:cursor-wait mt-2"
-                            style="
-                                background: linear-gradient(90deg, #2563eb 0%, #4f46e5 100%);
-                                box-shadow: 0 3px 10px -1px rgba(37, 99, 235, 0.35);
-                            "
+                            class="w-full rounded-full text-white font-bold text-sm flex items-center justify-center transition-all duration-200 active:scale-[0.98] disabled:opacity-70 disabled:cursor-wait"
+                            :style="{
+                                height: 'var(--btn-primary-height, 40px)',
+                                background: 'linear-gradient(90deg, #2563eb 0%, #4f46e5 100%)',
+                                boxShadow: '0 4px 14px -1px rgba(37, 99, 235, 0.4)',
+                            }"
                         >
                             <span v-if="!form.processing">Login</span>
                             <span v-else class="flex items-center gap-2">
-                                <Loader2 class="w-3.5 h-3.5 animate-spin" />
+                                <Loader2 class="w-4 h-4 animate-spin" />
                                 <span>Memproses...</span>
                             </span>
                         </button>
                     </form>
 
                     <!-- 5. Divider "atau masuk dengan" -->
-                    <div class="relative flex items-center justify-center my-1.5">
-                        <div class="w-full border-t border-slate-200 dark:border-slate-700"></div>
-                        <span class="absolute bg-white dark:bg-slate-900 px-2 text-[9.5px] text-slate-400 dark:text-slate-500 font-medium">
+                    <div
+                        class="relative flex items-center justify-center"
+                        :style="{
+                            marginTop: 'var(--divider-margin, 10px)',
+                            marginBottom: 'var(--divider-margin, 10px)',
+                        }"
+                    >
+                        <div
+                            class="w-full border-t border-slate-200 dark:border-slate-700/80"
+                        ></div>
+                        <span
+                            class="absolute bg-white dark:bg-slate-900 px-3 text-[11px] text-slate-400 dark:text-slate-500 font-medium select-none"
+                        >
                             atau masuk dengan
                         </span>
                     </div>
 
                     <!-- 6. Social Logins 2x2 Grid -->
-                    <div class="grid grid-cols-2 gap-1.5">
+                    <div class="grid grid-cols-2" :style="{ gap: 'var(--social-btn-gap, 8px)' }">
                         <!-- Google -->
                         <button
                             type="button"
                             @click="handleSocialLogin('Google')"
                             class="social-mobile-card"
+                            :style="{ height: 'var(--social-btn-height, 36px)' }"
                         >
-                            <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24">
-                                <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
-                                <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/>
-                                <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 10.04 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
-                                <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+                            <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                                <path
+                                    fill="#4285F4"
+                                    d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"
+                                />
+                                <path
+                                    fill="#34A853"
+                                    d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"
+                                />
+                                <path
+                                    fill="#FBBC05"
+                                    d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 10.04 0 12s.45 3.82 1.25 5.42l4.03-3.15z"
+                                />
+                                <path
+                                    fill="#EA4335"
+                                    d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
+                                />
                             </svg>
-                            <span class="social-btn-label">Google</span>
+                            <span
+                                class="social-btn-label"
+                                :style="{ fontSize: 'var(--social-font-size, 12px)' }"
+                                >Google</span
+                            >
                         </button>
 
                         <!-- GitHub -->
@@ -713,11 +805,21 @@
                             type="button"
                             @click="handleSocialLogin('GitHub')"
                             class="social-mobile-card"
+                            :style="{ height: 'var(--social-btn-height, 36px)' }"
                         >
-                            <svg class="w-3.5 h-3.5 shrink-0 text-slate-900 fill-current" viewBox="0 0 24 24">
-                                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                            <svg
+                                class="w-4 h-4 shrink-0 text-slate-900 fill-current"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"
+                                />
                             </svg>
-                            <span class="social-btn-label">GitHub</span>
+                            <span
+                                class="social-btn-label"
+                                :style="{ fontSize: 'var(--social-font-size, 12px)' }"
+                                >GitHub</span
+                            >
                         </button>
 
                         <!-- Discord -->
@@ -725,11 +827,18 @@
                             type="button"
                             @click="handleSocialLogin('Discord')"
                             class="social-mobile-card"
+                            :style="{ height: 'var(--social-btn-height, 36px)' }"
                         >
-                            <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="#5865F2">
-                                <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+                            <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="#5865F2">
+                                <path
+                                    d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"
+                                />
                             </svg>
-                            <span class="social-btn-label">Discord</span>
+                            <span
+                                class="social-btn-label"
+                                :style="{ fontSize: 'var(--social-font-size, 12px)' }"
+                                >Discord</span
+                            >
                         </button>
 
                         <!-- Microsoft -->
@@ -737,35 +846,53 @@
                             type="button"
                             @click="handleSocialLogin('Microsoft')"
                             class="social-mobile-card"
+                            :style="{ height: 'var(--social-btn-height, 36px)' }"
                         >
-                            <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24">
-                                <rect x="1" y="1" width="10" height="10" fill="#F25022"/>
-                                <rect x="13" y="1" width="10" height="10" fill="#7FBA00"/>
-                                <rect x="1" y="13" width="10" height="10" fill="#00A4EF"/>
-                                <rect x="13" y="13" width="10" height="10" fill="#FFB900"/>
+                            <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                                <rect x="1" y="1" width="10" height="10" fill="#F25022" />
+                                <rect x="13" y="1" width="10" height="10" fill="#7FBA00" />
+                                <rect x="1" y="13" width="10" height="10" fill="#00A4EF" />
+                                <rect x="13" y="13" width="10" height="10" fill="#FFB900" />
                             </svg>
-                            <span class="social-btn-label">Microsoft</span>
+                            <span
+                                class="social-btn-label"
+                                :style="{ fontSize: 'var(--social-font-size, 12px)' }"
+                                >Microsoft</span
+                            >
                         </button>
                     </div>
 
                     <!-- 7. Bottom Registration Section -->
-                    <div class="mt-1.5 pt-1.5 border-t border-slate-100 dark:border-slate-800/80 text-center flex flex-col items-center">
-                        <p class="text-[10.5px] font-bold text-slate-800 dark:text-white leading-none">
+                    <div
+                        class="border-t border-slate-100 dark:border-slate-800/80 text-center flex flex-col items-center"
+                        :style="{
+                            marginTop: 'var(--register-box-mt, 10px)',
+                            paddingTop: 'var(--register-box-pt, 8px)',
+                        }"
+                    >
+                        <p
+                            class="text-[11px] font-bold text-slate-800 dark:text-white leading-tight"
+                        >
                             Belum mempunyai akun?
                         </p>
-                        <p class="text-[9.5px] text-slate-400 dark:text-slate-400 mt-0.5 mb-1.5 leading-none">
+                        <p
+                            class="text-[10px] text-slate-400 dark:text-slate-400 mt-0.5 mb-2 leading-tight"
+                        >
                             Daftarkan akun baru melalui tombol di bawah.
                         </p>
                         <button
                             type="button"
                             @click="handleRegister"
-                            class="w-full h-[34px] rounded-full border-[1.5px] border-[#2563EB] text-[#2563EB] dark:text-blue-400 dark:border-blue-500 font-bold text-xs flex items-center justify-center hover:bg-blue-50/50 dark:hover:bg-blue-900/20 active:scale-[0.98] transition-all duration-150"
+                            class="w-full rounded-full border-[1.5px] border-[#2563EB] text-[#2563EB] dark:text-blue-400 dark:border-blue-500 font-bold text-xs flex items-center justify-center hover:bg-blue-50/50 dark:hover:bg-blue-900/20 active:scale-[0.98] transition-all duration-150"
+                            :style="{ height: 'var(--btn-primary-height, 40px)' }"
                         >
                             Daftar
                         </button>
 
                         <!-- Disclaimer Syarat & Privasi (Persis Screenshot) -->
-                        <p class="text-[9px] text-slate-500 dark:text-slate-400 mt-1.5 text-center leading-tight">
+                        <p
+                            class="text-[10px] text-slate-500 dark:text-slate-400 mt-2 text-center leading-tight"
+                        >
                             Melanjutkan berarti setuju dengan
                             <button
                                 type="button"
@@ -791,30 +918,46 @@
                 <!-- ══════════════════════════════════════════════════════════ -->
                 <div v-else-if="viewMode === 'register'">
                     <!-- Header Form Daftar Akun -->
-                    <div class="mb-2 text-left">
-                        <h2 class="text-[17px] font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight">
+                    <div :style="{ marginBottom: 'var(--card-header-mb, 12px)' }" class="text-left">
+                        <h2
+                            class="font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight"
+                            :style="{ fontSize: 'var(--card-title-size, 19px)' }"
+                        >
                             Form Daftar Akun
                         </h2>
-                        <p class="text-[10.5px] text-slate-500 dark:text-slate-400 mt-0.5 leading-tight">
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
                             Buat akun baru untuk mulai menggunakan layanan SoftSend
                         </p>
                     </div>
 
-                    <form class="space-y-1.5" @submit.prevent="submitRegister">
+                    <form
+                        class="flex flex-col"
+                        :style="{ gap: 'var(--input-row-gap, 10px)' }"
+                        @submit.prevent="submitRegister"
+                    >
                         <!-- 1. Input: Nama Lengkap -->
-                        <div class="flex items-center gap-2.5">
+                        <div class="flex items-center gap-3">
                             <div
-                                class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-400 flex items-center justify-center shrink-0"
+                                class="rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-400 flex items-center justify-center shrink-0"
+                                :style="{
+                                    width: 'var(--input-circle-size, 36px)',
+                                    height: 'var(--input-circle-size, 36px)',
+                                }"
                             >
-                                <User class="w-3.5 h-3.5 stroke-[2]" />
+                                <User class="w-4 h-4 stroke-[2]" />
                             </div>
                             <div
-                                class="flex-1 pb-0.5 transition-colors duration-200"
-                                :class="registerNameFocused ? 'border-b-2 border-[#2563EB]' : 'border-b border-slate-300 dark:border-slate-600'"
+                                class="flex-1 pb-1 transition-colors duration-200"
+                                :class="
+                                    registerNameFocused
+                                        ? 'border-b-2 border-[#2563EB]'
+                                        : 'border-b border-slate-300 dark:border-slate-700'
+                                "
                             >
                                 <label
                                     for="mobile-register-name"
-                                    class="block text-[10px] font-bold text-slate-800 dark:text-slate-100 leading-none mb-0.5"
+                                    class="block font-bold text-slate-800 dark:text-slate-100 leading-none mb-1"
+                                    :style="{ fontSize: 'var(--input-label-size, 11px)' }"
                                 >
                                     Nama Lengkap
                                 </label>
@@ -827,28 +970,41 @@
                                     @focus="registerNameFocused = true"
                                     @blur="registerNameFocused = false"
                                     required
-                                    class="mobile-custom-input text-[12.5px] font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 py-0.5"
+                                    class="mobile-custom-input font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 py-0.5"
+                                    :style="{ fontSize: 'var(--input-font-size, 13.5px)' }"
                                 />
                             </div>
                         </div>
-                        <p v-if="registerErrors.name" class="text-[10px] text-red-500 font-medium pl-10 -mt-1">
+                        <p
+                            v-if="registerErrors.name"
+                            class="text-xs text-red-500 font-medium pl-11 -mt-1"
+                        >
                             {{ registerErrors.name }}
                         </p>
 
                         <!-- 2. Input: Email -->
-                        <div class="flex items-center gap-2.5 pt-0.5">
+                        <div class="flex items-center gap-3">
                             <div
-                                class="w-8 h-8 rounded-full bg-[#EBF3FF] dark:bg-blue-950/70 text-[#2563EB] flex items-center justify-center shrink-0"
+                                class="rounded-full bg-[#EBF3FF] dark:bg-blue-950/70 text-[#2563EB] flex items-center justify-center shrink-0"
+                                :style="{
+                                    width: 'var(--input-circle-size, 36px)',
+                                    height: 'var(--input-circle-size, 36px)',
+                                }"
                             >
-                                <Mail class="w-3.5 h-3.5 stroke-[2]" />
+                                <Mail class="w-4 h-4 stroke-[2]" />
                             </div>
                             <div
-                                class="flex-1 pb-0.5 transition-colors duration-200"
-                                :class="registerEmailFocused ? 'border-b-2 border-[#2563EB]' : 'border-b border-slate-300 dark:border-slate-600'"
+                                class="flex-1 pb-1 transition-colors duration-200"
+                                :class="
+                                    registerEmailFocused
+                                        ? 'border-b-2 border-[#2563EB]'
+                                        : 'border-b border-slate-300 dark:border-slate-700'
+                                "
                             >
                                 <label
                                     for="mobile-register-email"
-                                    class="block text-[10px] font-bold text-slate-800 dark:text-slate-100 leading-none mb-0.5"
+                                    class="block font-bold text-slate-800 dark:text-slate-100 leading-none mb-1"
+                                    :style="{ fontSize: 'var(--input-label-size, 11px)' }"
                                 >
                                     Email
                                 </label>
@@ -861,28 +1017,41 @@
                                     @focus="registerEmailFocused = true"
                                     @blur="registerEmailFocused = false"
                                     required
-                                    class="mobile-custom-input text-[12.5px] font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 py-0.5"
+                                    class="mobile-custom-input font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 py-0.5"
+                                    :style="{ fontSize: 'var(--input-font-size, 13.5px)' }"
                                 />
                             </div>
                         </div>
-                        <p v-if="registerErrors.email" class="text-[10px] text-red-500 font-medium pl-10 -mt-1">
+                        <p
+                            v-if="registerErrors.email"
+                            class="text-xs text-red-500 font-medium pl-11 -mt-1"
+                        >
                             {{ registerErrors.email }}
                         </p>
 
                         <!-- 3. Input: Password -->
-                        <div class="flex items-center gap-2.5 pt-0.5">
+                        <div class="flex items-center gap-3">
                             <div
-                                class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-400 flex items-center justify-center shrink-0"
+                                class="rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-400 flex items-center justify-center shrink-0"
+                                :style="{
+                                    width: 'var(--input-circle-size, 36px)',
+                                    height: 'var(--input-circle-size, 36px)',
+                                }"
                             >
-                                <LockKeyhole class="w-3.5 h-3.5 stroke-[2]" />
+                                <LockKeyhole class="w-4 h-4 stroke-[2]" />
                             </div>
                             <div
-                                class="flex-1 pb-0.5 transition-colors duration-200"
-                                :class="registerPasswordFocused ? 'border-b-2 border-[#2563EB]' : 'border-b border-slate-300 dark:border-slate-600'"
+                                class="flex-1 pb-1 transition-colors duration-200"
+                                :class="
+                                    registerPasswordFocused
+                                        ? 'border-b-2 border-[#2563EB]'
+                                        : 'border-b border-slate-300 dark:border-slate-700'
+                                "
                             >
                                 <label
                                     for="mobile-register-password"
-                                    class="block text-[10px] font-bold text-slate-800 dark:text-slate-100 leading-none mb-0.5"
+                                    class="block font-bold text-slate-800 dark:text-slate-100 leading-none mb-1"
+                                    :style="{ fontSize: 'var(--input-label-size, 11px)' }"
                                 >
                                     Password
                                 </label>
@@ -896,38 +1065,54 @@
                                         @focus="registerPasswordFocused = true"
                                         @blur="registerPasswordFocused = false"
                                         required
-                                        class="mobile-custom-input text-[12.5px] font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 py-0.5"
+                                        class="mobile-custom-input font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 py-0.5"
+                                        :style="{ fontSize: 'var(--input-font-size, 13.5px)' }"
                                     />
                                     <button
                                         type="button"
                                         tabindex="-1"
                                         @click="showRegisterPassword = !showRegisterPassword"
-                                        class="text-slate-500 dark:text-slate-300 hover:text-slate-700 dark:hover:text-white focus:outline-none p-0.5 shrink-0 -mr-1"
+                                        class="text-slate-500 dark:text-slate-300 hover:text-slate-700 dark:hover:text-white focus:outline-none p-1 shrink-0 -mr-1"
                                     >
-                                        <EyeOff v-if="showRegisterPassword" class="w-3.5 h-3.5 stroke-[2]" />
-                                        <Eye v-else class="w-3.5 h-3.5 stroke-[2]" />
+                                        <EyeOff
+                                            v-if="showRegisterPassword"
+                                            class="w-4 h-4 stroke-[2]"
+                                        />
+                                        <Eye v-else class="w-4 h-4 stroke-[2]" />
                                     </button>
                                 </div>
                             </div>
                         </div>
-                        <p v-if="registerErrors.password" class="text-[10px] text-red-500 font-medium pl-10 -mt-1">
+                        <p
+                            v-if="registerErrors.password"
+                            class="text-xs text-red-500 font-medium pl-11 -mt-1"
+                        >
                             {{ registerErrors.password }}
                         </p>
 
                         <!-- 4. Input: Konfirmasi Password -->
-                        <div class="flex items-center gap-2.5 pt-0.5">
+                        <div class="flex items-center gap-3">
                             <div
-                                class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-400 flex items-center justify-center shrink-0"
+                                class="rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-400 flex items-center justify-center shrink-0"
+                                :style="{
+                                    width: 'var(--input-circle-size, 36px)',
+                                    height: 'var(--input-circle-size, 36px)',
+                                }"
                             >
-                                <LockKeyhole class="w-3.5 h-3.5 stroke-[2]" />
+                                <LockKeyhole class="w-4 h-4 stroke-[2]" />
                             </div>
                             <div
-                                class="flex-1 pb-0.5 transition-colors duration-200"
-                                :class="registerPasswordConfirmFocused ? 'border-b-2 border-[#2563EB]' : 'border-b border-slate-300 dark:border-slate-600'"
+                                class="flex-1 pb-1 transition-colors duration-200"
+                                :class="
+                                    registerPasswordConfirmFocused
+                                        ? 'border-b-2 border-[#2563EB]'
+                                        : 'border-b border-slate-300 dark:border-slate-700'
+                                "
                             >
                                 <label
                                     for="mobile-register-password-confirm"
-                                    class="block text-[10px] font-bold text-slate-800 dark:text-slate-100 leading-none mb-0.5"
+                                    class="block font-bold text-slate-800 dark:text-slate-100 leading-none mb-1"
+                                    :style="{ fontSize: 'var(--input-label-size, 11px)' }"
                                 >
                                     Konfirmasi Password
                                 </label>
@@ -941,21 +1126,31 @@
                                         @focus="registerPasswordConfirmFocused = true"
                                         @blur="registerPasswordConfirmFocused = false"
                                         required
-                                        class="mobile-custom-input text-[12.5px] font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 py-0.5"
+                                        class="mobile-custom-input font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 py-0.5"
+                                        :style="{ fontSize: 'var(--input-font-size, 13.5px)' }"
                                     />
                                     <button
                                         type="button"
                                         tabindex="-1"
-                                        @click="showRegisterPasswordConfirm = !showRegisterPasswordConfirm"
-                                        class="text-slate-500 dark:text-slate-300 hover:text-slate-700 dark:hover:text-white focus:outline-none p-0.5 shrink-0 -mr-1"
+                                        @click="
+                                            showRegisterPasswordConfirm =
+                                                !showRegisterPasswordConfirm
+                                        "
+                                        class="text-slate-500 dark:text-slate-300 hover:text-slate-700 dark:hover:text-white focus:outline-none p-1 shrink-0 -mr-1"
                                     >
-                                        <EyeOff v-if="showRegisterPasswordConfirm" class="w-3.5 h-3.5 stroke-[2]" />
-                                        <Eye v-else class="w-3.5 h-3.5 stroke-[2]" />
+                                        <EyeOff
+                                            v-if="showRegisterPasswordConfirm"
+                                            class="w-4 h-4 stroke-[2]"
+                                        />
+                                        <Eye v-else class="w-4 h-4 stroke-[2]" />
                                     </button>
                                 </div>
                             </div>
                         </div>
-                        <p v-if="registerErrors.password_confirmation" class="text-[10px] text-red-500 font-medium pl-10 -mt-1">
+                        <p
+                            v-if="registerErrors.password_confirmation"
+                            class="text-xs text-red-500 font-medium pl-11 -mt-1"
+                        >
                             {{ registerErrors.password_confirmation }}
                         </p>
 
@@ -963,24 +1158,35 @@
                         <button
                             type="submit"
                             :disabled="isRegisterSubmitting"
-                            class="w-full h-[37px] rounded-full text-white font-bold text-[13px] flex items-center justify-center transition-all duration-200 active:scale-[0.98] disabled:opacity-70 disabled:cursor-wait mt-2"
-                            style="
-                                background: linear-gradient(90deg, #2563eb 0%, #4f46e5 100%);
-                                box-shadow: 0 3px 10px -1px rgba(37, 99, 235, 0.35);
-                            "
+                            class="w-full rounded-full text-white font-bold text-sm flex items-center justify-center transition-all duration-200 active:scale-[0.98] disabled:opacity-70 disabled:cursor-wait"
+                            :style="{
+                                height: 'var(--btn-primary-height, 40px)',
+                                background: 'linear-gradient(90deg, #2563eb 0%, #4f46e5 100%)',
+                                boxShadow: '0 4px 14px -1px rgba(37, 99, 235, 0.4)',
+                            }"
                         >
                             <span v-if="!isRegisterSubmitting">Daftar</span>
                             <span v-else class="flex items-center gap-2">
-                                <Loader2 class="w-3.5 h-3.5 animate-spin" />
+                                <Loader2 class="w-4 h-4 animate-spin" />
                                 <span>Mendaftarkan...</span>
                             </span>
                         </button>
                     </form>
 
                     <!-- Divider & Switch ke Login -->
-                    <div class="relative flex items-center justify-center my-1.5">
-                        <div class="w-full border-t border-slate-200 dark:border-slate-700"></div>
-                        <span class="absolute bg-white dark:bg-slate-900 px-2.5 text-[9.5px] text-slate-500 dark:text-slate-400 font-medium">
+                    <div
+                        class="relative flex items-center justify-center"
+                        :style="{
+                            marginTop: 'var(--divider-margin, 10px)',
+                            marginBottom: 'var(--divider-margin, 10px)',
+                        }"
+                    >
+                        <div
+                            class="w-full border-t border-slate-200 dark:border-slate-700/80"
+                        ></div>
+                        <span
+                            class="absolute bg-white dark:bg-slate-900 px-3 text-[11px] text-slate-500 dark:text-slate-400 font-medium select-none"
+                        >
                             Sudah mempunyai akun?
                         </span>
                     </div>
@@ -989,7 +1195,7 @@
                         <button
                             type="button"
                             @click="viewMode = 'login'"
-                            class="text-[11.5px] font-bold text-[#2563EB] dark:text-blue-400 hover:underline focus:outline-none transition-colors"
+                            class="text-xs font-bold text-[#2563EB] dark:text-blue-400 hover:underline focus:outline-none transition-colors"
                         >
                             Login Sekarang
                         </button>
@@ -1001,18 +1207,30 @@
         <!-- ============================================================== -->
         <!-- FOOTER & BOTTOM DECORATION — Rapat, Rapih & Pas di Semua Layar -->
         <!-- ============================================================== -->
-        <div class="relative z-10 w-full text-center shrink-0 flex flex-col items-center justify-end">
-            <p class="text-[8.5px] text-[#475569] dark:text-slate-400 font-medium tracking-wide leading-none mb-0.5">
-                Powered by
-            </p>
-            <p class="text-[10px] text-[#475569] dark:text-slate-300 font-bold tracking-[0.16em] leading-none mb-1">
-                NOCTRYNX CORP
-            </p>
+        <div
+            class="relative z-10 w-full text-center shrink-0 flex flex-col items-center justify-end"
+        >
+            <div :style="{ marginBottom: 'var(--footer-mb, 6px)' }">
+                <p
+                    class="text-[9px] text-[#475569] dark:text-slate-400 font-medium tracking-wide leading-none mb-0.5"
+                >
+                    Powered by
+                </p>
+                <p
+                    class="text-[11px] text-[#475569] dark:text-slate-300 font-bold tracking-[0.18em] leading-none"
+                >
+                    NOCTRYNX CORP
+                </p>
+            </div>
 
             <!-- Bottom Hero Wave Decoration -->
             <div
-                class="relative w-full h-[5vh] min-h-[26px] max-h-[38px] overflow-hidden"
-                style="border-top-left-radius: 50% 24px; border-top-right-radius: 50% 24px"
+                class="relative w-full overflow-hidden"
+                :style="{
+                    height: 'var(--bottom-wave-height, 50px)',
+                    borderTopLeftRadius: '50% 28px',
+                    borderTopRightRadius: '50% 28px',
+                }"
             >
                 <!-- Base Gradient — Navy ke biru -->
                 <div
@@ -1228,7 +1446,7 @@
         inset: 0 !important;
     }
 
-    /* Pastikan halaman login mobile tetap fit 1 layar dan tanpa scrollbar */
+    /* Sistem responsif otomatis menyesuaikan ukuran layar Chrome Mobile */
     .login-mobile-page {
         height: 100% !important;
         height: 100svh !important;
@@ -1238,7 +1456,103 @@
         scrollbar-width: none !important;
         -ms-overflow-style: none !important;
         touch-action: pan-x pan-y;
+
+        /* Default: Layar standar (680px - 799px) */
+        --hero-pad-top: 14px;
+        --hero-pad-bottom: 8px;
+        --hero-logo-size: 44px;
+        --hero-title-size: 21px;
+        --hero-bg-height: 22vh;
+
+        --card-max-width: 365px;
+        --card-pad-x: 18px;
+        --card-pad-y: 16px;
+        --card-header-mb: 12px;
+        --card-title-size: 19px;
+
+        --input-row-gap: 10px;
+        --input-circle-size: 36px;
+        --input-label-size: 11px;
+        --input-font-size: 13.5px;
+
+        --btn-primary-height: 40px;
+        --divider-margin: 10px;
+        --social-btn-height: 36px;
+        --social-btn-gap: 8px;
+        --social-font-size: 12px;
+        --register-box-mt: 10px;
+        --register-box-pt: 8px;
+
+        --bottom-wave-height: 50px;
+        --footer-mb: 6px;
     }
+
+    /* Layar kompak / pendek (misal iPhone SE, layar < 680px) */
+    @media (max-height: 680px) {
+        .login-mobile-page {
+            --hero-pad-top: 8px;
+            --hero-pad-bottom: 4px;
+            --hero-logo-size: 36px;
+            --hero-title-size: 18px;
+            --hero-bg-height: 18vh;
+
+            --card-max-width: 350px;
+            --card-pad-x: 16px;
+            --card-pad-y: 12px;
+            --card-header-mb: 8px;
+            --card-title-size: 17px;
+
+            --input-row-gap: 7px;
+            --input-circle-size: 32px;
+            --input-label-size: 10px;
+            --input-font-size: 12.5px;
+
+            --btn-primary-height: 36px;
+            --divider-margin: 7px;
+            --social-btn-height: 32px;
+            --social-btn-gap: 6px;
+            --social-font-size: 11px;
+            --register-box-mt: 7px;
+            --register-box-pt: 6px;
+
+            --bottom-wave-height: 34px;
+            --footer-mb: 4px;
+        }
+    }
+
+    /* Layar tinggi modern (misal Samsung Galaxy, iPhone Pro Max, Pixel, tinggi >= 800px) */
+    @media (min-height: 800px) {
+        .login-mobile-page {
+            --hero-pad-top: 24px;
+            --hero-pad-bottom: 14px;
+            --hero-logo-size: 48px;
+            --hero-title-size: 23px;
+            --hero-bg-height: 25vh;
+
+            --card-max-width: 375px;
+            --card-pad-x: 22px;
+            --card-pad-y: 22px;
+            --card-header-mb: 16px;
+            --card-title-size: 21px;
+
+            --input-row-gap: 14px;
+            --input-circle-size: 40px;
+            --input-label-size: 12px;
+            --input-font-size: 14px;
+
+            --btn-primary-height: 44px;
+            --divider-margin: 14px;
+            --social-btn-height: 40px;
+            --social-btn-gap: 10px;
+            --social-font-size: 12.5px;
+            --register-box-mt: 14px;
+            --register-box-pt: 12px;
+
+            --bottom-wave-height: 68px;
+            --footer-mb: 10px;
+        }
+    }
+
     .login-mobile-page::-webkit-scrollbar {
         display: none !important;
         width: 0 !important;
@@ -1265,12 +1579,11 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 0.35rem;
-        height: 33px;
-        border-radius: 10px;
-        border: 1px solid #E2E8F0 !important;
-        background-color: #FFFFFF !important;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+        gap: 0.5rem;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0 !important;
+        background-color: #ffffff !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         transition: all 0.15s ease;
         cursor: pointer;
     }
@@ -1278,9 +1591,8 @@
         transform: scale(0.97);
     }
     .social-btn-label {
-        font-size: 11px !important;
         font-weight: 700 !important;
-        color: #0F172A !important; /* Deep dark slate - selalu jelas & tajam */
+        color: #0f172a !important; /* Deep dark slate - selalu jelas & tajam */
         letter-spacing: -0.01em;
     }
 
