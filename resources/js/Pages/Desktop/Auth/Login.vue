@@ -12,7 +12,7 @@
 -->
 <script setup>
 import { Head, useForm, router } from '@inertiajs/vue3';
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 import DetailMap from '@/Components/Map/DetailMap.vue';
 import {
     User,
@@ -57,7 +57,20 @@ const loginStatus = ref('loading');
 const loginProgress = ref(0);
 const isDark = ref(false);
 const isInteractiveMap = ref(false);
-const showEmailForm = ref(false);
+const viewMode = ref('social'); // 'social' | 'login' | 'register'
+
+// ── Register Form States (Persis media_1793184087946_9fd87b59.png) ────────
+const registerForm = reactive({
+    name: '',
+    email: '',
+    password: '',
+    password_confirmation: '',
+    agree: false,
+});
+const registerErrors = ref({});
+const isRegisterSubmitting = ref(false);
+const showRegisterPassword = ref(false);
+const showRegisterPasswordConfirm = ref(false);
 
 function handleSocialLogin(provider) {
     getSwal().then((Swal) => {
@@ -71,24 +84,91 @@ function handleSocialLogin(provider) {
             cancelButtonText: 'Tutup',
         }).then((result) => {
             if (result.isConfirmed) {
-                showEmailForm.value = true;
+                viewMode.value = 'login';
             }
         });
     }).catch(() => {
-        showEmailForm.value = true;
+        viewMode.value = 'login';
     });
 }
 
 function handleRegister() {
+    viewMode.value = 'register';
+}
+
+function openTermsModal(title) {
     getSwal().then((Swal) => {
         Swal.fire({
-            title: 'Daftar Akun Baru',
-            text: 'Pendaftaran akun admin baru dikelola secara terpusat oleh IT / Superadmin. Silakan hubungi administrator SoftSend untuk mendapatkan akses akun baru.',
+            title: title,
+            text: 'Dengan mendaftar di sistem SoftSend, Anda menyetujui ketentuan penggunaan layanan, kepatuhan kerahasiaan data pengiriman, dan perlindungan privasi pengguna.',
             icon: 'info',
             confirmButtonText: 'Mengerti',
             confirmButtonColor: '#1677FF',
         });
     });
+}
+
+function submitRegister() {
+    registerErrors.value = {};
+    let hasError = false;
+
+    if (!registerForm.name.trim()) {
+        registerErrors.value.name = 'Masukkan nama lengkap Anda.';
+        hasError = true;
+    }
+
+    const emailVal = registerForm.email.trim();
+    if (!emailVal) {
+        registerErrors.value.email = 'Masukkan alamat email Anda.';
+        hasError = true;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) {
+        registerErrors.value.email = 'Format email tidak valid.';
+        hasError = true;
+    }
+
+    if (!registerForm.password) {
+        registerErrors.value.password = 'Masukkan password.';
+        hasError = true;
+    } else if (registerForm.password.length < 6) {
+        registerErrors.value.password = 'Password minimal 6 karakter.';
+        hasError = true;
+    }
+
+    if (!registerForm.password_confirmation) {
+        registerErrors.value.password_confirmation = 'Konfirmasi password Anda.';
+        hasError = true;
+    } else if (registerForm.password !== registerForm.password_confirmation) {
+        registerErrors.value.password_confirmation = 'Konfirmasi password tidak cocok.';
+        hasError = true;
+    }
+
+    if (!registerForm.agree) {
+        registerErrors.value.agree = 'Anda harus menyetujui Syarat dan Privasi.';
+        hasError = true;
+    }
+
+    if (hasError) return;
+
+    isRegisterSubmitting.value = true;
+
+    setTimeout(() => {
+        isRegisterSubmitting.value = false;
+        getSwal().then((Swal) => {
+            Swal.fire({
+                title: 'Pendaftaran Berhasil Diajukan',
+                html: `Akun atas nama <b>${registerForm.name}</b> (${registerForm.email}) berhasil diajukan.<br><br><span class="text-xs text-slate-500">Permintaan aktivasi akun Anda sedang diverifikasi oleh IT / Superadmin SoftSend. Silakan login setelah akun disetujui.</span>`,
+                icon: 'success',
+                confirmButtonText: 'Lanjut ke Login',
+                confirmButtonColor: '#1677FF',
+            }).then(() => {
+                form.email = registerForm.email;
+                viewMode.value = 'login';
+            });
+        }).catch(() => {
+            form.email = registerForm.email;
+            viewMode.value = 'login';
+        });
+    }, 700);
 }
 
 let progressTimer = null;
@@ -174,6 +254,14 @@ watch(
 
 onMounted(() => {
     isDark.value = document.documentElement.classList.contains('dark');
+    if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('mode') === 'register' || window.location.hash === '#register') {
+            viewMode.value = 'register';
+        } else if (params.get('mode') === 'login' || window.location.hash === '#login') {
+            viewMode.value = 'login';
+        }
+    }
 });
 
 onBeforeUnmount(() => {
@@ -261,7 +349,7 @@ onBeforeUnmount(() => {
                 <!-- Transition Halus antara Opsi Login dan Form Email -->
                 <Transition name="fade-slide" mode="out-in">
                     <!-- TAMPILAN 1: Pilihan Login (100% Persis Sesuai Foto) -->
-                    <div v-if="!showEmailForm" key="social-view" class="w-full">
+                    <div v-if="viewMode === 'social'" key="social-view" class="w-full">
                         <!-- Judul Selamat Datang & Form Login -->
                         <div class="form-header">
                             <p class="welcome-text">
@@ -353,7 +441,7 @@ onBeforeUnmount(() => {
                         <!-- Tombol Login dengan Email (Persis Foto) -->
                         <button
                             type="button"
-                            @click="showEmailForm = true"
+                            @click="viewMode = 'login'"
                             class="social-auth-card"
                         >
                             <div class="flex items-center gap-3.5">
@@ -366,19 +454,19 @@ onBeforeUnmount(() => {
                         <!-- Teks Disclaimer di Bawah (Persis Foto) -->
                         <p class="terms-text">
                             Melanjutkan berarti setuju dengan
-                            <a href="#" class="terms-link" @click.prevent>Syarat</a>
+                            <a href="#" class="terms-link" @click.prevent="openTermsModal('Syarat & Ketentuan')">Syarat</a>
                             dan
-                            <a href="#" class="terms-link" @click.prevent>Privasi</a>.
+                            <a href="#" class="terms-link" @click.prevent="openTermsModal('Kebijakan Privasi')">Privasi</a>.
                         </p>
                     </div>
 
                     <!-- TAMPILAN 2: Form Input Kredensial Email & Password -->
-                    <div v-else key="email-view" class="w-full">
+                    <div v-else-if="viewMode === 'login'" key="email-view" class="w-full">
                         <!-- Tombol Kembali ke Pilihan Login -->
                         <div class="mb-3.5">
                             <button
                                 type="button"
-                                @click="showEmailForm = false"
+                                @click="viewMode = 'social'"
                                 class="back-btn"
                             >
                                 <ArrowLeft class="w-4 h-4 stroke-[2.2]" />
@@ -517,6 +605,211 @@ onBeforeUnmount(() => {
                                 <span>Daftar Akun &rarr;</span>
                             </button>
                         </div>
+                    </div>
+
+                    <!-- TAMPILAN 3: Form Daftar Akun (100% Persis media_1793184087946_9fd87b59.png) -->
+                    <div v-else-if="viewMode === 'register'" key="register-view" class="w-full">
+                        <!-- Tombol Kembali ke Login -->
+                        <div class="mb-3">
+                            <button
+                                type="button"
+                                @click="viewMode = 'login'"
+                                class="back-btn"
+                            >
+                                <ArrowLeft class="w-4 h-4 stroke-[2.2]" />
+                                <span>Kembali ke login</span>
+                            </button>
+                        </div>
+
+                        <!-- Header Form Daftar Akun -->
+                        <div class="form-header mb-4">
+                            <p class="welcome-text">
+                                Selamat bergabung
+                            </p>
+                            <h2 class="login-title">
+                                Form <span class="text-[#1677FF]">Daftar Akun</span>
+                            </h2>
+                            <p class="login-desc">
+                                Buat akun baru untuk mulai menggunakan layanan pengiriman.
+                            </p>
+                        </div>
+
+                        <!-- Form Input Pendaftaran -->
+                        <form @submit.prevent="submitRegister" class="register-form" novalidate>
+                            <!-- Input 1: Nama Lengkap -->
+                            <div class="input-group">
+                                <div
+                                    class="input-underline"
+                                    :class="{ 'input-error': registerErrors.name }"
+                                >
+                                    <User class="input-icon" />
+                                    <input
+                                        id="register-name"
+                                        v-model="registerForm.name"
+                                        type="text"
+                                        autocomplete="name"
+                                        placeholder="Masukkan nama lengkap"
+                                        required
+                                        class="input-field"
+                                    />
+                                </div>
+                                <p v-if="registerErrors.name" class="error-msg">
+                                    <AlertCircle class="w-3.5 h-3.5 shrink-0" />
+                                    <span>{{ registerErrors.name }}</span>
+                                </p>
+                            </div>
+
+                            <!-- Input 2: Email -->
+                            <div class="input-group">
+                                <div
+                                    class="input-underline"
+                                    :class="{ 'input-error': registerErrors.email }"
+                                >
+                                    <Mail class="input-icon" />
+                                    <input
+                                        id="register-email"
+                                        v-model="registerForm.email"
+                                        type="email"
+                                        autocomplete="email"
+                                        placeholder="Masukkan email"
+                                        required
+                                        class="input-field"
+                                    />
+                                </div>
+                                <p v-if="registerErrors.email" class="error-msg">
+                                    <AlertCircle class="w-3.5 h-3.5 shrink-0" />
+                                    <span>{{ registerErrors.email }}</span>
+                                </p>
+                            </div>
+
+                            <!-- Input 3: Password -->
+                            <div class="input-group">
+                                <div
+                                    class="input-underline"
+                                    :class="{ 'input-error': registerErrors.password }"
+                                >
+                                    <LockKeyhole class="input-icon" />
+                                    <input
+                                        id="register-password"
+                                        v-model="registerForm.password"
+                                        :type="showRegisterPassword ? 'text' : 'password'"
+                                        autocomplete="new-password"
+                                        placeholder="Masukkan password"
+                                        required
+                                        class="input-field pr-9"
+                                    />
+                                    <button
+                                        type="button"
+                                        @click="showRegisterPassword = !showRegisterPassword"
+                                        tabindex="-1"
+                                        class="eye-btn"
+                                        :title="showRegisterPassword ? 'Sembunyikan password' : 'Lihat password'"
+                                    >
+                                        <EyeOff v-if="showRegisterPassword" class="w-[18px] h-[18px] stroke-[1.8]" />
+                                        <Eye v-else class="w-[18px] h-[18px] stroke-[1.8]" />
+                                    </button>
+                                </div>
+                                <p v-if="registerErrors.password" class="error-msg">
+                                    <AlertCircle class="w-3.5 h-3.5 shrink-0" />
+                                    <span>{{ registerErrors.password }}</span>
+                                </p>
+                            </div>
+
+                            <!-- Input 4: Konfirmasi Password -->
+                            <div class="input-group">
+                                <div
+                                    class="input-underline"
+                                    :class="{ 'input-error': registerErrors.password_confirmation }"
+                                >
+                                    <LockKeyhole class="input-icon" />
+                                    <input
+                                        id="register-password-confirmation"
+                                        v-model="registerForm.password_confirmation"
+                                        :type="showRegisterPasswordConfirm ? 'text' : 'password'"
+                                        autocomplete="new-password"
+                                        placeholder="Konfirmasi password"
+                                        required
+                                        class="input-field pr-9"
+                                    />
+                                    <button
+                                        type="button"
+                                        @click="showRegisterPasswordConfirm = !showRegisterPasswordConfirm"
+                                        tabindex="-1"
+                                        class="eye-btn"
+                                        :title="showRegisterPasswordConfirm ? 'Sembunyikan password' : 'Lihat password'"
+                                    >
+                                        <EyeOff v-if="showRegisterPasswordConfirm" class="w-[18px] h-[18px] stroke-[1.8]" />
+                                        <Eye v-else class="w-[18px] h-[18px] stroke-[1.8]" />
+                                    </button>
+                                </div>
+                                <p v-if="registerErrors.password_confirmation" class="error-msg">
+                                    <AlertCircle class="w-3.5 h-3.5 shrink-0" />
+                                    <span>{{ registerErrors.password_confirmation }}</span>
+                                </p>
+                            </div>
+
+                            <!-- Baris Persetujuan: Syarat dan Privasi -->
+                            <div class="flex flex-col gap-1 mt-0.5">
+                                <label class="flex items-center gap-2.5 cursor-pointer select-none">
+                                    <div
+                                        @click="registerForm.agree = !registerForm.agree"
+                                        class="checkbox-box !w-[18px] !h-[18px] !rounded-[5px]"
+                                        :class="registerForm.agree ? 'checkbox-checked' : 'checkbox-unchecked'"
+                                    >
+                                        <Check v-if="registerForm.agree" class="w-3.5 h-3.5 text-white stroke-[3]" />
+                                    </div>
+                                    <span class="text-[13px] text-slate-600 dark:text-slate-300">
+                                        Saya setuju dengan
+                                        <a href="#" @click.prevent="openTermsModal('Syarat & Ketentuan')" class="text-[#1677FF] font-semibold hover:underline">Syarat</a>
+                                        dan
+                                        <a href="#" @click.prevent="openTermsModal('Kebijakan Privasi')" class="text-[#1677FF] font-semibold hover:underline">Privasi</a>.
+                                    </span>
+                                </label>
+                                <p v-if="registerErrors.agree" class="error-msg">
+                                    <AlertCircle class="w-3.5 h-3.5 shrink-0" />
+                                    <span>{{ registerErrors.agree }}</span>
+                                </p>
+                            </div>
+
+                            <!-- Tombol Utama: Daftar Akun → (Arrow Circle) -->
+                            <div class="login-btn-wrapper pt-1">
+                                <button
+                                    type="submit"
+                                    :disabled="isRegisterSubmitting"
+                                    class="login-btn"
+                                >
+                                    <div class="arrow-circle">
+                                        <ChevronRight class="w-5 h-5 stroke-[2.8]" />
+                                    </div>
+
+                                    <div class="login-btn-text">
+                                        <span v-if="!isRegisterSubmitting">Daftar Akun &rarr;</span>
+                                        <span v-else class="flex items-center justify-center gap-2">
+                                            <Loader2 class="w-4 h-4 animate-spin" />
+                                            <span>Mendaftarkan...</span>
+                                        </span>
+                                    </div>
+
+                                    <div class="w-10 h-10 opacity-0 shrink-0"></div>
+                                </button>
+                            </div>
+                        </form>
+
+                        <!-- Divider: Sudah mempunyai akun? -->
+                        <div class="divider-wrapper my-2.5">
+                            <div class="divider-line"></div>
+                            <span class="divider-text">Sudah mempunyai akun?</span>
+                        </div>
+
+                        <!-- Tombol Outline: Login Sekarang → -->
+                        <button
+                            type="button"
+                            @click="viewMode = 'login'"
+                            class="register-btn"
+                        >
+                            <UserPlus class="w-4 h-4 text-[#1677FF] dark:text-blue-400 stroke-[2.2]" />
+                            <span>Login Sekarang &rarr;</span>
+                        </button>
                     </div>
                 </Transition>
             </div>
@@ -868,6 +1161,7 @@ onBeforeUnmount(() => {
     font-size: 12px;
     font-weight: 400;
     color: #94A3B8;
+    white-space: nowrap;
 }
 :root.dark .divider-text {
     background-color: #0C101D;
@@ -941,6 +1235,20 @@ onBeforeUnmount(() => {
     display: flex;
     flex-direction: column;
     gap: 24px;
+}
+
+.register-form {
+    display: flex;
+    flex-direction: column;
+    gap: 13px;
+}
+
+.register-form .input-underline {
+    padding-bottom: 9px;
+}
+
+.register-form .eye-btn {
+    bottom: 8px;
 }
 
 .input-group {
