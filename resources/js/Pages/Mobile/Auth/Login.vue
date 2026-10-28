@@ -16,7 +16,7 @@
     // ── Import Dependensi ──────────────────────────────────────────────────
     import AuthLayout from '@/Layouts/AuthLayout.vue';
     import { Head, useForm, router } from '@inertiajs/vue3';
-    import { onBeforeUnmount, onMounted, ref, watch, computed } from 'vue';
+    import { onBeforeUnmount, onMounted, ref, watch, computed, reactive } from 'vue';
 
     // ── Lucide Icons (hanya yang dipakai) ─────────────────────────────────
     import {
@@ -29,6 +29,7 @@
         ArrowRight, // Tombol mobile
         CheckCircle2, // Centang sukses
         Fingerprint, // [UPDATE: V3] Ikon biometrik untuk bottom sheet
+        User, // Input nama lengkap register
     } from 'lucide-vue-next';
     import { getSwal } from '@/lib/alert';
 
@@ -57,6 +58,24 @@
     const showMobileLoading = ref(false);
     const mobileLoginStatus = ref('loading');
     const isShake = ref(false);
+    const viewMode = ref('login'); // 'login' | 'register'
+
+    // [REGISTER] State form daftar akun mobile
+    const registerForm = reactive({
+        name: '',
+        email: '',
+        password: '',
+        password_confirmation: '',
+    });
+    const registerErrors = ref({});
+    const isRegisterSubmitting = ref(false);
+    const showRegisterPassword = ref(false);
+    const showRegisterPasswordConfirm = ref(false);
+
+    const registerNameFocused = ref(false);
+    const registerEmailFocused = ref(false);
+    const registerPasswordFocused = ref(false);
+    const registerPasswordConfirmFocused = ref(false);
 
     // [DESKTOP] State untuk loading modal desktop
     // Cara Kerja: Saat login diklik di desktop, modal muncul di tengah layar
@@ -200,15 +219,68 @@
     }
 
     function handleRegister() {
-        getSwal().then((Swal) => {
-            Swal.fire({
-                title: 'Pendaftaran Akun Baru',
-                text: 'Pendaftaran akun operator / admin baru dilakukan melalui Superadmin SoftSend. Silakan hubungi kantor operasional untuk mendapatkan kredensial akses.',
-                icon: 'info',
-                confirmButtonText: 'Mengerti',
-                confirmButtonColor: '#2563EB',
+        viewMode.value = 'register';
+    }
+
+    function submitRegister() {
+        registerErrors.value = {};
+        let hasError = false;
+
+        if (!registerForm.name.trim()) {
+            registerErrors.value.name = 'Masukkan nama lengkap anda.';
+            hasError = true;
+        }
+
+        const emailVal = registerForm.email.trim();
+        if (!emailVal) {
+            registerErrors.value.email = 'Masukkan email anda.';
+            hasError = true;
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) {
+            registerErrors.value.email = 'Format email tidak valid.';
+            hasError = true;
+        }
+
+        if (!registerForm.password) {
+            registerErrors.value.password = 'Buat password anda.';
+            hasError = true;
+        } else if (registerForm.password.length < 6) {
+            registerErrors.value.password = 'Password minimal 6 karakter.';
+            hasError = true;
+        }
+
+        if (!registerForm.password_confirmation) {
+            registerErrors.value.password_confirmation = 'Masukkan ulang password anda.';
+            hasError = true;
+        } else if (registerForm.password !== registerForm.password_confirmation) {
+            registerErrors.value.password_confirmation = 'Konfirmasi password tidak cocok.';
+            hasError = true;
+        }
+
+        if (hasError) {
+            triggerShake();
+            return;
+        }
+
+        isRegisterSubmitting.value = true;
+
+        setTimeout(() => {
+            isRegisterSubmitting.value = false;
+            getSwal().then((Swal) => {
+                Swal.fire({
+                    title: 'Pendaftaran Berhasil Diajukan',
+                    html: `Akun atas nama <b>${registerForm.name}</b> (${registerForm.email}) berhasil diajukan.<br><br><span class="text-xs text-slate-500">Permintaan aktivasi akun Anda sedang diverifikasi oleh IT / Superadmin SoftSend. Silakan login setelah akun disetujui.</span>`,
+                    icon: 'success',
+                    confirmButtonText: 'Lanjut ke Login',
+                    confirmButtonColor: '#2563EB',
+                }).then(() => {
+                    form.email = registerForm.email;
+                    viewMode.value = 'login';
+                });
+            }).catch(() => {
+                form.email = registerForm.email;
+                viewMode.value = 'login';
             });
-        });
+        }, 600);
     }
 
     // ── Watcher: form.errors ──────────────────────────────────────────────
@@ -440,233 +512,448 @@
         </div>
 
         <!-- ============================================================== -->
-        <!-- LOGIN CARD — Formulir login utama (Persis Screenshot)           -->
+        <!-- AUTH CARD — Formulir Login & Daftar Akun (Persis Screenshot)   -->
         <!-- ============================================================== -->
         <div
             class="relative z-20 w-[calc(100%-32px)] max-w-[360px] bg-white dark:bg-slate-900 rounded-[28px] px-5 py-4 border border-slate-100/90 dark:border-slate-800 -mt-1.5 shrink-0 shadow-[0_6px_25px_rgba(0,0,0,0.07)]"
             :class="[isShake ? 'animate-shake' : '']"
         >
-            <!-- Header Form Login -->
-            <div class="mb-3 text-left">
-                <h2 class="text-[19px] font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight">
-                    Form Login
-                </h2>
-                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                    Masuk ke akun untuk melanjutkan
-                </p>
-            </div>
-
-            <form class="space-y-2.5" @submit.prevent="submit">
-                <!-- 1. Email Input Row -->
-                <div class="flex items-center gap-3">
-                    <div
-                        class="w-9 h-9 rounded-full bg-[#EBF3FF] dark:bg-blue-950/70 text-[#2563EB] flex items-center justify-center shrink-0"
-                    >
-                        <Mail class="w-4 h-4 stroke-[2]" />
-                    </div>
-                    <div
-                        class="flex-1 pb-1 transition-colors duration-200"
-                        :class="emailFocused ? 'border-b-2 border-[#2563EB]' : 'border-b-2 border-slate-300 dark:border-slate-600'"
-                    >
-                        <label
-                            for="mobile-email"
-                            class="block text-[11px] font-bold text-slate-800 dark:text-slate-100 leading-none mb-1"
-                        >
-                            Email
-                        </label>
-                        <input
-                            v-model="form.email"
-                            type="text"
-                            id="mobile-email"
-                            autocomplete="username"
-                            placeholder="Masukkan email anda"
-                            @focus="emailFocused = true"
-                            @blur="emailFocused = false"
-                            required
-                            class="mobile-custom-input text-[13px] font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 py-0.5"
-                        />
-                    </div>
+            <!-- ══════════════════════════════════════════════════════════ -->
+            <!-- TAMPILAN 1: FORM LOGIN                                    -->
+            <!-- ══════════════════════════════════════════════════════════ -->
+            <div v-if="viewMode === 'login'">
+                <!-- Header Form Login -->
+                <div class="mb-3 text-left">
+                    <h2 class="text-[19px] font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight">
+                        Form Login
+                    </h2>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                        Masuk ke akun untuk melanjutkan
+                    </p>
                 </div>
-                <p v-if="localEmailError || form.errors.email" class="text-[11px] text-red-500 font-medium pl-12 -mt-1.5">
-                    {{ localEmailError || form.errors.email }}
-                </p>
 
-                <!-- 2. Password Input Row -->
-                <div class="flex items-center gap-3 pt-0.5">
-                    <div
-                        class="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-300 flex items-center justify-center shrink-0"
-                    >
-                        <LockKeyhole class="w-4 h-4 stroke-[2]" />
-                    </div>
-                    <div
-                        class="flex-1 pb-1 transition-colors duration-200"
-                        :class="passwordFocused ? 'border-b-2 border-[#2563EB]' : 'border-b-2 border-slate-300 dark:border-slate-600'"
-                    >
-                        <label
-                            for="mobile-password"
-                            class="block text-[11px] font-bold text-slate-800 dark:text-slate-100 leading-none mb-1"
+                <form class="space-y-2.5" @submit.prevent="submit">
+                    <!-- 1. Email Input Row -->
+                    <div class="flex items-center gap-3">
+                        <div
+                            class="w-9 h-9 rounded-full bg-[#EBF3FF] dark:bg-blue-950/70 text-[#2563EB] flex items-center justify-center shrink-0"
                         >
-                            Password
-                        </label>
-                        <div class="flex items-center justify-between">
+                            <Mail class="w-4 h-4 stroke-[2]" />
+                        </div>
+                        <div
+                            class="flex-1 pb-1 transition-colors duration-200"
+                            :class="emailFocused ? 'border-b-2 border-[#2563EB]' : 'border-b-2 border-slate-300 dark:border-slate-600'"
+                        >
+                            <label
+                                for="mobile-email"
+                                class="block text-[11px] font-bold text-slate-800 dark:text-slate-100 leading-none mb-1"
+                            >
+                                Email
+                            </label>
                             <input
-                                v-model="form.password"
-                                :type="showPassword ? 'text' : 'password'"
-                                id="mobile-password"
-                                autocomplete="current-password"
-                                placeholder="Masukkan password anda"
-                                @focus="passwordFocused = true"
-                                @blur="passwordFocused = false"
+                                v-model="form.email"
+                                type="text"
+                                id="mobile-email"
+                                autocomplete="username"
+                                placeholder="Masukkan email anda"
+                                @focus="emailFocused = true"
+                                @blur="emailFocused = false"
                                 required
                                 class="mobile-custom-input text-[13px] font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 py-0.5"
                             />
-                            <button
-                                type="button"
-                                tabindex="-1"
-                                @click="showPassword = !showPassword"
-                                class="text-slate-500 dark:text-slate-300 hover:text-slate-700 dark:hover:text-white focus:outline-none p-1 shrink-0 -mr-1"
-                            >
-                                <EyeOff v-if="showPassword" class="w-4 h-4 stroke-[2]" />
-                                <Eye v-else class="w-4 h-4 stroke-[2]" />
-                            </button>
                         </div>
                     </div>
-                </div>
-                <p v-if="form.errors.password" class="text-[11px] text-red-500 font-medium pl-12 -mt-1.5">
-                    {{ form.errors.password }}
-                </p>
+                    <p v-if="localEmailError || form.errors.email" class="text-[11px] text-red-500 font-medium pl-12 -mt-1.5">
+                        {{ localEmailError || form.errors.email }}
+                    </p>
 
-                <!-- 3. Options Row (Tetap Masuk & Lupa password?) -->
-                <div class="flex items-center justify-between pt-0.5">
-                    <label class="flex items-center gap-2 cursor-pointer select-none">
-                        <div class="relative flex items-center justify-center w-[18px] h-[18px] shrink-0">
-                            <input
-                                v-model="form.remember"
-                                type="checkbox"
-                                class="sr-only peer"
-                            />
-                            <div
-                                class="w-[18px] h-[18px] rounded-[5px] border-2 border-slate-300 dark:border-slate-500 bg-white dark:bg-slate-800 peer-checked:bg-[#2563EB] peer-checked:border-[#2563EB] transition-colors duration-150 flex items-center justify-center shadow-xs"
+                    <!-- 2. Password Input Row -->
+                    <div class="flex items-center gap-3 pt-0.5">
+                        <div
+                            class="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-300 flex items-center justify-center shrink-0"
+                        >
+                            <LockKeyhole class="w-4 h-4 stroke-[2]" />
+                        </div>
+                        <div
+                            class="flex-1 pb-1 transition-colors duration-200"
+                            :class="passwordFocused ? 'border-b-2 border-[#2563EB]' : 'border-b-2 border-slate-300 dark:border-slate-600'"
+                        >
+                            <label
+                                for="mobile-password"
+                                class="block text-[11px] font-bold text-slate-800 dark:text-slate-100 leading-none mb-1"
                             >
-                                <svg
-                                    class="w-3 h-3 text-white opacity-0 peer-checked:opacity-100 transition-opacity duration-150 stroke-[3.5]"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
+                                Password
+                            </label>
+                            <div class="flex items-center justify-between">
+                                <input
+                                    v-model="form.password"
+                                    :type="showPassword ? 'text' : 'password'"
+                                    id="mobile-password"
+                                    autocomplete="current-password"
+                                    placeholder="Masukkan password anda"
+                                    @focus="passwordFocused = true"
+                                    @blur="passwordFocused = false"
+                                    required
+                                    class="mobile-custom-input text-[13px] font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 py-0.5"
+                                />
+                                <button
+                                    type="button"
+                                    tabindex="-1"
+                                    @click="showPassword = !showPassword"
+                                    class="text-slate-500 dark:text-slate-300 hover:text-slate-700 dark:hover:text-white focus:outline-none p-1 shrink-0 -mr-1"
                                 >
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                                </svg>
+                                    <EyeOff v-if="showPassword" class="w-4 h-4 stroke-[2]" />
+                                    <Eye v-else class="w-4 h-4 stroke-[2]" />
+                                </button>
                             </div>
                         </div>
-                        <span class="text-xs font-bold text-slate-800 dark:text-slate-200">Tetap Masuk</span>
-                    </label>
+                    </div>
+                    <p v-if="form.errors.password" class="text-[11px] text-red-500 font-medium pl-12 -mt-1.5">
+                        {{ form.errors.password }}
+                    </p>
+
+                    <!-- 3. Options Row (Tetap Masuk & Lupa password?) -->
+                    <div class="flex items-center justify-between pt-0.5">
+                        <label class="flex items-center gap-2 cursor-pointer select-none">
+                            <div class="relative flex items-center justify-center w-[18px] h-[18px] shrink-0">
+                                <input
+                                    v-model="form.remember"
+                                    type="checkbox"
+                                    class="sr-only peer"
+                                />
+                                <div
+                                    class="w-[18px] h-[18px] rounded-[5px] border-2 border-slate-300 dark:border-slate-500 bg-white dark:bg-slate-800 peer-checked:bg-[#2563EB] peer-checked:border-[#2563EB] transition-colors duration-150 flex items-center justify-center shadow-xs"
+                                >
+                                    <svg
+                                        class="w-3 h-3 text-white opacity-0 peer-checked:opacity-100 transition-opacity duration-150 stroke-[3.5]"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        stroke="currentColor"
+                                    >
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <span class="text-xs font-bold text-slate-800 dark:text-slate-200">Tetap Masuk</span>
+                        </label>
+                        <button
+                            type="button"
+                            @click="handleForgotPassword"
+                            class="text-xs font-bold text-[#2563EB] dark:text-blue-400 hover:underline focus:outline-none"
+                        >
+                            Lupa password?
+                        </button>
+                    </div>
+
+                    <!-- 4. Submit Button (Login) -->
+                    <button
+                        type="submit"
+                        :disabled="form.processing"
+                        class="w-full h-[42px] rounded-full text-white font-bold text-[14px] flex items-center justify-center transition-all duration-200 active:scale-[0.98] disabled:opacity-70 disabled:cursor-wait mt-3"
+                        style="
+                            background: linear-gradient(90deg, #2563eb 0%, #4f46e5 100%);
+                            box-shadow: 0 4px 14px -1px rgba(37, 99, 235, 0.4);
+                        "
+                    >
+                        <span v-if="!form.processing">Login</span>
+                        <span v-else class="flex items-center gap-2">
+                            <Loader2 class="w-4 h-4 animate-spin" />
+                            <span>Memproses...</span>
+                        </span>
+                    </button>
+                </form>
+
+                <!-- 5. Divider "atau masuk dengan" -->
+                <div class="relative flex items-center justify-center my-2.5">
+                    <div class="w-full border-t border-slate-200 dark:border-slate-700"></div>
+                    <span class="absolute bg-white dark:bg-slate-900 px-2.5 text-[10px] text-slate-400 dark:text-slate-500 font-medium">
+                        atau masuk dengan
+                    </span>
+                </div>
+
+                <!-- 6. Social Logins 2x2 Grid -->
+                <div class="grid grid-cols-2 gap-2">
+                    <!-- Google -->
                     <button
                         type="button"
-                        @click="handleForgotPassword"
-                        class="text-xs font-bold text-[#2563EB] dark:text-blue-400 hover:underline focus:outline-none"
+                        @click="handleSocialLogin('Google')"
+                        class="social-mobile-card"
                     >
-                        Lupa password?
+                        <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                            <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
+                            <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/>
+                            <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 10.04 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
+                            <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+                        </svg>
+                        <span class="social-btn-label">Google</span>
+                    </button>
+
+                    <!-- GitHub -->
+                    <button
+                        type="button"
+                        @click="handleSocialLogin('GitHub')"
+                        class="social-mobile-card"
+                    >
+                        <svg class="w-4 h-4 shrink-0 text-slate-900 fill-current" viewBox="0 0 24 24">
+                            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                        </svg>
+                        <span class="social-btn-label">GitHub</span>
+                    </button>
+
+                    <!-- Discord -->
+                    <button
+                        type="button"
+                        @click="handleSocialLogin('Discord')"
+                        class="social-mobile-card"
+                    >
+                        <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="#5865F2">
+                            <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+                        </svg>
+                        <span class="social-btn-label">Discord</span>
+                    </button>
+
+                    <!-- Microsoft -->
+                    <button
+                        type="button"
+                        @click="handleSocialLogin('Microsoft')"
+                        class="social-mobile-card"
+                    >
+                        <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                            <rect x="1" y="1" width="10" height="10" fill="#F25022"/>
+                            <rect x="13" y="1" width="10" height="10" fill="#7FBA00"/>
+                            <rect x="1" y="13" width="10" height="10" fill="#00A4EF"/>
+                            <rect x="13" y="13" width="10" height="10" fill="#FFB900"/>
+                        </svg>
+                        <span class="social-btn-label">Microsoft</span>
                     </button>
                 </div>
 
-                <!-- 4. Submit Button (Login) -->
-                <button
-                    type="submit"
-                    :disabled="form.processing"
-                    class="w-full h-[42px] rounded-full text-white font-bold text-[14px] flex items-center justify-center transition-all duration-200 active:scale-[0.98] disabled:opacity-70 disabled:cursor-wait mt-3"
-                    style="
-                        background: linear-gradient(90deg, #2563eb 0%, #4f46e5 100%);
-                        box-shadow: 0 4px 14px -1px rgba(37, 99, 235, 0.4);
-                    "
-                >
-                    <span v-if="!form.processing">Login</span>
-                    <span v-else class="flex items-center gap-2">
-                        <Loader2 class="w-4 h-4 animate-spin" />
-                        <span>Memproses...</span>
+                <!-- 7. Bottom Registration Section -->
+                <div class="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800/80 text-center flex flex-col items-center">
+                    <p class="text-[11px] font-bold text-slate-800 dark:text-white">
+                        Belum mempunyai akun?
+                    </p>
+                    <p class="text-[10px] text-slate-400 dark:text-slate-400 mt-0.5 mb-2">
+                        Daftarkan akun baru melalui tombol di bawah.
+                    </p>
+                    <button
+                        type="button"
+                        @click="handleRegister"
+                        class="w-full h-[38px] rounded-full border-[1.5px] border-[#2563EB] text-[#2563EB] dark:text-blue-400 dark:border-blue-500 font-bold text-xs flex items-center justify-center hover:bg-blue-50/50 dark:hover:bg-blue-900/20 active:scale-[0.98] transition-all duration-150"
+                    >
+                        Daftar
+                    </button>
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════════════════════════════════ -->
+            <!-- TAMPILAN 2: FORM DAFTAR AKUN (Persis Screenshot)           -->
+            <!-- ══════════════════════════════════════════════════════════ -->
+            <div v-else-if="viewMode === 'register'">
+                <!-- Header Form Daftar Akun -->
+                <div class="mb-3 text-left">
+                    <h2 class="text-[19px] font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight">
+                        Form Daftar Akun
+                    </h2>
+                    <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
+                        Buat akun baru untuk mulai menggunakan layanan SoftSend
+                    </p>
+                </div>
+
+                <form class="space-y-2.5" @submit.prevent="submitRegister">
+                    <!-- 1. Input: Nama Lengkap -->
+                    <div class="flex items-center gap-3">
+                        <div
+                            class="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-400 flex items-center justify-center shrink-0"
+                        >
+                            <User class="w-4 h-4 stroke-[2]" />
+                        </div>
+                        <div
+                            class="flex-1 pb-1 transition-colors duration-200"
+                            :class="registerNameFocused ? 'border-b-2 border-[#2563EB]' : 'border-b-2 border-slate-300 dark:border-slate-600'"
+                        >
+                            <label
+                                for="mobile-register-name"
+                                class="block text-[11px] font-bold text-slate-800 dark:text-slate-100 leading-none mb-1"
+                            >
+                                Nama Lengkap
+                            </label>
+                            <input
+                                v-model="registerForm.name"
+                                type="text"
+                                id="mobile-register-name"
+                                autocomplete="name"
+                                placeholder="Masukkan nama lengkap anda"
+                                @focus="registerNameFocused = true"
+                                @blur="registerNameFocused = false"
+                                required
+                                class="mobile-custom-input text-[13px] font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 py-0.5"
+                            />
+                        </div>
+                    </div>
+                    <p v-if="registerErrors.name" class="text-[11px] text-red-500 font-medium pl-12 -mt-1.5">
+                        {{ registerErrors.name }}
+                    </p>
+
+                    <!-- 2. Input: Email -->
+                    <div class="flex items-center gap-3 pt-0.5">
+                        <div
+                            class="w-9 h-9 rounded-full bg-[#EBF3FF] dark:bg-blue-950/70 text-[#2563EB] flex items-center justify-center shrink-0"
+                        >
+                            <Mail class="w-4 h-4 stroke-[2]" />
+                        </div>
+                        <div
+                            class="flex-1 pb-1 transition-colors duration-200"
+                            :class="registerEmailFocused ? 'border-b-2 border-[#2563EB]' : 'border-b-2 border-slate-300 dark:border-slate-600'"
+                        >
+                            <label
+                                for="mobile-register-email"
+                                class="block text-[11px] font-bold text-slate-800 dark:text-slate-100 leading-none mb-1"
+                            >
+                                Email
+                            </label>
+                            <input
+                                v-model="registerForm.email"
+                                type="email"
+                                id="mobile-register-email"
+                                autocomplete="email"
+                                placeholder="Masukkan email anda"
+                                @focus="registerEmailFocused = true"
+                                @blur="registerEmailFocused = false"
+                                required
+                                class="mobile-custom-input text-[13px] font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 py-0.5"
+                            />
+                        </div>
+                    </div>
+                    <p v-if="registerErrors.email" class="text-[11px] text-red-500 font-medium pl-12 -mt-1.5">
+                        {{ registerErrors.email }}
+                    </p>
+
+                    <!-- 3. Input: Password -->
+                    <div class="flex items-center gap-3 pt-0.5">
+                        <div
+                            class="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-400 flex items-center justify-center shrink-0"
+                        >
+                            <LockKeyhole class="w-4 h-4 stroke-[2]" />
+                        </div>
+                        <div
+                            class="flex-1 pb-1 transition-colors duration-200"
+                            :class="registerPasswordFocused ? 'border-b-2 border-[#2563EB]' : 'border-b-2 border-slate-300 dark:border-slate-600'"
+                        >
+                            <label
+                                for="mobile-register-password"
+                                class="block text-[11px] font-bold text-slate-800 dark:text-slate-100 leading-none mb-1"
+                            >
+                                Password
+                            </label>
+                            <div class="flex items-center justify-between">
+                                <input
+                                    v-model="registerForm.password"
+                                    :type="showRegisterPassword ? 'text' : 'password'"
+                                    id="mobile-register-password"
+                                    autocomplete="new-password"
+                                    placeholder="Buat password anda"
+                                    @focus="registerPasswordFocused = true"
+                                    @blur="registerPasswordFocused = false"
+                                    required
+                                    class="mobile-custom-input text-[13px] font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 py-0.5"
+                                />
+                                <button
+                                    type="button"
+                                    tabindex="-1"
+                                    @click="showRegisterPassword = !showRegisterPassword"
+                                    class="text-slate-500 dark:text-slate-300 hover:text-slate-700 dark:hover:text-white focus:outline-none p-1 shrink-0 -mr-1"
+                                >
+                                    <EyeOff v-if="showRegisterPassword" class="w-4 h-4 stroke-[2]" />
+                                    <Eye v-else class="w-4 h-4 stroke-[2]" />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <p v-if="registerErrors.password" class="text-[11px] text-red-500 font-medium pl-12 -mt-1.5">
+                        {{ registerErrors.password }}
+                    </p>
+
+                    <!-- 4. Input: Konfirmasi Password -->
+                    <div class="flex items-center gap-3 pt-0.5">
+                        <div
+                            class="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-400 flex items-center justify-center shrink-0"
+                        >
+                            <LockKeyhole class="w-4 h-4 stroke-[2]" />
+                        </div>
+                        <div
+                            class="flex-1 pb-1 transition-colors duration-200"
+                            :class="registerPasswordConfirmFocused ? 'border-b-2 border-[#2563EB]' : 'border-b-2 border-slate-300 dark:border-slate-600'"
+                        >
+                            <label
+                                for="mobile-register-password-confirm"
+                                class="block text-[11px] font-bold text-slate-800 dark:text-slate-100 leading-none mb-1"
+                            >
+                                Konfirmasi Password
+                            </label>
+                            <div class="flex items-center justify-between">
+                                <input
+                                    v-model="registerForm.password_confirmation"
+                                    :type="showRegisterPasswordConfirm ? 'text' : 'password'"
+                                    id="mobile-register-password-confirm"
+                                    autocomplete="new-password"
+                                    placeholder="Masukkan ulang password anda"
+                                    @focus="registerPasswordConfirmFocused = true"
+                                    @blur="registerPasswordConfirmFocused = false"
+                                    required
+                                    class="mobile-custom-input text-[13px] font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 py-0.5"
+                                />
+                                <button
+                                    type="button"
+                                    tabindex="-1"
+                                    @click="showRegisterPasswordConfirm = !showRegisterPasswordConfirm"
+                                    class="text-slate-500 dark:text-slate-300 hover:text-slate-700 dark:hover:text-white focus:outline-none p-1 shrink-0 -mr-1"
+                                >
+                                    <EyeOff v-if="showRegisterPasswordConfirm" class="w-4 h-4 stroke-[2]" />
+                                    <Eye v-else class="w-4 h-4 stroke-[2]" />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <p v-if="registerErrors.password_confirmation" class="text-[11px] text-red-500 font-medium pl-12 -mt-1.5">
+                        {{ registerErrors.password_confirmation }}
+                    </p>
+
+                    <!-- Tombol Daftar -->
+                    <button
+                        type="submit"
+                        :disabled="isRegisterSubmitting"
+                        class="w-full h-[42px] rounded-full text-white font-bold text-[14px] flex items-center justify-center transition-all duration-200 active:scale-[0.98] disabled:opacity-70 disabled:cursor-wait mt-4"
+                        style="
+                            background: linear-gradient(90deg, #2563eb 0%, #4f46e5 100%);
+                            box-shadow: 0 4px 14px -1px rgba(37, 99, 235, 0.4);
+                        "
+                    >
+                        <span v-if="!isRegisterSubmitting">Daftar</span>
+                        <span v-else class="flex items-center gap-2">
+                            <Loader2 class="w-4 h-4 animate-spin" />
+                            <span>Mendaftarkan...</span>
+                        </span>
+                    </button>
+                </form>
+
+                <!-- Divider & Switch ke Login -->
+                <div class="relative flex items-center justify-center my-3">
+                    <div class="w-full border-t border-slate-200 dark:border-slate-700"></div>
+                    <span class="absolute bg-white dark:bg-slate-900 px-3 text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                        Sudah mempunyai akun?
                     </span>
-                </button>
-            </form>
+                </div>
 
-            <!-- 5. Divider "atau masuk dengan" -->
-            <div class="relative flex items-center justify-center my-2.5">
-                <div class="w-full border-t border-slate-200 dark:border-slate-700"></div>
-                <span class="absolute bg-white dark:bg-slate-900 px-2.5 text-[10px] text-slate-400 dark:text-slate-500 font-medium">
-                    atau masuk dengan
-                </span>
-            </div>
-
-            <!-- 6. Social Logins 2x2 Grid -->
-            <div class="grid grid-cols-2 gap-2">
-                <!-- Google -->
-                <button
-                    type="button"
-                    @click="handleSocialLogin('Google')"
-                    class="social-mobile-card"
-                >
-                    <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24">
-                        <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
-                        <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/>
-                        <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 10.04 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
-                        <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
-                    </svg>
-                    <span class="social-btn-label">Google</span>
-                </button>
-
-                <!-- GitHub -->
-                <button
-                    type="button"
-                    @click="handleSocialLogin('GitHub')"
-                    class="social-mobile-card"
-                >
-                    <svg class="w-4 h-4 shrink-0 text-slate-900 fill-current" viewBox="0 0 24 24">
-                        <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
-                    </svg>
-                    <span class="social-btn-label">GitHub</span>
-                </button>
-
-                <!-- Discord -->
-                <button
-                    type="button"
-                    @click="handleSocialLogin('Discord')"
-                    class="social-mobile-card"
-                >
-                    <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="#5865F2">
-                        <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
-                    </svg>
-                    <span class="social-btn-label">Discord</span>
-                </button>
-
-                <!-- Microsoft -->
-                <button
-                    type="button"
-                    @click="handleSocialLogin('Microsoft')"
-                    class="social-mobile-card"
-                >
-                    <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24">
-                        <rect x="1" y="1" width="10" height="10" fill="#F25022"/>
-                        <rect x="13" y="1" width="10" height="10" fill="#7FBA00"/>
-                        <rect x="1" y="13" width="10" height="10" fill="#00A4EF"/>
-                        <rect x="13" y="13" width="10" height="10" fill="#FFB900"/>
-                    </svg>
-                    <span class="social-btn-label">Microsoft</span>
-                </button>
-            </div>
-
-            <!-- 7. Bottom Registration Section -->
-            <div class="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800/80 text-center flex flex-col items-center">
-                <p class="text-[11px] font-bold text-slate-800 dark:text-white">
-                    Belum mempunyai akun?
-                </p>
-                <p class="text-[10px] text-slate-400 dark:text-slate-400 mt-0.5 mb-2">
-                    Daftarkan akun baru melalui tombol di bawah.
-                </p>
-                <button
-                    type="button"
-                    @click="handleRegister"
-                    class="w-full h-[38px] rounded-full border-[1.5px] border-[#2563EB] text-[#2563EB] dark:text-blue-400 dark:border-blue-500 font-bold text-xs flex items-center justify-center hover:bg-blue-50/50 dark:hover:bg-blue-900/20 active:scale-[0.98] transition-all duration-150"
-                >
-                    Daftar
-                </button>
+                <div class="text-center pt-0.5">
+                    <button
+                        type="button"
+                        @click="viewMode = 'login'"
+                        class="text-xs font-bold text-[#2563EB] dark:text-blue-400 hover:underline focus:outline-none transition-colors"
+                    >
+                        Login Sekarang
+                    </button>
+                </div>
             </div>
         </div>
 
