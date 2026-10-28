@@ -620,7 +620,7 @@ onBeforeUnmount(() => {
                                         autocomplete="username"
                                         placeholder="Masukkan username atau email"
                                         required
-                                        class="input-field"
+                                        class="underline-input !border-0 !rounded-none !bg-transparent !p-0 !ring-0 !shadow-none !outline-none focus:!ring-0 focus:!border-0 focus:!outline-none"
                                     />
                                 </div>
                                 <p v-if="localEmailError || form.errors.email" class="error-msg">
@@ -643,7 +643,7 @@ onBeforeUnmount(() => {
                                         autocomplete="current-password"
                                         placeholder="Masukkan password"
                                         required
-                                        class="input-field pr-9"
+                                        class="underline-input pr-9 !border-0 !rounded-none !bg-transparent !p-0 !ring-0 !shadow-none !outline-none focus:!ring-0 focus:!border-0 focus:!outline-none"
                                         @focus="onLoginPasswordFocus"
                                         @blur="onLoginPasswordBlur"
                                     />
@@ -823,7 +823,7 @@ onBeforeUnmount(() => {
                                         autocomplete="name"
                                         placeholder="Masukkan nama lengkap"
                                         required
-                                        class="input-field"
+                                        class="underline-input !border-0 !rounded-none !bg-transparent !p-0 !ring-0 !shadow-none !outline-none focus:!ring-0 focus:!border-0 focus:!outline-none"
                                     />
                                 </div>
                                 <p v-if="registerErrors.name" class="error-msg">
@@ -846,7 +846,7 @@ onBeforeUnmount(() => {
                                         autocomplete="email"
                                         placeholder="Masukkan email"
                                         required
-                                        class="input-field"
+                                        class="underline-input !border-0 !rounded-none !bg-transparent !p-0 !ring-0 !shadow-none !outline-none focus:!ring-0 focus:!border-0 focus:!outline-none"
                                     />
                                 </div>
                                 <p v-if="registerErrors.email" class="error-msg">
@@ -869,7 +869,7 @@ onBeforeUnmount(() => {
                                         autocomplete="new-password"
                                         placeholder="Masukkan password"
                                         required
-                                        class="input-field pr-9"
+                                        class="underline-input pr-9 !border-0 !rounded-none !bg-transparent !p-0 !ring-0 !shadow-none !outline-none focus:!ring-0 focus:!border-0 focus:!outline-none"
                                         @focus="onRegisterPasswordFocus"
                                         @blur="onRegisterPasswordBlur"
                                     />
@@ -958,7 +958,7 @@ onBeforeUnmount(() => {
                                         autocomplete="new-password"
                                         placeholder="Konfirmasi password"
                                         required
-                                        class="input-field pr-9"
+                                        class="underline-input pr-9 !border-0 !rounded-none !bg-transparent !p-0 !ring-0 !shadow-none !outline-none focus:!ring-0 focus:!border-0 focus:!outline-none"
                                     />
                                     <button
                                         type="button"
@@ -1528,25 +1528,60 @@ onBeforeUnmount(() => {
     color: #94a3b8;
 }
 
+.underline-input,
+.input-underline input,
 .input-field {
-    width: 100%;
-    background: transparent;
-    font-size: 14.5px;
-    font-weight: 500;
-    color: #0f172a;
-    border: none;
-    outline: none;
-    padding: 0;
+    width: 100% !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    font-size: 14.5px !important;
+    font-weight: 500 !important;
+    color: #0f172a !important;
+    border: none !important;
+    border-width: 0 !important;
+    border-color: transparent !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    outline: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    -webkit-appearance: none !important;
+    appearance: none !important;
 }
+
+.underline-input:focus,
+.input-underline input:focus,
+.input-field:focus {
+    outline: none !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-width: 0 !important;
+    border-color: transparent !important;
+    ring: 0 !important;
+    --tw-ring-color: transparent !important;
+    --tw-ring-shadow: none !important;
+    --tw-ring-offset-shadow: none !important;
+}
+
+.underline-input::placeholder,
+.input-underline input::placeholder,
 .input-field::placeholder {
-    color: #94A3B8;
-    font-weight: 400;
+    color: #94A3B8 !important;
+    font-weight: 400 !important;
 }
+
+:root.dark .underline-input,
+:root.dark .input-underline input,
 :root.dark .input-field {
-    color: #f1f5f9;
+    color: #f1f5f9 !important;
+    background: transparent !important;
+    background-color: transparent !important;
 }
+
+:root.dark .underline-input::placeholder,
+:root.dark .input-underline input::placeholder,
 :root.dark .input-field::placeholder {
-    color: #475569;
+    color: #475569 !important;
 }
 
 .eye-btn {
