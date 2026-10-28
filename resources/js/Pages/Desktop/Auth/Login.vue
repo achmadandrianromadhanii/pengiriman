@@ -12,7 +12,7 @@
 -->
 <script setup>
 import { Head, useForm, router } from '@inertiajs/vue3';
-import { onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 import DetailMap from '@/Components/Map/DetailMap.vue';
 import {
     User,
@@ -33,6 +33,8 @@ import {
     Mail,
     ArrowLeft,
     UserPlus,
+    Shield,
+    X,
 } from 'lucide-vue-next';
 import { getSwal } from '@/lib/alert';
 
@@ -71,6 +73,126 @@ const registerErrors = ref({});
 const isRegisterSubmitting = ref(false);
 const showRegisterPassword = ref(false);
 const showRegisterPasswordConfirm = ref(false);
+
+// ── Password Strength System (Sesuai Kode Pengguna) ──────────────────────
+const passwordRules = [
+    { id: 'length', label: 'At least 12 characters long', test: (v) => (v || '').length >= 12, weight: 20 },
+    { id: 'uppercase', label: 'Contains uppercase letter', test: (v) => /[A-Z]/.test(v || ''), weight: 20 },
+    { id: 'lowercase', label: 'Contains lowercase letter', test: (v) => /[a-z]/.test(v || ''), weight: 20 },
+    { id: 'number', label: 'Contains number', test: (v) => /[0-9]/.test(v || ''), weight: 20 },
+    { id: 'special', label: 'Contains special character (!@#$...)', test: (v) => /[^a-zA-Z0-9]/.test(v || ''), weight: 20 }
+];
+
+// Login Password Strength
+const showLoginPasswordStrength = ref(false);
+let blurLoginTimer = null;
+
+const loginPasswordScore = computed(() => {
+    if (!form.password) return 0;
+    return passwordRules.reduce((acc, rule) => acc + (rule.test(form.password) ? rule.weight : 0), 0);
+});
+
+const loginPasswordSeverity = computed(() => {
+    if (loginPasswordScore.value <= 20) return 'danger';
+    if (loginPasswordScore.value <= 40) return 'warn';
+    if (loginPasswordScore.value <= 60) return 'info';
+    return 'success';
+});
+
+const loginPasswordColor = computed(() => {
+    switch (loginPasswordSeverity.value) {
+        case 'danger':
+            return '#EF4444';
+        case 'warn':
+            return '#F59E0B';
+        case 'info':
+            return '#3B82F6';
+        default:
+            return '#10B981';
+    }
+});
+
+const loginPasswordLabel = computed(() => {
+    if (loginPasswordScore.value === 0) return '';
+    if (loginPasswordScore.value <= 20) return 'Too Weak';
+    if (loginPasswordScore.value <= 40) return 'Weak';
+    if (loginPasswordScore.value <= 60) return 'Fair';
+    if (loginPasswordScore.value <= 80) return 'Strong';
+    return 'Very Strong';
+});
+
+function onLoginPasswordFocus() {
+    if (blurLoginTimer) clearTimeout(blurLoginTimer);
+    showLoginPasswordStrength.value = true;
+}
+
+function onLoginPasswordBlur() {
+    blurLoginTimer = setTimeout(() => {
+        showLoginPasswordStrength.value = false;
+    }, 200);
+}
+
+// Register Password Strength
+const showRegisterPasswordStrength = ref(false);
+let blurRegisterTimer = null;
+
+const registerPasswordScore = computed(() => {
+    if (!registerForm.password) return 0;
+    return passwordRules.reduce((acc, rule) => acc + (rule.test(registerForm.password) ? rule.weight : 0), 0);
+});
+
+const registerPasswordSeverity = computed(() => {
+    if (registerPasswordScore.value <= 20) return 'danger';
+    if (registerPasswordScore.value <= 40) return 'warn';
+    if (registerPasswordScore.value <= 60) return 'info';
+    return 'success';
+});
+
+const registerPasswordColor = computed(() => {
+    switch (registerPasswordSeverity.value) {
+        case 'danger':
+            return '#EF4444';
+        case 'warn':
+            return '#F59E0B';
+        case 'info':
+            return '#3B82F6';
+        default:
+            return '#10B981';
+    }
+});
+
+const registerPasswordLabel = computed(() => {
+    if (registerPasswordScore.value === 0) return '';
+    if (registerPasswordScore.value <= 20) return 'Too Weak';
+    if (registerPasswordScore.value <= 40) return 'Weak';
+    if (registerPasswordScore.value <= 60) return 'Fair';
+    if (registerPasswordScore.value <= 80) return 'Strong';
+    return 'Very Strong';
+});
+
+function onRegisterPasswordFocus() {
+    if (blurRegisterTimer) clearTimeout(blurRegisterTimer);
+    showRegisterPasswordStrength.value = true;
+}
+
+function onRegisterPasswordBlur() {
+    blurRegisterTimer = setTimeout(() => {
+        showRegisterPasswordStrength.value = false;
+    }, 200);
+}
+
+function getSeverityBadgeClass(severity) {
+    switch (severity) {
+        case 'danger':
+            return 'bg-red-50 text-red-600 border border-red-200 dark:bg-red-950/50 dark:text-red-400 dark:border-red-900';
+        case 'warn':
+            return 'bg-amber-50 text-amber-600 border border-amber-200 dark:bg-amber-950/50 dark:text-amber-400 dark:border-amber-900';
+        case 'info':
+            return 'bg-blue-50 text-blue-600 border border-blue-200 dark:bg-blue-950/50 dark:text-blue-400 dark:border-blue-900';
+        default:
+            return 'bg-emerald-50 text-emerald-600 border border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-400 dark:border-emerald-900';
+    }
+}
 
 function handleSocialLogin(provider) {
     getSwal().then((Swal) => {
@@ -507,7 +629,7 @@ onBeforeUnmount(() => {
                                 </p>
                             </div>
 
-                            <!-- Input 2: Password -->
+                            <!-- Input 2: Password (dengan Password Strength System) -->
                             <div class="input-group">
                                 <div
                                     class="input-underline"
@@ -522,6 +644,8 @@ onBeforeUnmount(() => {
                                         placeholder="Masukkan password"
                                         required
                                         class="input-field pr-9"
+                                        @focus="onLoginPasswordFocus"
+                                        @blur="onLoginPasswordBlur"
                                     />
                                     <button
                                         type="button"
@@ -538,6 +662,60 @@ onBeforeUnmount(() => {
                                     <AlertCircle class="w-3.5 h-3.5 shrink-0" />
                                     <span>{{ form.errors.password }}</span>
                                 </p>
+
+                                <!-- Popover Password Strength (Sesuai Kode Pengguna) -->
+                                <Transition name="popover-fade">
+                                    <div
+                                        v-if="showLoginPasswordStrength"
+                                        class="password-strength-popover"
+                                        @mousedown.prevent
+                                    >
+                                        <div class="flex flex-col gap-3 w-full">
+                                            <div class="flex items-center justify-between">
+                                                <div class="flex items-center gap-2">
+                                                    <Shield class="w-5 h-5 text-slate-700 dark:text-slate-200 stroke-[1.8]" />
+                                                    <span class="font-semibold text-sm text-slate-800 dark:text-slate-100">Password Strength</span>
+                                                </div>
+                                                <span
+                                                    class="px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider"
+                                                    :class="getSeverityBadgeClass(loginPasswordSeverity)"
+                                                    :style="{ visibility: loginPasswordLabel ? 'visible' : 'hidden' }"
+                                                >
+                                                    {{ loginPasswordLabel || '—' }}
+                                                </span>
+                                            </div>
+
+                                            <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                                                <div
+                                                    class="h-full transition-all duration-300 rounded-full"
+                                                    :style="{ width: `${loginPasswordScore}%`, backgroundColor: loginPasswordColor }"
+                                                ></div>
+                                            </div>
+
+                                            <ul class="flex flex-col gap-2 list-none m-0 p-0">
+                                                <li
+                                                    v-for="rule in passwordRules"
+                                                    :key="rule.id"
+                                                    class="flex items-center gap-2 text-xs"
+                                                >
+                                                    <Check
+                                                        v-if="rule.test(form.password)"
+                                                        class="w-3.5 h-3.5 text-emerald-500 shrink-0 stroke-[2.5]"
+                                                    />
+                                                    <X
+                                                        v-else
+                                                        class="w-3.5 h-3.5 text-rose-400 shrink-0 stroke-[2.5]"
+                                                    />
+                                                    <span
+                                                        :class="rule.test(form.password) ? 'text-slate-500 dark:text-slate-400' : 'text-slate-700 dark:text-slate-300 font-medium'"
+                                                    >
+                                                        {{ rule.label }}
+                                                    </span>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </Transition>
                             </div>
 
                             <!-- Baris Pilihan: Ingat Saya & Lupa Password -->
@@ -677,7 +855,7 @@ onBeforeUnmount(() => {
                                 </p>
                             </div>
 
-                            <!-- Input 3: Password -->
+                            <!-- Input 3: Password (dengan Password Strength System) -->
                             <div class="input-group">
                                 <div
                                     class="input-underline"
@@ -692,6 +870,8 @@ onBeforeUnmount(() => {
                                         placeholder="Masukkan password"
                                         required
                                         class="input-field pr-9"
+                                        @focus="onRegisterPasswordFocus"
+                                        @blur="onRegisterPasswordBlur"
                                     />
                                     <button
                                         type="button"
@@ -708,6 +888,60 @@ onBeforeUnmount(() => {
                                     <AlertCircle class="w-3.5 h-3.5 shrink-0" />
                                     <span>{{ registerErrors.password }}</span>
                                 </p>
+
+                                <!-- Popover Password Strength (Sesuai Kode Pengguna) -->
+                                <Transition name="popover-fade">
+                                    <div
+                                        v-if="showRegisterPasswordStrength"
+                                        class="password-strength-popover"
+                                        @mousedown.prevent
+                                    >
+                                        <div class="flex flex-col gap-3 w-full">
+                                            <div class="flex items-center justify-between">
+                                                <div class="flex items-center gap-2">
+                                                    <Shield class="w-5 h-5 text-slate-700 dark:text-slate-200 stroke-[1.8]" />
+                                                    <span class="font-semibold text-sm text-slate-800 dark:text-slate-100">Password Strength</span>
+                                                </div>
+                                                <span
+                                                    class="px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider"
+                                                    :class="getSeverityBadgeClass(registerPasswordSeverity)"
+                                                    :style="{ visibility: registerPasswordLabel ? 'visible' : 'hidden' }"
+                                                >
+                                                    {{ registerPasswordLabel || '—' }}
+                                                </span>
+                                            </div>
+
+                                            <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                                                <div
+                                                    class="h-full transition-all duration-300 rounded-full"
+                                                    :style="{ width: `${registerPasswordScore}%`, backgroundColor: registerPasswordColor }"
+                                                ></div>
+                                            </div>
+
+                                            <ul class="flex flex-col gap-2 list-none m-0 p-0">
+                                                <li
+                                                    v-for="rule in passwordRules"
+                                                    :key="rule.id"
+                                                    class="flex items-center gap-2 text-xs"
+                                                >
+                                                    <Check
+                                                        v-if="rule.test(registerForm.password)"
+                                                        class="w-3.5 h-3.5 text-emerald-500 shrink-0 stroke-[2.5]"
+                                                    />
+                                                    <X
+                                                        v-else
+                                                        class="w-3.5 h-3.5 text-rose-400 shrink-0 stroke-[2.5]"
+                                                    />
+                                                    <span
+                                                        :class="rule.test(registerForm.password) ? 'text-slate-500 dark:text-slate-400' : 'text-slate-700 dark:text-slate-300 font-medium'"
+                                                    >
+                                                        {{ rule.label }}
+                                                    </span>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </Transition>
                             </div>
 
                             <!-- Input 4: Konfirmasi Password -->
@@ -1209,6 +1443,56 @@ onBeforeUnmount(() => {
 
 .input-group {
     /* wrapper for each input + error */
+    position: relative;
+}
+
+/* ── Password Strength Popover (Sesuai Kode Pengguna) ──────────────── */
+.password-strength-popover {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    z-index: 60;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 16px;
+    padding: 14px 16px;
+    box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+:root.dark .password-strength-popover {
+    background: #0F172A;
+    border-color: #334155;
+    box-shadow: 0 12px 30px -3px rgba(0, 0, 0, 0.5);
+}
+
+.password-strength-popover::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    left: 28px;
+    width: 10px;
+    height: 10px;
+    background: #FFFFFF;
+    border-top: 1px solid #E2E8F0;
+    border-left: 1px solid #E2E8F0;
+    transform: rotate(45deg);
+}
+:root.dark .password-strength-popover::before {
+    background: #0F172A;
+    border-color: #334155;
+}
+
+.popover-fade-enter-active,
+.popover-fade-leave-active {
+    transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.popover-fade-enter-from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+}
+.popover-fade-leave-to {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
 }
 
 .input-underline {
