@@ -142,11 +142,6 @@ function submitRegister() {
         hasError = true;
     }
 
-    if (!registerForm.agree) {
-        registerErrors.value.agree = 'Anda harus menyetujui Syarat dan Privasi.';
-        hasError = true;
-    }
-
     if (hasError) return;
 
     isRegisterSubmitting.value = true;
@@ -748,29 +743,6 @@ onBeforeUnmount(() => {
                                 </p>
                             </div>
 
-                            <!-- Baris Persetujuan: Syarat dan Privasi -->
-                            <div class="flex flex-col gap-1 mt-0.5">
-                                <label class="flex items-center gap-2.5 cursor-pointer select-none">
-                                    <div
-                                        @click="registerForm.agree = !registerForm.agree"
-                                        class="checkbox-box !w-[18px] !h-[18px] !rounded-[5px]"
-                                        :class="registerForm.agree ? 'checkbox-checked' : 'checkbox-unchecked'"
-                                    >
-                                        <Check v-if="registerForm.agree" class="w-3.5 h-3.5 text-white stroke-[3]" />
-                                    </div>
-                                    <span class="text-[13px] text-slate-600 dark:text-slate-300">
-                                        Saya setuju dengan
-                                        <a href="#" @click.prevent="openTermsModal('Syarat & Ketentuan')" class="text-[#1677FF] font-semibold hover:underline">Syarat</a>
-                                        dan
-                                        <a href="#" @click.prevent="openTermsModal('Kebijakan Privasi')" class="text-[#1677FF] font-semibold hover:underline">Privasi</a>.
-                                    </span>
-                                </label>
-                                <p v-if="registerErrors.agree" class="error-msg">
-                                    <AlertCircle class="w-3.5 h-3.5 shrink-0" />
-                                    <span>{{ registerErrors.agree }}</span>
-                                </p>
-                            </div>
-
                             <!-- Tombol Utama: Daftar Akun → (Arrow Circle) -->
                             <div class="login-btn-wrapper pt-1">
                                 <button
@@ -794,22 +766,6 @@ onBeforeUnmount(() => {
                                 </button>
                             </div>
                         </form>
-
-                        <!-- Divider: Sudah mempunyai akun? -->
-                        <div class="divider-wrapper my-2.5">
-                            <div class="divider-line"></div>
-                            <span class="divider-text">Sudah mempunyai akun?</span>
-                        </div>
-
-                        <!-- Tombol Outline: Login Sekarang → -->
-                        <button
-                            type="button"
-                            @click="viewMode = 'login'"
-                            class="register-btn"
-                        >
-                            <UserPlus class="w-4 h-4 text-[#1677FF] dark:text-blue-400 stroke-[2.2]" />
-                            <span>Login Sekarang &rarr;</span>
-                        </button>
                     </div>
                 </Transition>
             </div>
@@ -1240,15 +1196,15 @@ onBeforeUnmount(() => {
 .register-form {
     display: flex;
     flex-direction: column;
-    gap: 13px;
+    gap: 18px;
 }
 
 .register-form .input-underline {
-    padding-bottom: 9px;
+    padding-bottom: 11px;
 }
 
 .register-form .eye-btn {
-    bottom: 8px;
+    bottom: 9px;
 }
 
 .input-group {
