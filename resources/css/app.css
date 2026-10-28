@@ -229,6 +229,41 @@
     scrollbar-color: #cbd5e1 transparent;
 }
 
+/* ── Scrollbar Khusus Mobile: Halus, Tipis & Ringan (GPU-friendly) ── */
+@media (max-width: 767px) {
+    ::-webkit-scrollbar {
+        width: 3.5px;
+        height: 3.5px;
+    }
+    ::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: rgba(148, 163, 184, 0.45);
+        border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover,
+    ::-webkit-scrollbar-thumb:active {
+        background: rgba(100, 116, 139, 0.7);
+    }
+
+    .dark ::-webkit-scrollbar-thumb {
+        background: rgba(148, 163, 184, 0.3);
+    }
+    .dark ::-webkit-scrollbar-thumb:hover,
+    .dark ::-webkit-scrollbar-thumb:active {
+        background: rgba(203, 213, 225, 0.55);
+    }
+
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(148, 163, 184, 0.45) transparent;
+    }
+    .dark * {
+        scrollbar-color: rgba(148, 163, 184, 0.3) transparent;
+    }
+}
+
 /* Scrollbar alternatif (opsional untuk container tertentu) */
 .nice-scrollbar::-webkit-scrollbar {
     width: 10px;

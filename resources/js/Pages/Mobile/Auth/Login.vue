@@ -359,7 +359,7 @@
 <template>
     <Head title="Login" />
     <div
-        class="h-[100dvh] max-h-[100dvh] w-full relative bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-between overflow-hidden select-none transform-gpu"
+        class="login-mobile-page h-[100dvh] max-h-[100dvh] w-full relative bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-between overflow-hidden select-none transform-gpu"
     >
         <!-- ============================================================== -->
         <!-- HERO BACKGROUND — 4 Layer Decorative Canvas Full Bleed          -->
@@ -889,15 +889,13 @@
 </template>
 
 <style scoped>
-    /* Hilangkan scrollbar di semua browser dan cegah overflow */
-    :global(html),
-    :global(body) {
+    /* Pastikan halaman login mobile tetap fit 1 layar dan tanpa scrollbar */
+    .login-mobile-page {
+        overflow: hidden !important;
         scrollbar-width: none !important;
         -ms-overflow-style: none !important;
-        overflow: hidden !important;
     }
-    :global(html::-webkit-scrollbar),
-    :global(body::-webkit-scrollbar) {
+    .login-mobile-page::-webkit-scrollbar {
         display: none !important;
         width: 0 !important;
         height: 0 !important;
