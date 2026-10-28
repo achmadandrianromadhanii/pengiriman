@@ -222,6 +222,18 @@
         viewMode.value = 'register';
     }
 
+    function openTermsModal(title) {
+        getSwal().then((Swal) => {
+            Swal.fire({
+                title: title,
+                text: 'Dengan mendaftar dan menggunakan layanan SoftSend, Anda menyetujui ketentuan penggunaan layanan, kepatuhan kerahasiaan data pengiriman, dan perlindungan privasi pengguna.',
+                icon: 'info',
+                confirmButtonText: 'Mengerti',
+                confirmButtonColor: '#2563EB',
+            });
+        });
+    }
+
     function submitRegister() {
         registerErrors.value = {};
         let hasError = false;
@@ -743,6 +755,26 @@
                     >
                         Daftar
                     </button>
+
+                    <!-- Disclaimer Syarat & Privasi (Persis Screenshot) -->
+                    <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-2 text-center leading-tight">
+                        Melanjutkan berarti setuju dengan
+                        <button
+                            type="button"
+                            @click="openTermsModal('Syarat & Ketentuan')"
+                            class="font-bold text-[#2563EB] dark:text-blue-400 underline hover:text-blue-700 dark:hover:text-blue-300 focus:outline-none"
+                        >
+                            SYARAT
+                        </button>
+                        dan
+                        <button
+                            type="button"
+                            @click="openTermsModal('Kebijakan Privasi')"
+                            class="font-bold text-[#2563EB] dark:text-blue-400 underline hover:text-blue-700 dark:hover:text-blue-300 focus:outline-none"
+                        >
+                            PRIVASI
+                        </button>
+                    </p>
                 </div>
             </div>
 
