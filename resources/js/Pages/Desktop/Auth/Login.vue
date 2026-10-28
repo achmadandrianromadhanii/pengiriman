@@ -32,6 +32,7 @@ import {
     Check,
     Mail,
     ArrowLeft,
+    UserPlus,
 } from 'lucide-vue-next';
 import { getSwal } from '@/lib/alert';
 
@@ -75,6 +76,18 @@ function handleSocialLogin(provider) {
         });
     }).catch(() => {
         showEmailForm.value = true;
+    });
+}
+
+function handleRegister() {
+    getSwal().then((Swal) => {
+        Swal.fire({
+            title: 'Daftar Akun Baru',
+            text: 'Pendaftaran akun admin baru dikelola secara terpusat oleh IT / Superadmin. Silakan hubungi administrator SoftSend untuk mendapatkan akses akun baru.',
+            icon: 'info',
+            confirmButtonText: 'Mengerti',
+            confirmButtonColor: '#1677FF',
+        });
     });
 }
 
@@ -489,6 +502,21 @@ onBeforeUnmount(() => {
                                 </button>
                             </div>
                         </form>
+
+                        <!-- Bagian Daftar Akun Baru (Persis Sesuai Foto) -->
+                        <div class="register-section">
+                            <p class="register-prompt">
+                                Belum mempunyai akun? Daftar akun baru melalui tombol di bawah.
+                            </p>
+                            <button
+                                type="button"
+                                @click="handleRegister"
+                                class="register-btn"
+                            >
+                                <UserPlus class="w-4 h-4 text-[#1677FF] dark:text-blue-400 stroke-[2.2]" />
+                                <span>Daftar Akun &rarr;</span>
+                            </button>
+                        </div>
                     </div>
                 </Transition>
             </div>
@@ -1124,6 +1152,62 @@ onBeforeUnmount(() => {
     letter-spacing: 0.02em;
     position: relative;
     z-index: 1;
+}
+
+/* ── Register Section (Persis Sesuai Foto) ─────────────────────────── */
+.register-section {
+    margin-top: 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.register-prompt {
+    font-size: 11.5px;
+    color: #64748B;
+    text-align: center;
+    margin-bottom: 10px;
+    line-height: 1.4;
+}
+:root.dark .register-prompt {
+    color: #94A3B8;
+}
+
+.register-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    height: 48px;
+    border: 1.5px solid #1677FF;
+    border-radius: 16px;
+    background-color: transparent;
+    color: #1677FF;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    user-select: none;
+    box-shadow: 0 1px 2px rgba(22, 119, 255, 0.05);
+}
+.register-btn:hover {
+    background-color: rgba(22, 119, 255, 0.06);
+    border-color: #0162FE;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(22, 119, 255, 0.12);
+}
+:root.dark .register-btn {
+    border-color: #3B82F6;
+    color: #60A5FA;
+}
+:root.dark .register-btn:hover {
+    background-color: rgba(59, 130, 246, 0.12);
+    border-color: #60A5FA;
+}
+.register-btn:active {
+    transform: scale(0.99);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
