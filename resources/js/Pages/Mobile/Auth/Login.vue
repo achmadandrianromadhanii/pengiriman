@@ -30,6 +30,7 @@
         CheckCircle2, // Centang sukses
         Fingerprint, // [UPDATE: V3] Ikon biometrik untuk bottom sheet
     } from 'lucide-vue-next';
+    import { getSwal } from '@/lib/alert';
 
     // ── Layout ─────────────────────────────────────────────────────────────
     defineOptions({ layout: AuthLayout });
@@ -120,11 +121,23 @@
     function submit() {
         localEmailError.value = '';
 
-        if (!form.email || !isGmail(form.email)) {
-            localEmailError.value = 't("auth.emailValidation")';
-            if (window.innerWidth < 768) {
-                triggerShake();
-            }
+        let val = (form.email || '').trim();
+        if (!val) {
+            localEmailError.value = 'Masukkan username atau email Anda.';
+            if (window.innerWidth < 768) triggerShake();
+            return;
+        }
+
+        // Adaptasi fleksibel: Jika pengguna memasukkan username (misal 'admin'),
+        // lengkapi domain @gmail.com agar sesuai validasi backend
+        if (!val.includes('@')) {
+            val = val + '@gmail.com';
+            form.email = val;
+        }
+
+        if (!isGmail(val)) {
+            localEmailError.value = 'Email akun harus berekstensi @gmail.com.';
+            if (window.innerWidth < 768) triggerShake();
             return;
         }
 
@@ -158,6 +171,43 @@
                     triggerShake();
                 }
             },
+        });
+    }
+
+    // ── Action Handlers ──────────────────────────────────────────────────
+    function handleForgotPassword() {
+        getSwal().then((Swal) => {
+            Swal.fire({
+                title: 'Lupa Password?',
+                text: 'Silakan hubungi Superadmin SoftSend atau bagian IT Support untuk mengatur ulang kata sandi akun Anda.',
+                icon: 'info',
+                confirmButtonText: 'Mengerti',
+                confirmButtonColor: '#2563EB',
+            });
+        });
+    }
+
+    function handleSocialLogin(provider) {
+        getSwal().then((Swal) => {
+            Swal.fire({
+                title: `Lanjutkan dengan ${provider}`,
+                text: `Integrasi autentikasi ${provider} sedang disiapkan. Silakan gunakan opsi login dengan email/username untuk masuk ke akun Anda.`,
+                icon: 'info',
+                confirmButtonText: 'Mengerti',
+                confirmButtonColor: '#2563EB',
+            });
+        });
+    }
+
+    function handleRegister() {
+        getSwal().then((Swal) => {
+            Swal.fire({
+                title: 'Pendaftaran Akun Baru',
+                text: 'Pendaftaran akun operator / admin baru dilakukan melalui Superadmin SoftSend. Silakan hubungi kantor operasional untuk mendapatkan kredensial akses.',
+                icon: 'info',
+                confirmButtonText: 'Mengerti',
+                confirmButtonColor: '#2563EB',
+            });
         });
     }
 
@@ -308,7 +358,7 @@
 
 <template>
     <Head title="Login" />
-        <div
+    <div
         class="min-h-[100dvh] w-full relative bg-slate-50 dark:bg-slate-950 flex flex-col items-center overflow-x-hidden transform-gpu"
     >
         <!-- ============================================================== -->
@@ -400,137 +450,223 @@
         </div>
 
         <!-- ============================================================== -->
-        <!-- LOGIN CARD — Formulir login utama                               -->
+        <!-- LOGIN CARD — Formulir login utama (Persis Screenshot)           -->
         <!-- Desain: Card putih overlap hero 22px                            -->
-        <!-- Radius: 30px | Padding: 24px | Margin LR: 20px                 -->
-        <!-- Shadow: Ringan (tidak membebani GPU mobile)                     -->
+        <!-- Radius: 32px | Padding: 24px | Margin LR: 20px                 -->
+        <!-- Shadow: Ringan dan elegan                                       -->
         <!-- ============================================================== -->
         <div
-            class="relative z-20 w-[calc(100%-40px)] max-w-[360px] bg-white dark:bg-slate-900 rounded-[30px] p-6 border border-slate-100 dark:border-slate-800 -mt-[22px]"
-            :class="[isShake ? 'animate-shake' : '', 'shadow-[0_4px_24px_-4px_rgba(0,0,0,0.08)]']"
+            class="relative z-20 w-[calc(100%-36px)] max-w-[365px] bg-white dark:bg-slate-900 rounded-[32px] p-6 border border-slate-100/80 dark:border-slate-800 -mt-[22px]"
+            :class="[isShake ? 'animate-shake' : '', 'shadow-[0_8px_30px_rgba(0,0,0,0.06)]']"
         >
-            <!-- ====================================================== -->
-            <!-- CARD LABEL — "Administrator Login"                      -->
-            <!-- Fungsi: Identifikasi tipe login untuk admin             -->
-            <!-- ====================================================== -->
-            <h2 class="text-[15px] font-semibold text-slate-800 dark:text-white mb-5">
-                {{ t('auth.adminLogin') }}
-            </h2>
+            <!-- Header Form Login -->
+            <div class="mb-5 text-left">
+                <h2 class="text-[22px] font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight">
+                    Form Login
+                </h2>
+                <p class="text-[12px] text-slate-400 dark:text-slate-400 mt-1">
+                    Masuk ke akun untuk melanjutkan
+                </p>
+            </div>
 
-            <form class="space-y-5" @submit.prevent="submit">
-                <!-- ====================================================== -->
-                <!-- JOINED INPUT GROUP — Email + Password dalam satu kotak  -->
-                <!-- Desain: Dua input disatukan dengan garis pemisah tipis  -->
-                <!-- Tinggi input: 52px | Radius grup: 16px                  -->
-                <!-- ====================================================== -->
-                <div
-                    class="flex flex-col border border-slate-200 dark:border-slate-700 rounded-[16px] overflow-hidden"
-                >
-                    <!-- Email Input — Ikon Mail dari Lucide -->
+            <form class="space-y-4" @submit.prevent="submit">
+                <!-- 1. Email Input Row -->
+                <div class="flex items-center gap-3.5">
                     <div
-                        class="relative w-full group border-b border-slate-200 dark:border-slate-700"
+                        class="w-10 h-10 rounded-full bg-[#EBF3FF] dark:bg-blue-950/60 text-[#2563EB] flex items-center justify-center shrink-0"
                     >
-                        <div
-                            class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-600 transition-colors duration-200"
+                        <Mail class="w-5 h-5 stroke-[2]" />
+                    </div>
+                    <div
+                        class="flex-1 pb-1 transition-colors duration-200"
+                        :class="emailFocused ? 'border-b-2 border-[#2563EB]' : 'border-b border-slate-200 dark:border-slate-700'"
+                    >
+                        <label
+                            for="mobile-email"
+                            class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 leading-none mb-1"
                         >
-                            <Mail class="w-5 h-5" />
-                        </div>
+                            Email
+                        </label>
                         <input
                             v-model="form.email"
-                            type="email"
+                            type="text"
                             id="mobile-email"
                             autocomplete="username"
-                            :placeholder="t('auth.emailPlaceholder')"
+                            placeholder="Masukkan email anda"
+                            @focus="emailFocused = true"
+                            @blur="emailFocused = false"
                             required
-                            class="block w-full h-[52px] pl-11 pr-4 bg-slate-50 dark:bg-slate-800/60 border-none text-sm font-normal text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-0"
+                            class="mobile-custom-input text-[13px] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 font-normal"
                         />
-                    </div>
-
-                    <!-- Password Input — Ikon LockKeyhole + Eye toggle -->
-                    <div class="relative w-full group">
-                        <div
-                            class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-600 transition-colors duration-200"
-                        >
-                            <LockKeyhole class="w-5 h-5" />
-                        </div>
-                        <input
-                            v-model="form.password"
-                            :type="showPassword ? 'text' : 'password'"
-                            id="mobile-password"
-                            autocomplete="current-password"
-                            :placeholder="t('auth.passwordPlaceholder')"
-                            required
-                            class="block w-full h-[52px] pl-11 pr-12 bg-slate-50 dark:bg-slate-800/60 border-none text-sm font-normal text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-0"
-                        />
-                        <!-- Tombol Toggle Visibilitas Password -->
-                        <button
-                            type="button"
-                            tabindex="-1"
-                            class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 active:text-blue-600 transition-colors focus:outline-none"
-                            @click="showPassword = !showPassword"
-                        >
-                            <EyeOff v-if="showPassword" class="w-5 h-5" />
-                            <Eye v-else class="w-5 h-5" />
-                        </button>
                     </div>
                 </div>
+                <p v-if="localEmailError || form.errors.email" class="text-[11px] text-red-500 font-medium pl-14 -mt-2">
+                    {{ localEmailError || form.errors.email }}
+                </p>
 
-                <!-- ====================================================== -->
-                <!-- REMEMBER ME — Checkbox modern 20px, area klik 44px      -->
-                <!-- Fungsi: Menjaga sesi login (remember token Laravel)     -->
-                <!-- Cara Kerja: Checkbox sr-only + visual custom via peer   -->
-                <!-- ====================================================== -->
-                <label
-                    class="flex items-center gap-3 cursor-pointer select-none -ml-1 p-1 min-h-[44px]"
-                >
-                    <div class="relative flex items-center justify-center w-5 h-5">
-                        <!-- Checkbox asli (tersembunyi, tetap fungsional) -->
-                        <input v-model="form.remember" type="checkbox" class="sr-only peer" />
-                        <!-- Visual kotak checkbox — 20px, radius 5px -->
-                        <div
-                            class="w-5 h-5 rounded-[5px] border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 peer-checked:bg-blue-600 peer-checked:border-blue-600 transition-colors duration-200"
-                        ></div>
-                        <!-- Ikon centang (muncul saat checked via peer) -->
-                        <svg
-                            class="absolute w-3 h-3 text-white opacity-0 peer-checked:opacity-100 transition-opacity duration-150"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            stroke-width="3.5"
-                            aria-hidden="true"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                d="M5 13l4 4L19 7"
-                            />
-                        </svg>
+                <!-- 2. Password Input Row -->
+                <div class="flex items-center gap-3.5 pt-1">
+                    <div
+                        class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-400 flex items-center justify-center shrink-0"
+                    >
+                        <LockKeyhole class="w-5 h-5 stroke-[2]" />
                     </div>
-                    <span class="text-[13px] font-medium text-slate-600 dark:text-slate-400">{{
-                        t('auth.rememberMe')
-                    }}</span>
-                </label>
+                    <div
+                        class="flex-1 pb-1 transition-colors duration-200"
+                        :class="passwordFocused ? 'border-b-2 border-[#2563EB]' : 'border-b border-slate-200 dark:border-slate-700'"
+                    >
+                        <label
+                            for="mobile-password"
+                            class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 leading-none mb-1"
+                        >
+                            Password
+                        </label>
+                        <div class="flex items-center justify-between">
+                            <input
+                                v-model="form.password"
+                                :type="showPassword ? 'text' : 'password'"
+                                id="mobile-password"
+                                autocomplete="current-password"
+                                placeholder="Masukkan password anda"
+                                @focus="passwordFocused = true"
+                                @blur="passwordFocused = false"
+                                required
+                                class="mobile-custom-input text-[13px] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 font-normal"
+                            />
+                            <button
+                                type="button"
+                                tabindex="-1"
+                                @click="showPassword = !showPassword"
+                                class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 focus:outline-none p-1 shrink-0 -mr-1"
+                            >
+                                <EyeOff v-if="showPassword" class="w-5 h-5 stroke-[1.8]" />
+                                <Eye v-else class="w-5 h-5 stroke-[1.8]" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <p v-if="form.errors.password" class="text-[11px] text-red-500 font-medium pl-14 -mt-2">
+                    {{ form.errors.password }}
+                </p>
 
-                <!-- ====================================================== -->
-                <!-- SUBMIT BUTTON — Gradient #2563EB → #6D28D9              -->
-                <!-- Ikon: ArrowRight (Lucide) | Teks: "Login"               -->
-                <!-- Micro-interaction: active:scale-[0.97] + glow tipis     -->
-                <!-- ====================================================== -->
+                <!-- 3. Options Row (Tetap Masuk & Lupa password?) -->
+                <div class="flex items-center justify-between pt-1">
+                    <label class="flex items-center gap-2.5 cursor-pointer select-none">
+                        <input
+                            v-model="form.remember"
+                            type="checkbox"
+                            class="w-4 h-4 rounded-[4px] border-slate-300 dark:border-slate-600 text-[#2563EB] focus:ring-0 focus:ring-offset-0 cursor-pointer"
+                        />
+                        <span class="text-xs font-semibold text-slate-700 dark:text-slate-300">Tetap Masuk</span>
+                    </label>
+                    <button
+                        type="button"
+                        @click="handleForgotPassword"
+                        class="text-xs font-semibold text-[#2563EB] hover:underline focus:outline-none"
+                    >
+                        Lupa password?
+                    </button>
+                </div>
+
+                <!-- 4. Submit Button (Login) -->
                 <button
                     type="submit"
                     :disabled="form.processing"
-                    class="w-full h-[52px] flex items-center justify-center gap-2 rounded-[16px] text-white font-semibold text-[15px] active:scale-[0.97] transition-transform duration-200 disabled:opacity-70 disabled:cursor-wait"
+                    class="w-full h-[48px] rounded-full text-white font-bold text-[15px] flex items-center justify-center transition-all duration-200 active:scale-[0.98] disabled:opacity-70 disabled:cursor-wait mt-5"
                     style="
-                        background: linear-gradient(to right, #2563eb, #6d28d9);
-                        box-shadow: 0 4px 14px -2px rgba(109, 40, 217, 0.3);
+                        background: linear-gradient(90deg, #2563eb 0%, #4f46e5 100%);
+                        box-shadow: 0 4px 14px -1px rgba(37, 99, 235, 0.4);
                     "
                 >
-                    <span
-                        ><template v-if="true">{{ t('auth.loginBtn') }}</template></span
-                    >
-                    <ArrowRight class="w-5 h-5" />
+                    <span v-if="!form.processing">Login</span>
+                    <span v-else class="flex items-center gap-2">
+                        <Loader2 class="w-4 h-4 animate-spin" />
+                        <span>Memproses...</span>
+                    </span>
                 </button>
             </form>
+
+            <!-- 5. Divider "atau masuk dengan" -->
+            <div class="relative flex items-center justify-center my-4">
+                <div class="w-full border-t border-slate-200 dark:border-slate-700"></div>
+                <span class="absolute bg-white dark:bg-slate-900 px-3 text-[11px] text-slate-400 dark:text-slate-500 font-normal">
+                    atau masuk dengan
+                </span>
+            </div>
+
+            <!-- 6. Social Logins 2x2 Grid -->
+            <div class="grid grid-cols-2 gap-2.5">
+                <!-- Google -->
+                <button
+                    type="button"
+                    @click="handleSocialLogin('Google')"
+                    class="social-mobile-card"
+                >
+                    <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
+                        <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/>
+                        <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 10.04 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
+                        <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+                    </svg>
+                    <span class="text-xs font-semibold text-slate-800 dark:text-slate-200">Google</span>
+                </button>
+
+                <!-- GitHub -->
+                <button
+                    type="button"
+                    @click="handleSocialLogin('GitHub')"
+                    class="social-mobile-card"
+                >
+                    <svg class="w-4 h-4 shrink-0 text-slate-900 dark:text-white fill-current" viewBox="0 0 24 24">
+                        <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                    </svg>
+                    <span class="text-xs font-semibold text-slate-800 dark:text-slate-200">GitHub</span>
+                </button>
+
+                <!-- Discord -->
+                <button
+                    type="button"
+                    @click="handleSocialLogin('Discord')"
+                    class="social-mobile-card"
+                >
+                    <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="#5865F2">
+                        <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+                    </svg>
+                    <span class="text-xs font-semibold text-slate-800 dark:text-slate-200">Discord</span>
+                </button>
+
+                <!-- Microsoft -->
+                <button
+                    type="button"
+                    @click="handleSocialLogin('Microsoft')"
+                    class="social-mobile-card"
+                >
+                    <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                        <rect x="1" y="1" width="10" height="10" fill="#F25022"/>
+                        <rect x="13" y="1" width="10" height="10" fill="#7FBA00"/>
+                        <rect x="1" y="13" width="10" height="10" fill="#00A4EF"/>
+                        <rect x="13" y="13" width="10" height="10" fill="#FFB900"/>
+                    </svg>
+                    <span class="text-xs font-semibold text-slate-800 dark:text-slate-200">Microsoft</span>
+                </button>
+            </div>
+
+            <!-- 7. Bottom Registration Section -->
+            <div class="mt-4 pt-3.5 border-t border-slate-100 dark:border-slate-800/80 text-center flex flex-col items-center">
+                <p class="text-xs font-bold text-slate-800 dark:text-white">
+                    Belum mempunyai akun?
+                </p>
+                <p class="text-[11px] text-slate-400 dark:text-slate-400 mt-0.5 mb-3">
+                    Daftarkan akun baru melalui tombol di bawah.
+                </p>
+                <button
+                    type="button"
+                    @click="handleRegister"
+                    class="w-full h-[44px] rounded-full border-[1.5px] border-[#2563EB] text-[#2563EB] font-bold text-sm flex items-center justify-center hover:bg-blue-50/50 dark:hover:bg-blue-900/20 active:scale-[0.98] transition-all duration-150"
+                >
+                    Daftar
+                </button>
+            </div>
         </div>
 
         <!-- ============================================================== -->
@@ -758,10 +894,45 @@
             </Transition>
         </Teleport>
     </div>
-
 </template>
 
 <style scoped>
+    /* Reset & Clean Input Mobile (Mencegah style rounded pill dari global .input-field) */
+    .mobile-custom-input {
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        padding: 0 !important;
+        width: 100% !important;
+    }
+    .mobile-custom-input:focus {
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
+    }
+
+    /* Social Login Card Mobile */
+    .social-mobile-card {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        height: 42px;
+        border-radius: 14px;
+        border: 1px solid #E2E8F0;
+        background-color: #FFFFFF;
+        transition: all 0.15s ease;
+        cursor: pointer;
+    }
+    :global(.dark) .social-mobile-card {
+        border-color: #334155;
+        background-color: #1E293B;
+    }
+    .social-mobile-card:active {
+        transform: scale(0.97);
+    }
+
     .fade-slide-leave-to {
         opacity: 0;
         transform: translateY(-5px);
