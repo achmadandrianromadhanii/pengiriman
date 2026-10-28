@@ -413,7 +413,7 @@
     }
     button,
     a,
-    input,
+    input:not([type="checkbox"]):not([type="radio"]),
     select,
     textarea {
         min-height: 44px;

@@ -359,21 +359,15 @@
 <template>
     <Head title="Login" />
     <div
-        class="min-h-[100dvh] w-full relative bg-slate-50 dark:bg-slate-950 flex flex-col items-center overflow-x-hidden transform-gpu"
+        class="h-[100dvh] max-h-[100dvh] w-full relative bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-between overflow-hidden select-none transform-gpu"
     >
         <!-- ============================================================== -->
         <!-- HERO BACKGROUND — 4 Layer Decorative Canvas Full Bleed          -->
-        <!-- Tinggi: 38% viewport height                                     -->
-        <!-- Fungsi: Identitas visual premium enterprise di bagian atas      -->
-        <!-- Cara Kerja: 4 layer ditumpuk menggunakan position absolute      -->
-        <!--   Layer 1 — Gradient (#1E40AF → #4F46E5 → #7C3AED)             -->
-        <!--   Layer 2 — Soft glow (radial putih, blur besar)                -->
-        <!--   Layer 3 — Contour line (#818CF8, stroke 2.8px, opacity 12%)   -->
-        <!--   Layer 4 — Mesh wave (#60A5FA, stroke 2.4px, opacity 10%)      -->
+        <!-- Tinggi: 24% viewport height                                     -->
         <!-- ============================================================== -->
         <div
-            class="absolute top-0 left-0 right-0 h-[38vh] overflow-hidden"
-            style="border-bottom-left-radius: 50% 44px; border-bottom-right-radius: 50% 44px"
+            class="absolute top-0 left-0 right-0 h-[24vh] overflow-hidden"
+            style="border-bottom-left-radius: 50% 36px; border-bottom-right-radius: 50% 36px"
         >
             <!-- Layer 1: Base Gradient — Warna enterprise SoftSend -->
             <div
@@ -386,7 +380,6 @@
             ></div>
 
             <!-- Layer 3: Contour Line — Garis konsentris (#818CF8, stroke 2.8px, 12%) -->
-            <!-- Pattern saling berlawanan dengan Layer 4 (posisi kanan atas) -->
             <svg
                 class="absolute -top-8 -right-8 w-[160%] h-[160%] opacity-[0.12]"
                 viewBox="0 0 200 200"
@@ -402,7 +395,6 @@
             </svg>
 
             <!-- Layer 4: Mesh Wave — Gelombang diagonal (#60A5FA, stroke 2.4px, 10%) -->
-            <!-- Arah berlawanan dengan contour (posisi kiri bawah) -->
             <svg
                 class="absolute bottom-0 left-0 w-[140%] h-full opacity-[0.10]"
                 viewBox="0 0 200 100"
@@ -425,65 +417,60 @@
 
         <!-- ============================================================== -->
         <!-- HERO CONTENT — Logo + Brand di atas hero background             -->
-        <!-- Posisi: Di dalam area hero, BUKAN di dalam card login           -->
-        <!-- Logo: File HD asli, ukuran 72px, PNG transparan, shadow tipis   -->
         <!-- ============================================================== -->
-        <div class="relative z-10 w-full text-center px-6 pt-10 pb-16 flex flex-col items-center">
-            <!-- Logo SoftSend HD — PNG transparan resolusi tinggi, 72px + shadow -->
+        <div class="relative z-10 w-full text-center px-4 pt-3.5 pb-2.5 flex flex-col items-center shrink-0">
+            <!-- Logo SoftSend HD -->
             <img
                 src="/images/logo-softsend-hd.png"
                 alt="SoftSend Logo"
-                class="w-[72px] h-auto object-contain mb-3"
-                width="72"
-                height="72"
+                class="w-[46px] h-auto object-contain mb-1"
+                width="46"
+                height="46"
                 fetchpriority="high"
-                style="filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.15))"
+                style="filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.15))"
             />
 
             <!-- Nama Brand -->
-            <h1 class="font-semibold text-[28px] text-white tracking-tight leading-tight">
+            <h1 class="font-bold text-[22px] text-white tracking-tight leading-tight">
                 SoftSend
             </h1>
 
             <!-- Tagline -->
-            <p class="text-[13px] text-white/80 font-normal mt-1">{{ t('auth.tagline') }}</p>
+            <p class="text-[11px] text-white/85 font-normal mt-0.5">{{ t('auth.tagline') }}</p>
         </div>
 
         <!-- ============================================================== -->
         <!-- LOGIN CARD — Formulir login utama (Persis Screenshot)           -->
-        <!-- Desain: Card putih overlap hero 22px                            -->
-        <!-- Radius: 32px | Padding: 24px | Margin LR: 20px                 -->
-        <!-- Shadow: Ringan dan elegan                                       -->
         <!-- ============================================================== -->
         <div
-            class="relative z-20 w-[calc(100%-36px)] max-w-[365px] bg-white dark:bg-slate-900 rounded-[32px] p-6 border border-slate-100/80 dark:border-slate-800 -mt-[22px]"
-            :class="[isShake ? 'animate-shake' : '', 'shadow-[0_8px_30px_rgba(0,0,0,0.06)]']"
+            class="relative z-20 w-[calc(100%-32px)] max-w-[360px] bg-white dark:bg-slate-900 rounded-[28px] px-5 py-4 border border-slate-100/90 dark:border-slate-800 -mt-1.5 shrink-0 shadow-[0_6px_25px_rgba(0,0,0,0.07)]"
+            :class="[isShake ? 'animate-shake' : '']"
         >
             <!-- Header Form Login -->
-            <div class="mb-5 text-left">
-                <h2 class="text-[22px] font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight">
+            <div class="mb-3 text-left">
+                <h2 class="text-[19px] font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight">
                     Form Login
                 </h2>
-                <p class="text-[12px] text-slate-400 dark:text-slate-400 mt-1">
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
                     Masuk ke akun untuk melanjutkan
                 </p>
             </div>
 
-            <form class="space-y-4" @submit.prevent="submit">
+            <form class="space-y-2.5" @submit.prevent="submit">
                 <!-- 1. Email Input Row -->
-                <div class="flex items-center gap-3.5">
+                <div class="flex items-center gap-3">
                     <div
-                        class="w-10 h-10 rounded-full bg-[#EBF3FF] dark:bg-blue-950/60 text-[#2563EB] flex items-center justify-center shrink-0"
+                        class="w-9 h-9 rounded-full bg-[#EBF3FF] dark:bg-blue-950/70 text-[#2563EB] flex items-center justify-center shrink-0"
                     >
-                        <Mail class="w-5 h-5 stroke-[2]" />
+                        <Mail class="w-4 h-4 stroke-[2]" />
                     </div>
                     <div
                         class="flex-1 pb-1 transition-colors duration-200"
-                        :class="emailFocused ? 'border-b-2 border-[#2563EB]' : 'border-b border-slate-200 dark:border-slate-700'"
+                        :class="emailFocused ? 'border-b-2 border-[#2563EB]' : 'border-b-2 border-slate-300 dark:border-slate-600'"
                     >
                         <label
                             for="mobile-email"
-                            class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 leading-none mb-1"
+                            class="block text-[11px] font-bold text-slate-800 dark:text-slate-100 leading-none mb-1"
                         >
                             Email
                         </label>
@@ -496,28 +483,28 @@
                             @focus="emailFocused = true"
                             @blur="emailFocused = false"
                             required
-                            class="mobile-custom-input text-[13px] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 font-normal"
+                            class="mobile-custom-input text-[13px] font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 py-0.5"
                         />
                     </div>
                 </div>
-                <p v-if="localEmailError || form.errors.email" class="text-[11px] text-red-500 font-medium pl-14 -mt-2">
+                <p v-if="localEmailError || form.errors.email" class="text-[11px] text-red-500 font-medium pl-12 -mt-1.5">
                     {{ localEmailError || form.errors.email }}
                 </p>
 
                 <!-- 2. Password Input Row -->
-                <div class="flex items-center gap-3.5 pt-1">
+                <div class="flex items-center gap-3 pt-0.5">
                     <div
-                        class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-400 flex items-center justify-center shrink-0"
+                        class="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-300 flex items-center justify-center shrink-0"
                     >
-                        <LockKeyhole class="w-5 h-5 stroke-[2]" />
+                        <LockKeyhole class="w-4 h-4 stroke-[2]" />
                     </div>
                     <div
                         class="flex-1 pb-1 transition-colors duration-200"
-                        :class="passwordFocused ? 'border-b-2 border-[#2563EB]' : 'border-b border-slate-200 dark:border-slate-700'"
+                        :class="passwordFocused ? 'border-b-2 border-[#2563EB]' : 'border-b-2 border-slate-300 dark:border-slate-600'"
                     >
                         <label
                             for="mobile-password"
-                            class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 leading-none mb-1"
+                            class="block text-[11px] font-bold text-slate-800 dark:text-slate-100 leading-none mb-1"
                         >
                             Password
                         </label>
@@ -531,38 +518,52 @@
                                 @focus="passwordFocused = true"
                                 @blur="passwordFocused = false"
                                 required
-                                class="mobile-custom-input text-[13px] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 font-normal"
+                                class="mobile-custom-input text-[13px] font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-400 py-0.5"
                             />
                             <button
                                 type="button"
                                 tabindex="-1"
                                 @click="showPassword = !showPassword"
-                                class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 focus:outline-none p-1 shrink-0 -mr-1"
+                                class="text-slate-500 dark:text-slate-300 hover:text-slate-700 dark:hover:text-white focus:outline-none p-1 shrink-0 -mr-1"
                             >
-                                <EyeOff v-if="showPassword" class="w-5 h-5 stroke-[1.8]" />
-                                <Eye v-else class="w-5 h-5 stroke-[1.8]" />
+                                <EyeOff v-if="showPassword" class="w-4 h-4 stroke-[2]" />
+                                <Eye v-else class="w-4 h-4 stroke-[2]" />
                             </button>
                         </div>
                     </div>
                 </div>
-                <p v-if="form.errors.password" class="text-[11px] text-red-500 font-medium pl-14 -mt-2">
+                <p v-if="form.errors.password" class="text-[11px] text-red-500 font-medium pl-12 -mt-1.5">
                     {{ form.errors.password }}
                 </p>
 
                 <!-- 3. Options Row (Tetap Masuk & Lupa password?) -->
-                <div class="flex items-center justify-between pt-1">
-                    <label class="flex items-center gap-2.5 cursor-pointer select-none">
-                        <input
-                            v-model="form.remember"
-                            type="checkbox"
-                            class="w-4 h-4 rounded-[4px] border-slate-300 dark:border-slate-600 text-[#2563EB] focus:ring-0 focus:ring-offset-0 cursor-pointer"
-                        />
-                        <span class="text-xs font-semibold text-slate-700 dark:text-slate-300">Tetap Masuk</span>
+                <div class="flex items-center justify-between pt-0.5">
+                    <label class="flex items-center gap-2 cursor-pointer select-none">
+                        <div class="relative flex items-center justify-center w-[18px] h-[18px] shrink-0">
+                            <input
+                                v-model="form.remember"
+                                type="checkbox"
+                                class="sr-only peer"
+                            />
+                            <div
+                                class="w-[18px] h-[18px] rounded-[5px] border-2 border-slate-300 dark:border-slate-500 bg-white dark:bg-slate-800 peer-checked:bg-[#2563EB] peer-checked:border-[#2563EB] transition-colors duration-150 flex items-center justify-center shadow-xs"
+                            >
+                                <svg
+                                    class="w-3 h-3 text-white opacity-0 peer-checked:opacity-100 transition-opacity duration-150 stroke-[3.5]"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                >
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                            </div>
+                        </div>
+                        <span class="text-xs font-bold text-slate-800 dark:text-slate-200">Tetap Masuk</span>
                     </label>
                     <button
                         type="button"
                         @click="handleForgotPassword"
-                        class="text-xs font-semibold text-[#2563EB] hover:underline focus:outline-none"
+                        class="text-xs font-bold text-[#2563EB] dark:text-blue-400 hover:underline focus:outline-none"
                     >
                         Lupa password?
                     </button>
@@ -572,7 +573,7 @@
                 <button
                     type="submit"
                     :disabled="form.processing"
-                    class="w-full h-[48px] rounded-full text-white font-bold text-[15px] flex items-center justify-center transition-all duration-200 active:scale-[0.98] disabled:opacity-70 disabled:cursor-wait mt-5"
+                    class="w-full h-[42px] rounded-full text-white font-bold text-[14px] flex items-center justify-center transition-all duration-200 active:scale-[0.98] disabled:opacity-70 disabled:cursor-wait mt-3"
                     style="
                         background: linear-gradient(90deg, #2563eb 0%, #4f46e5 100%);
                         box-shadow: 0 4px 14px -1px rgba(37, 99, 235, 0.4);
@@ -587,15 +588,15 @@
             </form>
 
             <!-- 5. Divider "atau masuk dengan" -->
-            <div class="relative flex items-center justify-center my-4">
+            <div class="relative flex items-center justify-center my-2.5">
                 <div class="w-full border-t border-slate-200 dark:border-slate-700"></div>
-                <span class="absolute bg-white dark:bg-slate-900 px-3 text-[11px] text-slate-400 dark:text-slate-500 font-normal">
+                <span class="absolute bg-white dark:bg-slate-900 px-2.5 text-[10px] text-slate-400 dark:text-slate-500 font-medium">
                     atau masuk dengan
                 </span>
             </div>
 
             <!-- 6. Social Logins 2x2 Grid -->
-            <div class="grid grid-cols-2 gap-2.5">
+            <div class="grid grid-cols-2 gap-2">
                 <!-- Google -->
                 <button
                     type="button"
@@ -608,7 +609,7 @@
                         <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 10.04 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
                         <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
                     </svg>
-                    <span class="text-xs font-semibold text-slate-800 dark:text-slate-200">Google</span>
+                    <span class="social-btn-label">Google</span>
                 </button>
 
                 <!-- GitHub -->
@@ -617,10 +618,10 @@
                     @click="handleSocialLogin('GitHub')"
                     class="social-mobile-card"
                 >
-                    <svg class="w-4 h-4 shrink-0 text-slate-900 dark:text-white fill-current" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4 shrink-0 text-slate-900 fill-current" viewBox="0 0 24 24">
                         <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
                     </svg>
-                    <span class="text-xs font-semibold text-slate-800 dark:text-slate-200">GitHub</span>
+                    <span class="social-btn-label">GitHub</span>
                 </button>
 
                 <!-- Discord -->
@@ -632,7 +633,7 @@
                     <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="#5865F2">
                         <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
                     </svg>
-                    <span class="text-xs font-semibold text-slate-800 dark:text-slate-200">Discord</span>
+                    <span class="social-btn-label">Discord</span>
                 </button>
 
                 <!-- Microsoft -->
@@ -647,22 +648,22 @@
                         <rect x="1" y="13" width="10" height="10" fill="#00A4EF"/>
                         <rect x="13" y="13" width="10" height="10" fill="#FFB900"/>
                     </svg>
-                    <span class="text-xs font-semibold text-slate-800 dark:text-slate-200">Microsoft</span>
+                    <span class="social-btn-label">Microsoft</span>
                 </button>
             </div>
 
             <!-- 7. Bottom Registration Section -->
-            <div class="mt-4 pt-3.5 border-t border-slate-100 dark:border-slate-800/80 text-center flex flex-col items-center">
-                <p class="text-xs font-bold text-slate-800 dark:text-white">
+            <div class="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800/80 text-center flex flex-col items-center">
+                <p class="text-[11px] font-bold text-slate-800 dark:text-white">
                     Belum mempunyai akun?
                 </p>
-                <p class="text-[11px] text-slate-400 dark:text-slate-400 mt-0.5 mb-3">
+                <p class="text-[10px] text-slate-400 dark:text-slate-400 mt-0.5 mb-2">
                     Daftarkan akun baru melalui tombol di bawah.
                 </p>
                 <button
                     type="button"
                     @click="handleRegister"
-                    class="w-full h-[44px] rounded-full border-[1.5px] border-[#2563EB] text-[#2563EB] font-bold text-sm flex items-center justify-center hover:bg-blue-50/50 dark:hover:bg-blue-900/20 active:scale-[0.98] transition-all duration-150"
+                    class="w-full h-[38px] rounded-full border-[1.5px] border-[#2563EB] text-[#2563EB] dark:text-blue-400 dark:border-blue-500 font-bold text-xs flex items-center justify-center hover:bg-blue-50/50 dark:hover:bg-blue-900/20 active:scale-[0.98] transition-all duration-150"
                 >
                     Daftar
                 </button>
@@ -670,34 +671,26 @@
         </div>
 
         <!-- ============================================================== -->
-        <!-- SPACER — Mendorong footer + bottom hero ke bagian bawah         -->
+        <!-- SPACER — Menjaga keseimbangan vertikal                          -->
         <!-- ============================================================== -->
-        <div class="flex-1"></div>
+        <div class="flex-1 min-h-[4px]"></div>
 
         <!-- ============================================================== -->
         <!-- FOOTER — "Powered by NOCTRYNX CORP"                             -->
-        <!-- Posisi: Di atas Bottom Hero navy                                -->
-        <!-- Typography: "Powered by" 10px medium, "NOCTRYNX CORP" 12px     -->
-        <!--             semibold letter-spacing 0.18em                      -->
         <!-- ============================================================== -->
-        <div class="relative z-10 text-center pb-3">
-            <p class="text-[10px] text-[#475569] font-medium tracking-wide leading-relaxed">
+        <div class="relative z-10 text-center pb-1 shrink-0">
+            <p class="text-[9px] text-[#475569] dark:text-slate-400 font-medium tracking-wide leading-tight">
                 Powered by
             </p>
-            <p class="text-[12px] text-[#475569] font-semibold tracking-[0.18em]">NOCTRYNX CORP</p>
+            <p class="text-[11px] text-[#475569] dark:text-slate-300 font-bold tracking-[0.18em]">NOCTRYNX CORP</p>
         </div>
 
         <!-- ============================================================== -->
         <!-- BOTTOM HERO — Dekorasi navy di bagian bawah halaman             -->
-        <!-- Tinggi: 22% layar | Bentuk: Setengah lingkaran terbalik         -->
-        <!-- Gradient: #172554 → #1E3A8A → #2563EB (navy ke biru)            -->
-        <!-- Pattern: Wave Mesh (#60A5FA, stroke 2.6px, opacity 10%)         -->
-        <!-- Desain: BERBEDA dari hero atas (navy vs ungu)                   -->
-        <!-- Fungsi: Menyeimbangkan hero atas, memberi kesan enterprise      -->
         <!-- ============================================================== -->
         <div
-            class="relative w-full h-[22vh] overflow-hidden"
-            style="border-top-left-radius: 50% 44px; border-top-right-radius: 50% 44px"
+            class="relative w-full h-[10vh] min-h-[50px] max-h-[85px] overflow-hidden shrink-0"
+            style="border-top-left-radius: 50% 32px; border-top-right-radius: 50% 32px"
         >
             <!-- Base Gradient — Navy ke biru -->
             <div
@@ -705,7 +698,6 @@
             ></div>
 
             <!-- Wave Mesh Pattern — Gelombang + diagonal bersilangan (#60A5FA, 10%) -->
-            <!-- Stroke 2.6px, pattern berbeda dari hero atas -->
             <svg
                 class="absolute bottom-0 left-0 w-[150%] h-full opacity-[0.10]"
                 viewBox="0 0 300 100"
@@ -897,6 +889,20 @@
 </template>
 
 <style scoped>
+    /* Hilangkan scrollbar di semua browser dan cegah overflow */
+    :global(html),
+    :global(body) {
+        scrollbar-width: none !important;
+        -ms-overflow-style: none !important;
+        overflow: hidden !important;
+    }
+    :global(html::-webkit-scrollbar),
+    :global(body::-webkit-scrollbar) {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+    }
+
     /* Reset & Clean Input Mobile (Mencegah style rounded pill dari global .input-field) */
     .mobile-custom-input {
         border: none !important;
@@ -912,25 +918,28 @@
         box-shadow: none !important;
     }
 
-    /* Social Login Card Mobile */
+    /* Social Login Card Mobile — Tampilan Putih Solid Bersih Persis Screenshot */
     .social-mobile-card {
         display: flex;
         align-items: center;
         justify-content: center;
         gap: 0.5rem;
-        height: 42px;
-        border-radius: 14px;
-        border: 1px solid #E2E8F0;
-        background-color: #FFFFFF;
+        height: 38px;
+        border-radius: 12px;
+        border: 1px solid #E2E8F0 !important;
+        background-color: #FFFFFF !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         transition: all 0.15s ease;
         cursor: pointer;
     }
-    :global(.dark) .social-mobile-card {
-        border-color: #334155;
-        background-color: #1E293B;
-    }
     .social-mobile-card:active {
         transform: scale(0.97);
+    }
+    .social-btn-label {
+        font-size: 12px !important;
+        font-weight: 700 !important;
+        color: #0F172A !important; /* Deep dark slate - selalu jelas & tajam */
+        letter-spacing: -0.01em;
     }
 
     .fade-slide-leave-to {
