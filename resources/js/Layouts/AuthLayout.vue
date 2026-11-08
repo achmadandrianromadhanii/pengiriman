@@ -23,7 +23,7 @@
 
 <template>
     <!-- Container Utama — Background dasar untuk semua halaman auth -->
-    <div class="min-h-screen relative overflow-hidden bg-white dark:bg-[#0E1117] transition-colors duration-200">
+    <div class="h-[100svh] md:min-h-screen relative overflow-hidden bg-white dark:bg-[#0E1117] transition-colors duration-200">
         <Head :title="title" />
 
         <!-- Desktop: dot-pattern background (Light Mode) -->
@@ -52,10 +52,10 @@
         />
 
         <!-- Konten Utama -->
-        <!-- Mobile: Full-width tanpa constraint (Login.vue mengatur sendiri) -->
+        <!-- Mobile: h-full tanpa scrollbar overflow, pas 100svh di Chrome Android -->
         <!-- Desktop: Centered dengan max-width -->
-        <main class="relative z-10 min-h-screen flex items-center justify-center md:px-4 md:py-12">
-            <div class="w-full md:max-w-lg">
+        <main class="relative z-10 h-full md:min-h-screen flex items-center justify-center md:px-4 md:py-12 overflow-hidden md:overflow-visible">
+            <div class="w-full h-full md:h-auto md:max-w-lg flex flex-col justify-center">
                 <slot />
             </div>
         </main>
