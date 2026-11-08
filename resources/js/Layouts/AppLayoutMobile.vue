@@ -22,6 +22,12 @@
     let removeInertiaSuccessListener = null;
 
     onMounted(() => {
+        // Pastikan class pengunci login/register langsung dibersihkan saat masuk ke layout aplikasi
+        if (typeof document !== 'undefined') {
+            document.documentElement.classList.remove('login-page-active');
+            document.body.classList.remove('login-page-active');
+        }
+
         // Auto-close drawer ketika navigasi Inertia sukses
         removeInertiaSuccessListener = router.on('success', () => {
             mobileOpen.value = false;

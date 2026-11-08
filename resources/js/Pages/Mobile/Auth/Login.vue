@@ -1038,16 +1038,30 @@
 </template>
 
 <style scoped>
-    /* Kunci total root dokumen di mobile agar bebas scrollbar & tidak bisa naik turun */
+    /* Kunci total root dokumen di mobile HANYA saat di halaman login/register agar bebas scrollbar & tidak bisa naik turun */
     :global(html.login-page-active),
     :global(body.login-page-active),
-    :global(#app) {
+    :global(html.login-page-active #app),
+    :global(body.login-page-active #app) {
         height: 100% !important;
         max-height: 100svh !important;
         overflow: hidden !important;
         overscroll-behavior: none !important;
         margin: 0 !important;
         padding: 0 !important;
+    }
+
+    :global(html.login-page-active),
+    :global(body.login-page-active) {
+        scrollbar-width: none !important;
+        -ms-overflow-style: none !important;
+    }
+
+    :global(html.login-page-active::-webkit-scrollbar),
+    :global(body.login-page-active::-webkit-scrollbar) {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
     }
 
     .login-mobile-page {

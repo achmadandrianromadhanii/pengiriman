@@ -262,6 +262,25 @@
     .dark * {
         scrollbar-color: rgba(148, 163, 184, 0.3) transparent;
     }
+
+    /* Pastikan seluruh halaman mobile selain login/register bisa di-scroll bebas & mulus */
+    html:not(.login-page-active),
+    body:not(.login-page-active) {
+        height: auto !important;
+        min-height: 100% !important;
+        max-height: none !important;
+        overflow-y: auto !important;
+        overscroll-behavior-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    html:not(.login-page-active) #app,
+    body:not(.login-page-active) #app {
+        height: auto !important;
+        min-height: 100% !important;
+        max-height: none !important;
+        overflow-y: visible !important;
+    }
 }
 
 /* Scrollbar alternatif (opsional untuk container tertentu) */

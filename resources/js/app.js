@@ -4,7 +4,7 @@ import './bootstrap';
 import '../css/app.css';
 
 import { createApp, h } from 'vue';
-import { createInertiaApp } from '@inertiajs/vue3';
+import { createInertiaApp, router } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { ZiggyVue } from 'ziggy-js';
 
@@ -96,4 +96,16 @@ createInertiaApp({
         includeCSS: true, // [UPDATE: PERFORMA - Aktifkan CSS agar bar loading terlihat!]
     },
 });
+
+// Bersihkan class pengunci scroll saat berpindah dari halaman auth ke halaman aplikasi
+if (typeof window !== 'undefined') {
+    router.on('navigate', (event) => {
+        const url = event?.detail?.page?.url || '';
+        if (!url.includes('/login') && !url.includes('/register')) {
+            document.documentElement.classList.remove('login-page-active');
+            document.body.classList.remove('login-page-active');
+        }
+    });
+}
+
 
