@@ -27,6 +27,7 @@
         Loader2, // Spinner loading
         AlertCircle, // Error icon
         ArrowRight, // Tombol mobile
+        ArrowLeft, // Tombol kembali di register mobile
         CheckCircle2, // Centang sukses
         Fingerprint, // [UPDATE: V3] Ikon biometrik untuk bottom sheet
         User, // Input nama lengkap register
@@ -456,7 +457,19 @@
         class="login-mobile-page min-h-[100dvh] w-full bg-white dark:bg-slate-950 flex flex-col justify-between px-6 py-6 select-none overflow-y-auto no-scrollbar transition-colors"
     >
         <!-- Content Container (Center Aligned, Mobile Max-Width) -->
-        <div class="w-full max-w-[390px] mx-auto flex-1 flex flex-col justify-between" :class="[isShake ? 'animate-shake' : '']">
+        <div class="w-full max-w-[390px] mx-auto flex-1 flex flex-col justify-between relative" :class="[isShake ? 'animate-shake' : '']">
+
+            <!-- Tombol Kembali ke Login (Khusus mode register) -->
+            <button
+                v-if="viewMode === 'register'"
+                type="button"
+                @click="viewMode = 'login'"
+                class="absolute top-2 left-0 p-2 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors z-20"
+                title="Kembali ke Login"
+                aria-label="Kembali ke Login"
+            >
+                <ArrowLeft class="w-5 h-5" stroke-width="2" />
+            </button>
 
             <!-- 1. TOP BRAND HEADER -->
             <div class="flex flex-col items-center pt-2 pb-5 text-center">
@@ -809,18 +822,11 @@
                         </div>
                     </form>
 
-                    <!-- Switch to Login (Persis Screenshot: Teks + Link Biru di Bawahnya) -->
-                    <div class="mt-7 text-center">
-                        <p class="text-sm font-medium text-slate-800 dark:text-slate-200">
-                            Sudah mempunyai akun?
+                    <!-- Keterangan Singkat Create Account (Pengganti Area yang Dilingkari) -->
+                    <div class="mt-6 text-center px-4">
+                        <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                            Akun baru akan diverifikasi oleh tim administrator SoftSend sebelum dapat digunakan untuk mengakses layanan pengiriman.
                         </p>
-                        <button
-                            type="button"
-                            @click="viewMode = 'login'"
-                            class="mt-1.5 text-base font-bold text-[#2563EB] dark:text-blue-400 hover:underline focus:outline-none transition-colors"
-                        >
-                            Login Sekarang
-                        </button>
                     </div>
                 </div>
             </div>
