@@ -231,8 +231,7 @@ Route::middleware(['auth', 'admin.active'])->group(function () {
     // Cara Kerja:
     //   1. Ambil 10 riwayat login terakhir dari tabel login_histories
     //   2. Ambil semua sesi aktif dari tabel sessions + parse device_name
-    //   3. Hitung password_age (umur password dalam hari)
-    //   4. Kirim password_changed_at dari admin
+    //   3. Kirim password_changed_at dari admin
     // =====================================================================
     Route::get('/profile/security', function () {
         $admin = \Illuminate\Support\Facades\Auth::user();
@@ -276,12 +275,6 @@ Route::middleware(['auth', 'admin.active'])->group(function () {
                 ];
             });
 
-        // ── Hitung umur password (dalam hari) ───────────────────────
-        $passwordAge = null;
-        if ($admin->password_changed_at) {
-            $passwordAge = (int) $admin->password_changed_at->diffInDays(now());
-        }
-
         // ── [UPDATE: V3] Ambil pengaturan keamanan dari database ─────
         $settings = \App\Models\AdminSecuritySetting::getOrCreate($admin->id);
 
@@ -290,7 +283,6 @@ Route::middleware(['auth', 'admin.active'])->group(function () {
 
         return Inertia\Inertia::render('Profile/Security', [
             'password_changed_at' => $admin->password_changed_at?->toIso8601String(),
-            'password_age'        => $passwordAge,
             'last_login'          => $admin->last_login?->toIso8601String(),
             'login_histories'     => $loginHistories,
             'active_sessions'     => $activeSessions,

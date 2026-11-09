@@ -3,7 +3,7 @@
      =========================================================================
      Fungsi: Menampilkan informasi keamanan akun admin secara REALTIME.
      Cara Kerja:
-       - Password status: Dari props password_changed_at + password_age (database)
+       - Password status: Dari props password_changed_at (database)
        - Riwayat Login: Dari props login_histories (tabel login_histories)
        - Sesi Aktif: Dari props active_sessions (tabel sessions)
        - Perangkat Saat Ini: Deteksi otomatis dari navigator.userAgent
@@ -46,7 +46,6 @@ import {
 // ── Props dari backend (data asli dari database) ─────────────────────────
 const props = defineProps({
     password_changed_at: { type: String, default: null },
-    password_age: { type: Number, default: null },
     last_login: { type: String, default: null },
     login_histories: { type: Array, default: () => [] },
     active_sessions: { type: Array, default: () => [] },
@@ -482,7 +481,10 @@ function formatTimeAgo(dateString) {
 
 // ── Badge password perlu diperbarui (>90 hari) ──────────────────────────
 const passwordNeedsUpdate = computed(() => {
-    return props.password_age !== null && props.password_age > 90;
+    if (!props.password_changed_at) return false;
+    const changed = new Date(props.password_changed_at);
+    const diffDays = Math.floor((Date.now() - changed.getTime()) / (1000 * 60 * 60 * 24));
+    return diffDays > 90;
 });
 
 function goBack() {
@@ -556,7 +558,7 @@ function goBack() {
                         <CheckCircle2 v-else :size="20" class="text-green-500" stroke-width="2.5" />
                     </div>
                     <!-- Terakhir Diubah -->
-                    <div class="flex items-center justify-between p-4 border-b border-gray-100/50 dark:border-gray-800/80">
+                    <div class="flex items-center justify-between p-4">
                         <div class="flex items-center gap-3.5">
                             <div class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-gray-800/50 text-slate-500 flex items-center justify-center"><Clock :size="20" stroke-width="2.5" /></div>
                             <div>
@@ -567,18 +569,6 @@ function goBack() {
                             </div>
                         </div>
                         <AlertTriangle v-if="!password_changed_at" :size="18" class="text-amber-500" stroke-width="2.5" />
-                    </div>
-                    <!-- Umur Password -->
-                    <div class="flex items-center justify-between p-4">
-                        <div class="flex items-center gap-3.5">
-                            <div class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-gray-800/50 text-slate-500 flex items-center justify-center"><Timer :size="20" stroke-width="2.5" /></div>
-                            <div>
-                                <span class="font-semibold text-[14px] text-slate-800 dark:text-gray-200 block">Umur Password</span>
-                                <span class="text-[11px] font-medium" :class="passwordNeedsUpdate ? 'text-amber-500' : 'text-slate-400 dark:text-gray-500'">
-                                    {{ password_age !== null ? `${password_age} hari lalu` : 'Belum pernah diubah' }}
-                                </span>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
