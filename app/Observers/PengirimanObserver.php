@@ -11,9 +11,13 @@ class PengirimanObserver
     private function triggerDashboardUpdate()
     {
         // Hapus cache statistik agar dashboard mengambil data baru
-        Cache::forget('dashboard.stats');
+        try {
+            Cache::flush();
+        } catch (\Throwable $e) {
+            Cache::forget('dashboard.stats');
+        }
 
-        // Broadcast event ke websocket
+        // Broadcast event ke websocket secara instan
         event(new DashboardUpdated);
     }
 

@@ -4,7 +4,7 @@ const { t } = useI18n();
 import AppLayoutDesktop from '@/Layouts/AppLayoutDesktop.vue';
 import ChartJsLine from '@/Components/ChartJsLine.vue';
 import ChartJsDoughnut from '@/Components/ChartJsDoughnut.vue';
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { Head, router, Link } from '@inertiajs/vue3';
 import {
     BarChart3,
@@ -19,7 +19,11 @@ import {
     ChevronDown,
     ArrowUp,
     ArrowDown,
-    ArrowRight
+    ArrowRight,
+    Filter,
+    X,
+    RotateCcw,
+    Layers
 } from 'lucide-vue-next';
 
 defineOptions({ layout: AppLayoutDesktop });
@@ -28,18 +32,154 @@ const props = defineProps({
     stats: { type: Object, default: () => ({}) },
     charts: { type: Object, default: () => ({}) },
     latest: { type: Object, default: () => ({ data: [] }) },
+    filters: { type: Object, default: () => ({}) },
 });
 
 // ── State Real-Time & Filter ──────────────────────────────────────────────
 const mounted = ref(false);
 const isPusherConnected = ref(false);
-const activePeriod = ref('Bulan Ini');
 const activeTrenTab = ref('pengiriman'); // 'pengiriman' | 'ongkir'
 const isRealtimeFlashing = ref(false);
+const showFilterDropdown = ref(false);
+const filterDropdownRef = ref(null);
 
-const periodOptions = ['Hari Ini', '7 Hari', '30 Hari', 'Bulan Ini', 'Custom'];
+// Filter Input State
+const customStartDate = ref(props.filters?.start_date || '');
+const customEndDate = ref(props.filters?.end_date || '');
 
-// ── 1. KPI Cards (100% Data Database Murni & Dinamis) ───────────────────────
+watch(
+    () => props.filters,
+    (newFilters) => {
+        if (newFilters?.start_date) customStartDate.value = newFilters.start_date;
+        if (newFilters?.end_date) customEndDate.value = newFilters.end_date;
+    },
+    { deep: true }
+);
+
+const activePeriod = computed(() => props.filters?.period || 'bulan_ini');
+const activePeriodLabel = computed(() => props.filters?.period_label || 'Bulan Ini');
+const activeLayanan = computed(() => props.filters?.layanan || 'semua');
+const deltaLabel = computed(() => props.filters?.delta_label || 'vs bulan lalu');
+
+const isFilterActive = computed(() => {
+    return activePeriod.value !== 'bulan_ini' || activeLayanan.value !== 'semua';
+});
+
+// Pilihan Cepat Tombol Pills
+const quickPills = [
+    { key: 'hari_ini', label: 'Hari Ini' },
+    { key: '7_hari', label: '7 Hari' },
+    { key: '30_hari', label: '30 Hari' },
+    { key: 'bulan_ini', label: 'Bulan Ini' },
+    { key: 'custom', label: 'Custom' },
+];
+
+const periodPresets = [
+    { key: 'hari_ini', label: 'Hari Ini', desc: 'Transaksi hari ini' },
+    { key: '7_hari', label: '7 Hari Terakhir', desc: '1 minggu terakhir' },
+    { key: '30_hari', label: '30 Hari Terakhir', desc: '1 bulan terakhir' },
+    { key: 'bulan_ini', label: 'Bulan Ini', desc: 'Awal hingga akhir bulan ini' },
+    { key: 'bulan_lalu', label: 'Bulan Lalu', desc: 'Rekap bulan sebelumnya' },
+    { key: 'tahun_ini', label: 'Tahun Ini', desc: 'Performa tahun berjalan' },
+];
+
+const layananOptions = [
+    { key: 'semua', label: 'Semua Layanan' },
+    { key: 'reguler', label: 'Reguler' },
+    { key: 'express', label: 'Express' },
+    { key: 'ekonomi', label: 'Ekonomi' },
+    { key: 'kargo', label: 'Kargo' },
+];
+
+// Terapkan Filter Periode Cepat
+function applyPeriod(periodKey) {
+    if (periodKey === 'custom') {
+        showFilterDropdown.value = true;
+        return;
+    }
+
+    showFilterDropdown.value = false;
+    router.get(
+        route('dashboard'),
+        {
+            period: periodKey,
+            layanan: activeLayanan.value !== 'semua' ? activeLayanan.value : undefined,
+        },
+        {
+            preserveState: true,
+            preserveScroll: true,
+            only: ['stats', 'charts', 'latest', 'filters'],
+        }
+    );
+}
+
+// Terapkan Filter Rentang Tanggal Custom
+function applyCustomDateFilter() {
+    if (!customStartDate.value || !customEndDate.value) return;
+
+    showFilterDropdown.value = false;
+    router.get(
+        route('dashboard'),
+        {
+            period: 'custom',
+            start_date: customStartDate.value,
+            end_date: customEndDate.value,
+            layanan: activeLayanan.value !== 'semua' ? activeLayanan.value : undefined,
+        },
+        {
+            preserveState: true,
+            preserveScroll: true,
+            only: ['stats', 'charts', 'latest', 'filters'],
+        }
+    );
+}
+
+// Terapkan Filter Layanan
+function applyLayananFilter(layananKey) {
+    router.get(
+        route('dashboard'),
+        {
+            period: activePeriod.value,
+            start_date: activePeriod.value === 'custom' ? customStartDate.value : undefined,
+            end_date: activePeriod.value === 'custom' ? customEndDate.value : undefined,
+            layanan: layananKey !== 'semua' ? layananKey : undefined,
+        },
+        {
+            preserveState: true,
+            preserveScroll: true,
+            only: ['stats', 'charts', 'latest', 'filters'],
+        }
+    );
+}
+
+// Reset Filter ke Default
+function resetAllFilters() {
+    showFilterDropdown.value = false;
+    customStartDate.value = '';
+    customEndDate.value = '';
+    router.get(
+        route('dashboard'),
+        {},
+        {
+            preserveState: true,
+            preserveScroll: true,
+            only: ['stats', 'charts', 'latest', 'filters'],
+        }
+    );
+}
+
+// Menutup Dropdown jika klik di luar
+function handleDocumentClick(e) {
+    if (
+        showFilterDropdown.value &&
+        filterDropdownRef.value &&
+        !filterDropdownRef.value.contains(e.target)
+    ) {
+        showFilterDropdown.value = false;
+    }
+}
+
+// ── 1. KPI Cards (100% Data Database Terfilter & Dinamis) ────────────────────
 const totalPengiriman = computed(() => {
     return Number(props.stats?.totalPengiriman ?? 0);
 });
@@ -56,41 +196,24 @@ const paketBermasalah = computed(() => {
     return Number(props.stats?.paketBermasalah ?? 0);
 });
 
-// Format delta persentase dengan tanda + atau -
 function fmtDelta(val) {
     const num = Number(val || 0);
     const sign = num > 0 ? '+' : '';
     return `${sign}${num.toFixed(1).replace('.', ',')}%`;
 }
 
-// ── 2. Data Tren Pengiriman Chart.js (Realtime 6 Bulan Terakhir) ─────────────
+// ── 2. Data Tren Pengiriman Chart.js ─────────────────────────────────────────
 const trenLabels = computed(() => {
-    return (
-        props.charts?.area?.labels6 ||
-        props.charts?.area?.labels?.slice(-6) || [
-            'Jun 2026',
-            'Jul 2026',
-            'Agu 2026',
-            'Sep 2026',
-            'Okt 2026',
-            'Nov 2026',
-        ]
-    );
+    return props.charts?.area?.labels || ['Jun 2026', 'Jul 2026', 'Agu 2026', 'Sep 2026', 'Okt 2026', 'Nov 2026'];
 });
 
 const trenShipmentsData = computed(() => {
-    const data =
-        props.charts?.area?.seriesShipments6 ||
-        props.charts?.area?.seriesShipments?.slice(-6) ||
-        [];
+    const data = props.charts?.area?.seriesShipments || [];
     return data.length > 0 ? data : [0, 0, 0, 0, 0, 0];
 });
 
 const trenRevenueData = computed(() => {
-    const data =
-        props.charts?.area?.seriesRevenue6 ||
-        props.charts?.area?.seriesRevenue?.slice(-6) ||
-        [];
+    const data = props.charts?.area?.seriesRevenue || [];
     return data.length > 0 ? data : [0, 0, 0, 0, 0, 0];
 });
 
@@ -150,7 +273,7 @@ const statusData = computed(() => {
     ];
 });
 
-// ── 4. Distribusi Layanan (Data Real dari Kolom jenis_layanan) ───────────────
+// ── 4. Distribusi Layanan ───────────────────────────────────────────────────
 const layananData = computed(() => {
     const reguler = Number(props.charts?.layanan?.reguler ?? 0);
     const express = Number(props.charts?.layanan?.express ?? 0);
@@ -196,7 +319,7 @@ const layananData = computed(() => {
     ];
 });
 
-// ── 5. Top 5 Kota Tujuan (Data Real dari Database) ──────────────────────────
+// ── 5. Top 5 Kota Tujuan ───────────────────────────────────────────────────
 const topKotaData = computed(() => {
     const list = props.charts?.topKotaList || [];
     if (list.length === 0) return [];
@@ -223,12 +346,11 @@ const successRateDelta = computed(() => {
     return Number(props.stats?.successRateDeltaPercent ?? 0);
 });
 
-// ── 7. Tabel 5 Pengiriman Terbaru (Real dari Database) ──────────────────────
+// ── 7. Tabel 5 Pengiriman Terbaru ──────────────────────────────────────────
 const recentShipments = computed(() => {
     return props.latest?.data || [];
 });
 
-// Format Tanggal: "08 Nov 2026, 14:21"
 function formatDateTime(isoString) {
     if (!isoString) return '-';
     const date = new Date(isoString);
@@ -241,7 +363,6 @@ function formatDateTime(isoString) {
     return `${day} ${month} ${year}, ${hours}:${minutes}`;
 }
 
-// Navigasi ke Detail
 function goDetail(id) {
     if (id) {
         router.visit(route('pengiriman.show', id));
@@ -251,6 +372,7 @@ function goDetail(id) {
 // ── 8. Inisialisasi Realtime Pusher ─────────────────────────────────────────
 onMounted(async () => {
     mounted.value = true;
+    window.addEventListener('click', handleDocumentClick);
 
     try {
         const { initEcho } = await import('@/echo');
@@ -259,7 +381,7 @@ onMounted(async () => {
         if (window.Echo) {
             isPusherConnected.value = true;
 
-            // Dengarkan channel public 'dashboard' untuk update seketika
+            // Dengarkan channel public 'dashboard'
             window.Echo.channel('dashboard')
                 .listen('DashboardUpdated', () => {
                     handleRealtimeUpdate();
@@ -276,7 +398,7 @@ onMounted(async () => {
 function handleRealtimeUpdate() {
     isRealtimeFlashing.value = true;
     router.reload({
-        only: ['stats', 'charts', 'latest'],
+        only: ['stats', 'charts', 'latest', 'filters'],
         preserveScroll: true,
         preserveState: true,
         onFinish: () => {
@@ -289,6 +411,7 @@ function handleRealtimeUpdate() {
 
 onUnmounted(() => {
     mounted.value = false;
+    window.removeEventListener('click', handleDocumentClick);
     if (window.Echo) {
         window.Echo.leave('dashboard');
     }
@@ -313,17 +436,26 @@ onUnmounted(() => {
                     <BarChart3 class="w-6 h-6 stroke-[2.2]" />
                 </div>
                 <div>
-                    <h1 class="text-2xl font-black text-gray-900 dark:text-white tracking-tight leading-none font-heading">
-                        Dashboard
-                    </h1>
+                    <div class="flex items-center gap-2.5">
+                        <h1 class="text-2xl font-black text-gray-900 dark:text-white tracking-tight leading-none font-heading">
+                            Dashboard
+                        </h1>
+                        <!-- Badge Jika Filter Layanan Aktif -->
+                        <span
+                            v-if="activeLayanan !== 'semua'"
+                            class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 capitalize border border-blue-100 dark:border-blue-800/40"
+                        >
+                            Layanan: {{ activeLayanan }}
+                        </span>
+                    </div>
                     <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
                         Ringkasan analitik pengiriman dan performa operasional
                     </p>
                 </div>
             </div>
 
-            <!-- Sisi Kanan: Status Pusher & Filter Periode -->
-            <div class="flex flex-wrap items-center gap-2.5">
+            <!-- Sisi Kanan: Status Pusher & Filter Periode Lengkap -->
+            <div class="flex flex-wrap items-center gap-2.5 relative" ref="filterDropdownRef">
                 <!-- Indikator Realtime Pusher -->
                 <div
                     class="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-[#111827] border border-gray-200/80 dark:border-gray-800 rounded-xl text-xs font-medium text-gray-600 dark:text-gray-300 shadow-sm"
@@ -337,37 +469,179 @@ onUnmounted(() => {
                     <span>Pusher Realtime Aktif</span>
                 </div>
 
-                <!-- Dropdown Periode -->
+                <!-- Tombol Dropdown Periode Interaktif -->
                 <button
                     type="button"
-                    class="flex items-center gap-2 px-3.5 py-1.5 bg-white dark:bg-[#111827] border border-gray-200/80 dark:border-gray-800 rounded-xl text-xs font-semibold text-gray-700 dark:text-gray-200 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+                    class="flex items-center gap-2 px-3.5 py-1.5 bg-white dark:bg-[#111827] border rounded-xl text-xs font-semibold shadow-sm transition"
+                    :class="
+                        showFilterDropdown || isFilterActive
+                            ? 'border-blue-500 text-blue-600 dark:text-blue-400 ring-2 ring-blue-500/10'
+                            : 'border-gray-200/80 dark:border-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'
+                    "
+                    @click="showFilterDropdown = !showFilterDropdown"
                 >
                     <Calendar class="w-3.5 h-3.5 text-gray-500" />
-                    <span>Periode: <strong class="text-gray-900 dark:text-white">{{ activePeriod }}</strong></span>
-                    <ChevronDown class="w-3.5 h-3.5 text-gray-400 ml-0.5" />
+                    <span>Periode: <strong class="text-gray-900 dark:text-white">{{ activePeriodLabel }}</strong></span>
+                    <ChevronDown
+                        class="w-3.5 h-3.5 text-gray-400 ml-0.5 transition-transform"
+                        :class="showFilterDropdown ? 'rotate-180' : ''"
+                    />
                 </button>
 
                 <!-- Tombol Pill Periode Cepat -->
                 <div class="flex items-center gap-1 bg-white dark:bg-[#111827] p-1 rounded-xl border border-gray-200/80 dark:border-gray-800 shadow-sm">
                     <button
-                        v-for="p in periodOptions"
-                        :key="p"
+                        v-for="pill in quickPills"
+                        :key="pill.key"
                         type="button"
                         class="px-3 py-1 rounded-lg text-xs font-semibold transition-all duration-150"
                         :class="
-                            activePeriod === p
+                            activePeriod === pill.key
                                 ? 'bg-[#1D4ED8] text-white shadow-sm'
-                                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:white'
+                                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                         "
-                        @click="activePeriod = p"
+                        @click="applyPeriod(pill.key)"
                     >
-                        {{ p }}
+                        {{ pill.label }}
                     </button>
                 </div>
+
+                <!-- Tombol Reset Cepat (Tampil Jika Filter Aktif) -->
+                <button
+                    v-if="isFilterActive"
+                    type="button"
+                    title="Kembalikan ke filter default"
+                    class="flex items-center gap-1.5 px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-950/40 dark:text-rose-400 border border-rose-200/70 dark:border-rose-900/40 rounded-xl text-xs font-semibold shadow-sm transition"
+                    @click="resetAllFilters"
+                >
+                    <RotateCcw class="w-3 h-3 stroke-[2.5]" />
+                    <span>Reset</span>
+                </button>
+
+                <!-- ── Popover Menu Filter Lengkap & Elegan ─────────────────── -->
+                <transition
+                    enter-active-class="transition duration-200 ease-out"
+                    enter-from-class="transform scale-95 opacity-0 -translate-y-2"
+                    enter-to-class="transform scale-100 opacity-100 translate-y-0"
+                    leave-active-class="transition duration-150 ease-in"
+                    leave-from-class="transform scale-100 opacity-100 translate-y-0"
+                    leave-to-class="transform scale-95 opacity-0 -translate-y-2"
+                >
+                    <div
+                        v-if="showFilterDropdown"
+                        class="absolute right-0 top-full mt-2 w-[340px] sm:w-[380px] bg-white dark:bg-[#111827] rounded-2xl border border-gray-200 dark:border-gray-800 shadow-2xl p-4 z-50 space-y-4"
+                    >
+                        <!-- Header Popover -->
+                        <div class="flex items-center justify-between pb-2.5 border-b border-gray-100 dark:border-gray-800">
+                            <div class="flex items-center gap-2">
+                                <Filter class="w-4 h-4 text-blue-600" />
+                                <span class="text-xs font-bold text-gray-900 dark:text-white">Filter Dashboard</span>
+                            </div>
+                            <button
+                                type="button"
+                                class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                                @click="showFilterDropdown = false"
+                            >
+                                <X class="w-4 h-4" />
+                            </button>
+                        </div>
+
+                        <!-- 1. Pilihan Preset Periode -->
+                        <div>
+                            <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">
+                                Rentang Waktu Preset
+                            </label>
+                            <div class="grid grid-cols-2 gap-1.5">
+                                <button
+                                    v-for="preset in periodPresets"
+                                    :key="preset.key"
+                                    type="button"
+                                    class="text-left px-2.5 py-2 rounded-xl text-xs font-medium border transition"
+                                    :class="
+                                        activePeriod === preset.key
+                                            ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800 font-bold'
+                                            : 'bg-gray-50/70 hover:bg-gray-100 dark:bg-gray-800/50 text-gray-700 dark:text-gray-300 border-transparent'
+                                    "
+                                    @click="applyPeriod(preset.key)"
+                                >
+                                    <div class="leading-none">{{ preset.label }}</div>
+                                    <div class="text-[10px] text-gray-400 mt-1 truncate">{{ preset.desc }}</div>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 2. Filter Berdasarkan Layanan -->
+                        <div>
+                            <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">
+                                Filter Jenis Layanan
+                            </label>
+                            <div class="flex flex-wrap gap-1 bg-gray-50 dark:bg-gray-800/50 p-1 rounded-xl">
+                                <button
+                                    v-for="opt in layananOptions"
+                                    :key="opt.key"
+                                    type="button"
+                                    class="px-2.5 py-1 rounded-lg text-xs font-semibold transition"
+                                    :class="
+                                        activeLayanan === opt.key
+                                            ? 'bg-white dark:bg-[#111827] text-blue-600 shadow-sm'
+                                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-800'
+                                    "
+                                    @click="applyLayananFilter(opt.key)"
+                                >
+                                    {{ opt.label }}
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 3. Rentang Tanggal Custom -->
+                        <div>
+                            <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">
+                                Rentang Tanggal Custom
+                            </label>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <span class="text-[10px] text-gray-400 block mb-0.5">Dari Tanggal</span>
+                                    <input
+                                        v-model="customStartDate"
+                                        type="date"
+                                        class="w-full text-xs px-2.5 py-1.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:border-blue-500"
+                                    />
+                                </div>
+                                <div>
+                                    <span class="text-[10px] text-gray-400 block mb-0.5">Sampai Tanggal</span>
+                                    <input
+                                        v-model="customEndDate"
+                                        type="date"
+                                        class="w-full text-xs px-2.5 py-1.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 focus:outline-none focus:border-blue-500"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tombol Aksi Popover -->
+                        <div class="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-800">
+                            <button
+                                type="button"
+                                class="text-xs font-semibold text-gray-500 hover:text-gray-800 dark:hover:text-gray-200"
+                                @click="resetAllFilters"
+                            >
+                                Reset Default
+                            </button>
+                            <button
+                                type="button"
+                                class="px-4 py-1.5 bg-[#1D4ED8] hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-sm transition disabled:opacity-50"
+                                :disabled="!customStartDate || !customEndDate"
+                                @click="applyCustomDateFilter"
+                            >
+                                Terapkan Tanggal
+                            </button>
+                        </div>
+                    </div>
+                </transition>
             </div>
         </div>
 
-        <!-- ── Row 1: 4 KPI Cards (Data Asli Database) ────────────────────── -->
+        <!-- ── Row 1: 4 KPI Cards (Data Database Terfilter & Realtime) ──────── -->
         <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
             <!-- 1. Total Pengiriman -->
             <div
@@ -400,7 +674,7 @@ onUnmounted(() => {
                                 <ArrowDown v-else class="w-3 h-3 stroke-[2.5]" />
                                 {{ fmtDelta(stats.pengirimanDeltaPercent) }}
                             </span>
-                            <span class="text-xs text-gray-400 dark:text-gray-500">vs bulan lalu</span>
+                            <span class="text-xs text-gray-400 dark:text-gray-500">{{ deltaLabel }}</span>
                         </div>
                     </div>
                 </div>
@@ -441,7 +715,7 @@ onUnmounted(() => {
                                 <ArrowDown v-else class="w-3 h-3 stroke-[2.5]" />
                                 {{ fmtDelta(stats.dalamProsesDeltaPercent) }}
                             </span>
-                            <span class="text-xs text-gray-400 dark:text-gray-500">vs bulan lalu</span>
+                            <span class="text-xs text-gray-400 dark:text-gray-500">{{ deltaLabel }}</span>
                         </div>
                     </div>
                 </div>
@@ -482,7 +756,7 @@ onUnmounted(() => {
                                 <ArrowDown v-else class="w-3 h-3 stroke-[2.5]" />
                                 {{ fmtDelta(stats.terkirimDeltaPercent) }}
                             </span>
-                            <span class="text-xs text-gray-400 dark:text-gray-500">vs bulan lalu</span>
+                            <span class="text-xs text-gray-400 dark:text-gray-500">{{ deltaLabel }}</span>
                         </div>
                     </div>
                 </div>
@@ -518,7 +792,7 @@ onUnmounted(() => {
                                 <ArrowDown v-else class="w-3 h-3 stroke-[2.5]" />
                                 {{ fmtDelta(stats.bermasalahDeltaPercent) }}
                             </span>
-                            <span class="text-xs text-gray-400 dark:text-gray-500">vs bulan lalu</span>
+                            <span class="text-xs text-gray-400 dark:text-gray-500">{{ deltaLabel }}</span>
                         </div>
                     </div>
                 </div>
@@ -570,7 +844,7 @@ onUnmounted(() => {
                     </div>
                 </div>
 
-                <!-- Canvas Chart.js Line (Realtime Database) -->
+                <!-- Canvas Chart.js Line (Realtime Database & Sesuai Filter) -->
                 <ChartJsLine
                     :labels="trenLabels"
                     :shipments-data="trenShipmentsData"
@@ -589,7 +863,7 @@ onUnmounted(() => {
                 </div>
 
                 <div class="flex flex-col sm:flex-row items-center justify-between gap-6 my-auto">
-                    <!-- Doughnut Chart dengan Total Paket Asli di tengah -->
+                    <!-- Doughnut Chart dengan Total Paket Asli Terfilter di tengah -->
                     <ChartJsDoughnut
                         :data="[terkirimCount, dalamPerjalananCount, diprosesCount, bermasalahCount]"
                         :total="totalPengiriman"
@@ -616,7 +890,7 @@ onUnmounted(() => {
             </div>
         </div>
 
-        <!-- ── Row 3: 3 Cards (Data Database Murni) ───────────────────────── -->
+        <!-- ── Row 3: 3 Cards (Data Database Terfilter) ───────────────────── -->
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
             <!-- 1. Distribusi Layanan -->
             <div
@@ -693,7 +967,7 @@ onUnmounted(() => {
                     </div>
                 </div>
                 <div v-else class="text-xs text-gray-400 text-center py-8">
-                    Belum ada data pengiriman kota.
+                    Tidak ada data tujuan kota pada filter ini.
                 </div>
             </div>
 
@@ -728,7 +1002,7 @@ onUnmounted(() => {
                                 <ArrowDown v-else class="w-3 h-3 stroke-[2.5]" />
                                 {{ fmtDelta(successRateDelta) }}
                             </span>
-                            <span class="text-xs text-gray-400 dark:text-gray-500">vs bulan lalu</span>
+                            <span class="text-xs text-gray-400 dark:text-gray-500">{{ deltaLabel }}</span>
                         </div>
                     </div>
 
@@ -768,6 +1042,9 @@ onUnmounted(() => {
                 <div class="flex items-center gap-2">
                     <div class="w-2.5 h-2.5 rounded-full bg-blue-600"></div>
                     <h2 class="text-base font-bold text-gray-900 dark:text-white">5 Pengiriman Terbaru</h2>
+                    <span v-if="isFilterActive" class="text-xs text-gray-400">
+                        ({{ activePeriodLabel }})
+                    </span>
                 </div>
 
                 <Link
@@ -844,7 +1121,6 @@ onUnmounted(() => {
 
                             <!-- Status Badge dengan Icon -->
                             <td class="py-3.5 px-3">
-                                <!-- Dalam Perjalanan -->
                                 <span
                                     v-if="p.status === 'dalam_perjalanan' || p.status === 'tiba_di_kota_tujuan' || p.status === 'sedang_diantar'"
                                     class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
@@ -853,7 +1129,6 @@ onUnmounted(() => {
                                     <span>Dalam Perjalanan</span>
                                 </span>
 
-                                <!-- Terkirim -->
                                 <span
                                     v-else-if="p.status === 'terkirim'"
                                     class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
@@ -862,7 +1137,6 @@ onUnmounted(() => {
                                     <span>Terkirim</span>
                                 </span>
 
-                                <!-- Bermasalah / Gagal / Batal -->
                                 <span
                                     v-else-if="p.status === 'gagal' || p.status === 'dibatalkan'"
                                     class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-rose-50 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300"
@@ -871,7 +1145,6 @@ onUnmounted(() => {
                                     <span>Bermasalah</span>
                                 </span>
 
-                                <!-- Diproses / Pending -->
                                 <span
                                     v-else
                                     class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"
@@ -889,7 +1162,7 @@ onUnmounted(() => {
 
                         <tr v-if="recentShipments.length === 0">
                             <td colspan="6" class="py-8 text-center text-gray-400">
-                                Belum ada riwayat transaksi pengiriman di database.
+                                Tidak ada transaksi pengiriman pada periode yang dipilih.
                             </td>
                         </tr>
                     </tbody>
