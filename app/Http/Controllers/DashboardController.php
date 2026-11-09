@@ -133,12 +133,20 @@ class DashboardController extends Controller
             // Penjelasan: Menggunakan getAttribute('total') agar aman dari error property undefined di PHPStan, karena 'total' adalah hasil query agregasi (COUNT), bukan kolom tabel asli.
             $topKotaValues = $topKota->map(fn ($k) => (int) $k->getAttribute('total'))->toArray();
 
+            $topKotaList = [];
+            foreach ($topKota as $k) {
+                $nama = $k->getRelationValue('penerimaKota')->nama_kota ?? 'Unknown';
+                $val = (int) $k->getAttribute('total');
+                if ($val > 0) {
+                    $topKotaList[] = [
+                        'name' => $nama,
+                        'value' => $val,
+                    ];
+                }
+            }
+
             // [UPDATE: PADDING DATA UNTUK SPLINE AREA CHART]
             // Fungsi: Menambahkan titik data kosong (0) agar array selalu berjumlah 5.
-            // Alasan: Grafik tipe "Area Spline" membutuhkan minimal 2 titik untuk menggambar kurva (garis lengkung) dan area warnanya. 
-            //         Jika data di database hanya ada 1 kota (seperti saat website baru jalan), 
-            //         ApexCharts hanya akan menggambar 1 titik (dot) tanpa area fill.
-            // Cara Kerja: Looping menambahkan '-' dan 0 sampai array berjumlah persis 5.
             while (count($topKotaLabels) < 5) {
                 $topKotaLabels[] = ''; // Label kosong agar sumbu X tetap bersih
                 $topKotaValues[] = 0;
@@ -147,34 +155,90 @@ class DashboardController extends Controller
             $dalamPerjalananCount = Pengiriman::whereIn('status', ['dalam_perjalanan', 'tiba_di_kota_tujuan', 'sedang_diantar'])->count();
             $diprosesOnlyCount = Pengiriman::whereIn('status', ['pending', 'diproses'])->count();
 
+            // Hitung delta nyata bulan ini vs bulan lalu (100% data database murni)
+            $dalamProsesThisMonth = Pengiriman::whereIn('status', ['pending', 'diproses', 'dalam_perjalanan', 'sedang_diantar', 'tiba_di_kota_tujuan'])
+                ->whereBetween('created_at', [$startThisMonth, $endThisMonth])->count();
+            $dalamProsesLastMonth = Pengiriman::whereIn('status', ['pending', 'diproses', 'dalam_perjalanan', 'sedang_diantar', 'tiba_di_kota_tujuan'])
+                ->whereBetween('created_at', [$startLastMonth, $endLastMonth])->count();
+            $dalamProsesDeltaPercent = $dalamProsesLastMonth > 0
+                ? round((($dalamProsesThisMonth - $dalamProsesLastMonth) / $dalamProsesLastMonth) * 100, 1)
+                : ($dalamProsesThisMonth > 0 ? 100.0 : 0.0);
+
+            $terkirimThisMonth = Pengiriman::where('status', 'terkirim')->whereBetween('created_at', [$startThisMonth, $endThisMonth])->count();
+            $terkirimLastMonth = Pengiriman::where('status', 'terkirim')->whereBetween('created_at', [$startLastMonth, $endLastMonth])->count();
+            $terkirimDeltaPercent = $terkirimLastMonth > 0
+                ? round((($terkirimThisMonth - $terkirimLastMonth) / $terkirimLastMonth) * 100, 1)
+                : ($terkirimThisMonth > 0 ? 100.0 : 0.0);
+
+            $bermasalahTotal = $terlambat + $gagalBatal;
+            $bermasalahThisMonth = Pengiriman::where(function ($q) {
+                $q->whereIn('status', ['gagal', 'dibatalkan'])
+                    ->orWhere(function ($sub) {
+                        $sub->whereNotIn('status', ['terkirim', 'gagal', 'dibatalkan'])
+                            ->where('estimasi_tiba', '<', today());
+                    });
+            })->whereBetween('created_at', [$startThisMonth, $endThisMonth])->count();
+
+            $bermasalahLastMonth = Pengiriman::where(function ($q) {
+                $q->whereIn('status', ['gagal', 'dibatalkan'])
+                    ->orWhere(function ($sub) {
+                        $sub->whereNotIn('status', ['terkirim', 'gagal', 'dibatalkan'])
+                            ->where('estimasi_tiba', '<', today());
+                    });
+            })->whereBetween('created_at', [$startLastMonth, $endLastMonth])->count();
+
+            $bermasalahDeltaPercent = $bermasalahLastMonth > 0
+                ? round((($bermasalahThisMonth - $bermasalahLastMonth) / $bermasalahLastMonth) * 100, 1)
+                : ($bermasalahThisMonth > 0 ? 100.0 : 0.0);
+
+            $selesaiLastMonth = $terkirimLastMonth + $bermasalahLastMonth;
+            $successRateLastMonth = $selesaiLastMonth > 0 ? round(($terkirimLastMonth / $selesaiLastMonth) * 100, 1) : 0.0;
+            $successRateDeltaPercent = round($successRatePercent - $successRateLastMonth, 1);
+
+            // 6 bulan terakhir untuk desktop chart
+            $cursor6 = now()->startOfMonth()->subMonths(5);
+            $labels6 = [];
+            $seriesS6 = [];
+            $seriesR6 = [];
+            for ($i = 0; $i < 6; $i++) {
+                $ym = $cursor6->format('Y-m');
+                $labels6[] = $cursor6->translatedFormat('M Y');
+                $seriesS6[] = (int) ($shipmentsByMonth[$ym] ?? 0);
+                $seriesR6[] = (float) ($revenueByMonth[$ym] ?? 0);
+                $cursor6->addMonth();
+            }
+
             return [
                 'stats' => [
                     'totalPengiriman' => $totalPengiriman,
                     'totalPendapatan' => $totalPendapatan,
                     'pengirimanDelta' => $pengirimanDelta,
-                    'pengirimanDeltaPercent' => $pengirimanLastMonth > 0 ? round((($pengirimanThisMonth - $pengirimanLastMonth) / $pengirimanLastMonth) * 100, 1) : 12.5,
+                    'pengirimanDeltaPercent' => $pengirimanLastMonth > 0 ? round((($pengirimanThisMonth - $pengirimanLastMonth) / $pengirimanLastMonth) * 100, 1) : ($pengirimanThisMonth > 0 ? 100.0 : 0.0),
                     'pendapatanDeltaPercent' => $pendapatanDeltaPercent,
-                    'successRate' => $successRatePercent > 0 ? $successRatePercent : 94.2,
-                    'successRateDeltaPercent' => 3.9,
+                    'successRate' => $successRatePercent,
+                    'successRateDeltaPercent' => $successRateDeltaPercent,
                     'paketAktif' => $diproses,
                     'dalamProses' => $diproses,
-                    'dalamProsesDeltaPercent' => 9.1,
+                    'dalamProsesDeltaPercent' => $dalamProsesDeltaPercent,
                     'paketTerkirim' => $terkirim,
-                    'terkirimDeltaPercent' => 18.1,
-                    'paketBermasalah' => $terlambat + $gagalBatal,
-                    'bermasalahDeltaPercent' => 50.0,
+                    'terkirimDeltaPercent' => $terkirimDeltaPercent,
+                    'paketBermasalah' => $bermasalahTotal,
+                    'bermasalahDeltaPercent' => $bermasalahDeltaPercent,
                 ],
                 'charts' => [
                     'area' => [
                         'labels' => $labels,
                         'seriesRevenue' => $seriesR,
                         'seriesShipments' => $seriesS,
+                        'labels6' => $labels6,
+                        'seriesRevenue6' => $seriesR6,
+                        'seriesShipments6' => $seriesS6,
                     ],
                     'status' => [
                         'terkirim' => $terkirim,
                         'dalam_perjalanan' => $dalamPerjalananCount,
                         'diproses' => $diprosesOnlyCount,
-                        'bermasalah' => $terlambat + $gagalBatal,
+                        'bermasalah' => $bermasalahTotal,
                     ],
                     'layanan' => [
                         'reguler' => (int) ($layananCounts['reguler'] ?? 0),
@@ -182,6 +246,7 @@ class DashboardController extends Controller
                         'ekonomi' => (int) ($layananCounts['ekonomi'] ?? 0),
                         'kargo' => (int) ($layananCounts['kargo'] ?? 0),
                     ],
+                    'topKotaList' => $topKotaList,
                     'topKota' => [
                         'labels' => $topKotaLabels,
                         'series' => $topKotaValues,

@@ -18,8 +18,8 @@ import {
     Calendar,
     ChevronDown,
     ArrowUp,
-    ArrowRight,
-    Radio
+    ArrowDown,
+    ArrowRight
 } from 'lucide-vue-next';
 
 defineOptions({ layout: AppLayoutDesktop });
@@ -33,173 +33,202 @@ const props = defineProps({
 // ── State Real-Time & Filter ──────────────────────────────────────────────
 const mounted = ref(false);
 const isPusherConnected = ref(false);
-const activePeriod = ref('Bulan Ini'); // 'Hari Ini' | '7 Hari' | '30 Hari' | 'Bulan Ini' | 'Custom'
+const activePeriod = ref('Bulan Ini');
 const activeTrenTab = ref('pengiriman'); // 'pengiriman' | 'ongkir'
 const isRealtimeFlashing = ref(false);
 
 const periodOptions = ['Hari Ini', '7 Hari', '30 Hari', 'Bulan Ini', 'Custom'];
 
-// ── Baseline Data Presisi (Sesuai Desain Referensi 100%) ─────────────────────
-// Jika backend belum memiliki cukup data agregat, nilai otomatis fallback ke angka desain persis
+// ── 1. KPI Cards (100% Data Database Murni & Dinamis) ───────────────────────
 const totalPengiriman = computed(() => {
-    return Number(props.stats?.totalPengiriman ?? 128);
+    return Number(props.stats?.totalPengiriman ?? 0);
 });
+
 const dalamProses = computed(() => {
-    return Number(props.stats?.dalamProses ?? 24);
+    return Number(props.stats?.dalamProses ?? 0);
 });
+
 const paketTerkirim = computed(() => {
-    return Number(props.stats?.paketTerkirim ?? 98);
+    return Number(props.stats?.paketTerkirim ?? 0);
 });
+
 const paketBermasalah = computed(() => {
-    return Number(props.stats?.paketBermasalah ?? 6);
+    return Number(props.stats?.paketBermasalah ?? 0);
 });
 
-// ── Distribusi Status Pengiriman (Donut Chart & Legend) ────────────────────
-const statusData = computed(() => {
-    const terkirim = Number(props.charts?.status?.terkirim ?? 98);
-    const dalamPerjalanan = Number(props.charts?.status?.dalam_perjalanan ?? 32);
-    const diproses = Number(props.charts?.status?.diproses ?? 16);
-    const bermasalah = Number(props.charts?.status?.bermasalah ?? 6);
+// Format delta persentase dengan tanda + atau -
+function fmtDelta(val) {
+    const num = Number(val || 0);
+    const sign = num > 0 ? '+' : '';
+    return `${sign}${num.toFixed(1).replace('.', ',')}%`;
+}
 
-    const total = terkirim + dalamPerjalanan + diproses + bermasalah || 1;
+// ── 2. Data Tren Pengiriman Chart.js (Realtime 6 Bulan Terakhir) ─────────────
+const trenLabels = computed(() => {
+    return (
+        props.charts?.area?.labels6 ||
+        props.charts?.area?.labels?.slice(-6) || [
+            'Jun 2026',
+            'Jul 2026',
+            'Agu 2026',
+            'Sep 2026',
+            'Okt 2026',
+            'Nov 2026',
+        ]
+    );
+});
+
+const trenShipmentsData = computed(() => {
+    const data =
+        props.charts?.area?.seriesShipments6 ||
+        props.charts?.area?.seriesShipments?.slice(-6) ||
+        [];
+    return data.length > 0 ? data : [0, 0, 0, 0, 0, 0];
+});
+
+const trenRevenueData = computed(() => {
+    const data =
+        props.charts?.area?.seriesRevenue6 ||
+        props.charts?.area?.seriesRevenue?.slice(-6) ||
+        [];
+    return data.length > 0 ? data : [0, 0, 0, 0, 0, 0];
+});
+
+// ── 3. Distribusi Status Pengiriman (Donut Chart & Legend) ──────────────────
+const terkirimCount = computed(() => Number(props.charts?.status?.terkirim ?? 0));
+const dalamPerjalananCount = computed(() => Number(props.charts?.status?.dalam_perjalanan ?? 0));
+const diprosesCount = computed(() => Number(props.charts?.status?.diproses ?? 0));
+const bermasalahCount = computed(() => Number(props.charts?.status?.bermasalah ?? 0));
+
+const totalStatusCount = computed(() => {
+    return (
+        terkirimCount.value +
+        dalamPerjalananCount.value +
+        diprosesCount.value +
+        bermasalahCount.value ||
+        totalPengiriman.value ||
+        1
+    );
+});
+
+const statusData = computed(() => {
+    const total = totalStatusCount.value;
 
     return [
         {
             key: 'terkirim',
             label: 'Terkirim',
-            count: terkirim,
-            percent: '51,6%',
-            color: '#10B981', // Hijau
+            count: terkirimCount.value,
+            percent: total > 0 ? `${((terkirimCount.value / total) * 100).toFixed(1).replace('.', ',')}%` : '0,0%',
+            color: '#10B981',
             dotClass: 'bg-[#10B981]',
         },
         {
             key: 'dalam_perjalanan',
             label: 'Dalam Perjalanan',
-            count: dalamPerjalanan,
-            percent: '25,0%',
-            color: '#2563EB', // Biru
+            count: dalamPerjalananCount.value,
+            percent: total > 0 ? `${((dalamPerjalananCount.value / total) * 100).toFixed(1).replace('.', ',')}%` : '0,0%',
+            color: '#2563EB',
             dotClass: 'bg-[#2563EB]',
         },
         {
             key: 'diproses',
             label: 'Diproses',
-            count: diproses,
-            percent: '12,5%',
-            color: '#F59E0B', // Kuning/Amber
+            count: diprosesCount.value,
+            percent: total > 0 ? `${((diprosesCount.value / total) * 100).toFixed(1).replace('.', ',')}%` : '0,0%',
+            color: '#F59E0B',
             dotClass: 'bg-[#F59E0B]',
         },
         {
             key: 'bermasalah',
             label: 'Bermasalah',
-            count: bermasalah,
-            percent: '10,9%',
-            color: '#EF4444', // Merah
+            count: bermasalahCount.value,
+            percent: total > 0 ? `${((bermasalahCount.value / total) * 100).toFixed(1).replace('.', ',')}%` : '0,0%',
+            color: '#EF4444',
             dotClass: 'bg-[#EF4444]',
         },
     ];
 });
 
-// ── Distribusi Layanan (Progress Bars) ──────────────────────────────────────
-const layananData = computed(() => [
-    {
-        name: 'Reguler',
-        count: 56,
-        percentText: '56 paket (43,8%)',
-        barWidth: '43.8%',
-        barColor: 'bg-[#2563EB]',
-        boxBg: 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
-    },
-    {
-        name: 'Express',
-        count: 38,
-        percentText: '38 paket (29,7%)',
-        barWidth: '29.7%',
-        barColor: 'bg-[#8B5CF6]',
-        boxBg: 'bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400',
-    },
-    {
-        name: 'Ekonomi',
-        count: 24,
-        percentText: '24 paket (18,8%)',
-        barWidth: '18.8%',
-        barColor: 'bg-[#10B981]',
-        boxBg: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400',
-    },
-    {
-        name: 'Kargo',
-        count: 10,
-        percentText: '10 paket (7,8%)',
-        barWidth: '7.8%',
-        barColor: 'bg-[#F59E0B]',
-        boxBg: 'bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400',
-    },
-]);
+// ── 4. Distribusi Layanan (Data Real dari Kolom jenis_layanan) ───────────────
+const layananData = computed(() => {
+    const reguler = Number(props.charts?.layanan?.reguler ?? 0);
+    const express = Number(props.charts?.layanan?.express ?? 0);
+    const ekonomi = Number(props.charts?.layanan?.ekonomi ?? 0);
+    const kargo = Number(props.charts?.layanan?.kargo ?? 0);
 
-// ── Top 5 Kota Tujuan ──────────────────────────────────────────────────────
-const topKotaData = computed(() => [
-    { name: 'Bandung', value: 45, width: '100%' },
-    { name: 'Lumajang', value: 32, width: '71.1%' },
-    { name: 'Surabaya', value: 25, width: '55.5%' },
-    { name: 'Malang', value: 18, width: '40.0%' },
-    { name: 'Yogyakarta', value: 8, width: '17.8%' },
-]);
+    const total = totalPengiriman.value || 1;
+    const maxVal = Math.max(reguler, express, ekonomi, kargo, 1);
 
-// ── 5 Pengiriman Terbaru ───────────────────────────────────────────────────
-const recentShipments = computed(() => {
-    if (props.latest?.data && props.latest.data.length >= 5) {
-        return props.latest.data.slice(0, 5);
-    }
-    // Fallback data statis persis seperti di foto bila data database belum lengkap
     return [
         {
-            id: 5,
-            nomor_resi: 'SS-260803-0005',
-            pengirim_nama: 'Rizal Putra',
-            tujuan_kota: 'Bandung',
-            jenis_layanan: 'reguler',
-            status: 'dalam_perjalanan',
-            created_at: '2026-11-08T14:21:00Z',
+            name: 'Reguler',
+            count: reguler,
+            percentText: `${reguler} paket (${((reguler / total) * 100).toFixed(1).replace('.', ',')}%)`,
+            barWidth: `${Math.round((reguler / maxVal) * 100)}%`,
+            barColor: 'bg-[#2563EB]',
+            boxBg: 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
         },
         {
-            id: 4,
-            nomor_resi: 'SS-260803-0004',
-            pengirim_nama: 'Siti Aulia',
-            tujuan_kota: 'Surabaya',
-            jenis_layanan: 'express',
-            status: 'terkirim',
-            created_at: '2026-11-08T11:40:00Z',
+            name: 'Express',
+            count: express,
+            percentText: `${express} paket (${((express / total) * 100).toFixed(1).replace('.', ',')}%)`,
+            barWidth: `${Math.round((express / maxVal) * 100)}%`,
+            barColor: 'bg-[#8B5CF6]',
+            boxBg: 'bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400',
         },
         {
-            id: 3,
-            nomor_resi: 'SS-260803-0003',
-            pengirim_nama: 'Andrian',
-            tujuan_kota: 'Malang',
-            jenis_layanan: 'ekonomi',
-            status: 'terkirim',
-            created_at: '2026-11-08T10:15:00Z',
+            name: 'Ekonomi',
+            count: ekonomi,
+            percentText: `${ekonomi} paket (${((ekonomi / total) * 100).toFixed(1).replace('.', ',')}%)`,
+            barWidth: `${Math.round((ekonomi / maxVal) * 100)}%`,
+            barColor: 'bg-[#10B981]',
+            boxBg: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400',
         },
         {
-            id: 2,
-            nomor_resi: 'SS-260803-0002',
-            pengirim_nama: 'Pitil',
-            tujuan_kota: 'Lumajang',
-            jenis_layanan: 'express',
-            status: 'gagal',
-            created_at: '2026-11-07T16:32:00Z',
-        },
-        {
-            id: 1,
-            nomor_resi: 'SS-260803-0001',
-            pengirim_nama: 'Dimas Pratama',
-            tujuan_kota: 'Bandung',
-            jenis_layanan: 'reguler',
-            status: 'terkirim',
-            created_at: '2026-11-07T09:20:00Z',
+            name: 'Kargo',
+            count: kargo,
+            percentText: `${kargo} paket (${((kargo / total) * 100).toFixed(1).replace('.', ',')}%)`,
+            barWidth: `${Math.round((kargo / maxVal) * 100)}%`,
+            barColor: 'bg-[#F59E0B]',
+            boxBg: 'bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400',
         },
     ];
 });
 
-// Format Tanggal Desain: "08 Nov 2026, 14:21"
+// ── 5. Top 5 Kota Tujuan (Data Real dari Database) ──────────────────────────
+const topKotaData = computed(() => {
+    const list = props.charts?.topKotaList || [];
+    if (list.length === 0) return [];
+
+    const maxVal = Math.max(...list.map((k) => Number(k.value || 0)), 1);
+
+    return list.map((k) => ({
+        name: k.name,
+        value: Number(k.value || 0),
+        width: `${Math.round((Number(k.value || 0) / maxVal) * 100)}%`,
+    }));
+});
+
+// ── 6. Tingkat Keberhasilan ────────────────────────────────────────────────
+const successRate = computed(() => {
+    return Number(props.stats?.successRate ?? 0);
+});
+
+const successRatePercentText = computed(() => {
+    return `${successRate.value.toFixed(1).replace('.', ',')}%`;
+});
+
+const successRateDelta = computed(() => {
+    return Number(props.stats?.successRateDeltaPercent ?? 0);
+});
+
+// ── 7. Tabel 5 Pengiriman Terbaru (Real dari Database) ──────────────────────
+const recentShipments = computed(() => {
+    return props.latest?.data || [];
+});
+
+// Format Tanggal: "08 Nov 2026, 14:21"
 function formatDateTime(isoString) {
     if (!isoString) return '-';
     const date = new Date(isoString);
@@ -219,7 +248,7 @@ function goDetail(id) {
     }
 }
 
-// ── Inisialisasi Realtime Pusher ───────────────────────────────────────────
+// ── 8. Inisialisasi Realtime Pusher ─────────────────────────────────────────
 onMounted(async () => {
     mounted.value = true;
 
@@ -328,7 +357,7 @@ onUnmounted(() => {
                         :class="
                             activePeriod === p
                                 ? 'bg-[#1D4ED8] text-white shadow-sm'
-                                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:white'
                         "
                         @click="activePeriod = p"
                     >
@@ -338,7 +367,7 @@ onUnmounted(() => {
             </div>
         </div>
 
-        <!-- ── Row 1: 4 KPI Cards ─────────────────────────────────────────── -->
+        <!-- ── Row 1: 4 KPI Cards (Data Asli Database) ────────────────────── -->
         <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
             <!-- 1. Total Pengiriman -->
             <div
@@ -357,10 +386,19 @@ onUnmounted(() => {
                         </div>
                         <div class="flex items-center gap-1.5 mt-2.5">
                             <span
-                                class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[11px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40"
+                                class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[11px] font-bold"
+                                :class="
+                                    Number(stats.pengirimanDeltaPercent || 0) >= 0
+                                        ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40'
+                                        : 'text-rose-600 bg-rose-50 dark:bg-rose-950/40'
+                                "
                             >
-                                <ArrowUp class="w-3 h-3 stroke-[2.5]" />
-                                +12,5%
+                                <ArrowUp
+                                    v-if="Number(stats.pengirimanDeltaPercent || 0) >= 0"
+                                    class="w-3 h-3 stroke-[2.5]"
+                                />
+                                <ArrowDown v-else class="w-3 h-3 stroke-[2.5]" />
+                                {{ fmtDelta(stats.pengirimanDeltaPercent) }}
                             </span>
                             <span class="text-xs text-gray-400 dark:text-gray-500">vs bulan lalu</span>
                         </div>
@@ -389,10 +427,19 @@ onUnmounted(() => {
                         </div>
                         <div class="flex items-center gap-1.5 mt-2.5">
                             <span
-                                class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[11px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40"
+                                class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[11px] font-bold"
+                                :class="
+                                    Number(stats.dalamProsesDeltaPercent || 0) >= 0
+                                        ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40'
+                                        : 'text-rose-600 bg-rose-50 dark:bg-rose-950/40'
+                                "
                             >
-                                <ArrowUp class="w-3 h-3 stroke-[2.5]" />
-                                +9,1%
+                                <ArrowUp
+                                    v-if="Number(stats.dalamProsesDeltaPercent || 0) >= 0"
+                                    class="w-3 h-3 stroke-[2.5]"
+                                />
+                                <ArrowDown v-else class="w-3 h-3 stroke-[2.5]" />
+                                {{ fmtDelta(stats.dalamProsesDeltaPercent) }}
                             </span>
                             <span class="text-xs text-gray-400 dark:text-gray-500">vs bulan lalu</span>
                         </div>
@@ -421,10 +468,19 @@ onUnmounted(() => {
                         </div>
                         <div class="flex items-center gap-1.5 mt-2.5">
                             <span
-                                class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[11px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40"
+                                class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[11px] font-bold"
+                                :class="
+                                    Number(stats.terkirimDeltaPercent || 0) >= 0
+                                        ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40'
+                                        : 'text-rose-600 bg-rose-50 dark:bg-rose-950/40'
+                                "
                             >
-                                <ArrowUp class="w-3 h-3 stroke-[2.5]" />
-                                +18,1%
+                                <ArrowUp
+                                    v-if="Number(stats.terkirimDeltaPercent || 0) >= 0"
+                                    class="w-3 h-3 stroke-[2.5]"
+                                />
+                                <ArrowDown v-else class="w-3 h-3 stroke-[2.5]" />
+                                {{ fmtDelta(stats.terkirimDeltaPercent) }}
                             </span>
                             <span class="text-xs text-gray-400 dark:text-gray-500">vs bulan lalu</span>
                         </div>
@@ -455,8 +511,12 @@ onUnmounted(() => {
                             <span
                                 class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md text-[11px] font-bold text-rose-600 bg-rose-50 dark:bg-rose-950/40"
                             >
-                                <ArrowUp class="w-3 h-3 stroke-[2.5]" />
-                                +50,0%
+                                <ArrowUp
+                                    v-if="Number(stats.bermasalahDeltaPercent || 0) >= 0"
+                                    class="w-3 h-3 stroke-[2.5]"
+                                />
+                                <ArrowDown v-else class="w-3 h-3 stroke-[2.5]" />
+                                {{ fmtDelta(stats.bermasalahDeltaPercent) }}
                             </span>
                             <span class="text-xs text-gray-400 dark:text-gray-500">vs bulan lalu</span>
                         </div>
@@ -510,8 +570,13 @@ onUnmounted(() => {
                     </div>
                 </div>
 
-                <!-- Canvas Chart.js Line -->
-                <ChartJsLine :active-tab="activeTrenTab" />
+                <!-- Canvas Chart.js Line (Realtime Database) -->
+                <ChartJsLine
+                    :labels="trenLabels"
+                    :shipments-data="trenShipmentsData"
+                    :revenue-data="trenRevenueData"
+                    :active-tab="activeTrenTab"
+                />
             </div>
 
             <!-- Status Pengiriman (Chart.js Doughnut) -->
@@ -524,10 +589,13 @@ onUnmounted(() => {
                 </div>
 
                 <div class="flex flex-col sm:flex-row items-center justify-between gap-6 my-auto">
-                    <!-- Doughnut Chart dengan Total Paket di tengah -->
-                    <ChartJsDoughnut :total="totalPengiriman" />
+                    <!-- Doughnut Chart dengan Total Paket Asli di tengah -->
+                    <ChartJsDoughnut
+                        :data="[terkirimCount, dalamPerjalananCount, diprosesCount, bermasalahCount]"
+                        :total="totalPengiriman"
+                    />
 
-                    <!-- Legend List Status -->
+                    <!-- Legend List Status Asli -->
                     <div class="flex-1 w-full space-y-3">
                         <div
                             v-for="item in statusData"
@@ -548,7 +616,7 @@ onUnmounted(() => {
             </div>
         </div>
 
-        <!-- ── Row 3: 3 Cards ─────────────────────────────────────────────── -->
+        <!-- ── Row 3: 3 Cards (Data Database Murni) ───────────────────────── -->
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
             <!-- 1. Distribusi Layanan -->
             <div
@@ -602,13 +670,13 @@ onUnmounted(() => {
                     <h2 class="text-base font-bold text-gray-900 dark:text-white">Top 5 Kota Tujuan</h2>
                 </div>
 
-                <div class="space-y-3.5">
+                <div v-if="topKotaData.length > 0" class="space-y-3.5">
                     <div
                         v-for="k in topKotaData"
                         :key="k.name"
                         class="flex items-center justify-between gap-3 text-xs"
                     >
-                        <span class="font-medium text-gray-700 dark:text-gray-300 w-20 shrink-0 truncate">
+                        <span class="font-medium text-gray-700 dark:text-gray-300 w-24 shrink-0 truncate">
                             {{ k.name }}
                         </span>
 
@@ -624,6 +692,9 @@ onUnmounted(() => {
                         </span>
                     </div>
                 </div>
+                <div v-else class="text-xs text-gray-400 text-center py-8">
+                    Belum ada data pengiriman kota.
+                </div>
             </div>
 
             <!-- 3. Tingkat Keberhasilan -->
@@ -636,26 +707,32 @@ onUnmounted(() => {
                 </div>
 
                 <div class="flex items-center justify-between gap-4 my-auto">
-                    <!-- Sisi Kiri: Angka & Delta -->
+                    <!-- Sisi Kiri: Angka & Delta Asli -->
                     <div>
                         <div class="text-4xl font-black text-gray-900 dark:text-white tracking-tight leading-none">
-                            94,2%
+                            {{ successRatePercentText }}
                         </div>
                         <div class="text-xs text-gray-500 dark:text-gray-400 mt-2 font-medium">
                             Paket berhasil terkirim
                         </div>
                         <div class="flex items-center gap-1.5 mt-3">
                             <span
-                                class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md text-[11px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40"
+                                class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-md text-[11px] font-bold"
+                                :class="
+                                    successRateDelta >= 0
+                                        ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40'
+                                        : 'text-rose-600 bg-rose-50 dark:bg-rose-950/40'
+                                "
                             >
-                                <ArrowUp class="w-3 h-3 stroke-[2.5]" />
-                                +3,9%
+                                <ArrowUp v-if="successRateDelta >= 0" class="w-3 h-3 stroke-[2.5]" />
+                                <ArrowDown v-else class="w-3 h-3 stroke-[2.5]" />
+                                {{ fmtDelta(successRateDelta) }}
                             </span>
                             <span class="text-xs text-gray-400 dark:text-gray-500">vs bulan lalu</span>
                         </div>
                     </div>
 
-                    <!-- Sisi Kanan: Circular Ring Gauge SVG Presisi -->
+                    <!-- Sisi Kanan: Circular Ring Gauge SVG Dinamis -->
                     <div class="relative w-20 h-20 shrink-0 flex items-center justify-center">
                         <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
                             <!-- Background Track -->
@@ -666,10 +743,10 @@ onUnmounted(() => {
                                 fill="none"
                                 d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                             />
-                            <!-- Progress Ring (94.2%) -->
+                            <!-- Dynamic Progress Ring -->
                             <path
-                                class="text-[#10B981]"
-                                stroke-dasharray="94.2, 100"
+                                class="text-[#10B981] transition-all duration-500"
+                                :stroke-dasharray="`${Math.min(100, Math.max(0, successRate))}, 100`"
                                 stroke-width="3.6"
                                 stroke-linecap="round"
                                 stroke="currentColor"
@@ -682,7 +759,7 @@ onUnmounted(() => {
             </div>
         </div>
 
-        <!-- ── Row 4: 5 Pengiriman Terbaru (Tabel) ────────────────────────── -->
+        <!-- ── Row 4: 5 Pengiriman Terbaru (Real dari Database) ───────────── -->
         <div
             class="bg-white dark:bg-[#111827] rounded-[20px] p-6 border border-gray-100 dark:border-gray-800/80 shadow-[0_2px_12px_rgba(0,0,0,0.03)]"
         >
@@ -734,7 +811,7 @@ onUnmounted(() => {
 
                             <!-- Tujuan -->
                             <td class="py-3.5 px-3 text-gray-600 dark:text-gray-400">
-                                {{ p.tujuan_kota }}
+                                {{ p.tujuan_kota || '-' }}
                             </td>
 
                             <!-- Layanan Badge -->
@@ -807,6 +884,12 @@ onUnmounted(() => {
                             <!-- Tanggal -->
                             <td class="py-3.5 px-3 text-gray-500 dark:text-gray-400 whitespace-nowrap">
                                 {{ formatDateTime(p.created_at) }}
+                            </td>
+                        </tr>
+
+                        <tr v-if="recentShipments.length === 0">
+                            <td colspan="6" class="py-8 text-center text-gray-400">
+                                Belum ada riwayat transaksi pengiriman di database.
                             </td>
                         </tr>
                     </tbody>

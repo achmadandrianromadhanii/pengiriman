@@ -43,26 +43,41 @@ const props = defineProps({
     },
 });
 
-// Plugin custom untuk menggambar callout pin statis pada titik Okt 2026 seperti pada desain referensi
+// Plugin custom untuk menggambar callout pin pada titik puncak data nyata
 const calloutPinPlugin = {
     id: 'calloutPin',
     afterDatasetsDraw(chart) {
         if (props.activeTab !== 'pengiriman') return;
         const { ctx } = chart;
         const meta = chart.getDatasetMeta(0);
-        if (!meta || !meta.data || meta.data.length < 5) return;
+        if (!meta || !meta.data || meta.data.length === 0) return;
 
-        // Titik ke-5 (indeks 4) adalah Okt 2026 (53 paket)
-        const targetIndex = 4;
+        // Cari titik data tertinggi atau titik aktif nyata
+        let targetIndex = 0;
+        let maxVal = -1;
+        props.shipmentsData.forEach((val, idx) => {
+            if (val > maxVal) {
+                maxVal = val;
+                targetIndex = idx;
+            }
+        });
+
+        if (maxVal <= 0) {
+            targetIndex = meta.data.length - 1; // Default ke titik terakhir jika semua 0
+        }
+
         const point = meta.data[targetIndex];
         if (!point) return;
 
+        const targetLabel = props.labels[targetIndex] || 'Bulan Ini';
+        const targetValue = props.shipmentsData[targetIndex] || 0;
+
         const px = point.x;
         const py = point.y;
-        const boxW = 84;
+        const boxW = 86;
         const boxH = 42;
         const boxX = px - boxW / 2;
-        const boxY = py - boxH - 12;
+        const boxY = Math.max(8, py - boxH - 12);
 
         ctx.save();
         // Bayangan lembut
@@ -93,16 +108,16 @@ const calloutPinPlugin = {
         ctx.lineTo(px, py - 4);
         ctx.stroke();
 
-        // Teks Judul: "Okt 2026"
+        // Teks Judul Dinamis (misal "Nov 2026")
         ctx.fillStyle = '#64748B';
         ctx.font = '500 10px Plus Jakarta Sans, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('Okt 2026', px, boxY + 16);
+        ctx.fillText(targetLabel, px, boxY + 16);
 
-        // Teks Nilai: "53 paket"
+        // Teks Nilai Dinamis (misal "5 paket")
         ctx.fillStyle = '#0F172A';
         ctx.font = '700 12px Plus Jakarta Sans, sans-serif';
-        ctx.fillText('53 paket', px, boxY + 32);
+        ctx.fillText(`${targetValue} paket`, px, boxY + 32);
 
         ctx.restore();
     },
@@ -204,7 +219,9 @@ const chartOptions = computed(() => {
                 ticks: {
                     color: '#94A3B8',
                     font: { size: 11, family: "'Plus Jakarta Sans', sans-serif" },
-                    stepSize: isPengiriman ? 10 : undefined,
+                    stepSize: isPengiriman
+                        ? Math.max(1, Math.ceil(Math.max(...(props.shipmentsData || [10]), 5) / 5))
+                        : undefined,
                     callback: (value) => {
                         if (isPengiriman) return value;
                         if (value >= 1000000) return `${value / 1000000} Jt`;
@@ -212,7 +229,9 @@ const chartOptions = computed(() => {
                     },
                 },
                 min: 0,
-                max: isPengiriman ? 60 : undefined,
+                max: isPengiriman
+                    ? Math.max(5, Math.ceil(Math.max(...(props.shipmentsData || [5]), 5) * 1.25))
+                    : undefined,
             },
         },
     };
