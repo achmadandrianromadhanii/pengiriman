@@ -1,421 +1,457 @@
 <script setup>
-import { useI18n } from '@/composables/useI18n.js';
-const { t } = useI18n();
-import AppLayoutDesktop from '@/Layouts/AppLayoutDesktop.vue';
-import ChartJsLine from '@/Components/ChartJsLine.vue';
-import ChartJsDoughnut from '@/Components/ChartJsDoughnut.vue';
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
-import { Head, router, Link } from '@inertiajs/vue3';
-import {
-    BarChart3,
-    BarChart2,
-    Package,
-    Truck,
-    CheckCircle2,
-    AlertTriangle,
-    TrendingUp,
-    Target,
-    Calendar,
-    ChevronDown,
-    ArrowUp,
-    ArrowDown,
-    ArrowRight,
-    Filter,
-    X,
-    RotateCcw,
-    Layers
-} from 'lucide-vue-next';
+    import { useI18n } from '@/composables/useI18n.js';
+    const { t } = useI18n();
+    import AppLayoutDesktop from '@/Layouts/AppLayoutDesktop.vue';
+    import ChartJsLine from '@/Components/ChartJsLine.vue';
+    import ChartJsDoughnut from '@/Components/ChartJsDoughnut.vue';
+    import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+    import { Head, router, Link } from '@inertiajs/vue3';
+    import {
+        BarChart3,
+        BarChart2,
+        Package,
+        Truck,
+        CheckCircle2,
+        AlertTriangle,
+        TrendingUp,
+        Target,
+        Calendar,
+        ChevronDown,
+        ArrowUp,
+        ArrowDown,
+        ArrowRight,
+        Filter,
+        X,
+        RotateCcw,
+        Layers,
+    } from 'lucide-vue-next';
 
-defineOptions({ layout: AppLayoutDesktop });
+    defineOptions({ layout: AppLayoutDesktop });
 
-const props = defineProps({
-    stats: { type: Object, default: () => ({}) },
-    charts: { type: Object, default: () => ({}) },
-    latest: { type: Object, default: () => ({ data: [] }) },
-    filters: { type: Object, default: () => ({}) },
-});
-
-// ── State Real-Time & Filter ──────────────────────────────────────────────
-const mounted = ref(false);
-const isPusherConnected = ref(false);
-const activeTrenTab = ref('pengiriman'); // 'pengiriman' | 'ongkir'
-const isRealtimeFlashing = ref(false);
-const showFilterDropdown = ref(false);
-const filterDropdownRef = ref(null);
-
-// Filter Input State
-const customStartDate = ref(props.filters?.start_date || '');
-const customEndDate = ref(props.filters?.end_date || '');
-
-watch(
-    () => props.filters,
-    (newFilters) => {
-        if (newFilters?.start_date) customStartDate.value = newFilters.start_date;
-        if (newFilters?.end_date) customEndDate.value = newFilters.end_date;
-    },
-    { deep: true }
-);
-
-const activePeriod = computed(() => props.filters?.period || 'bulan_ini');
-const activePeriodLabel = computed(() => props.filters?.period_label || 'Bulan Ini');
-const activeLayanan = computed(() => props.filters?.layanan || 'semua');
-const deltaLabel = computed(() => props.filters?.delta_label || 'vs bulan lalu');
-
-const isFilterActive = computed(() => {
-    return activePeriod.value !== 'bulan_ini' || activeLayanan.value !== 'semua';
-});
-
-// Pilihan Cepat Tombol Pills
-const quickPills = [
-    { key: 'hari_ini', label: 'Hari Ini' },
-    { key: '7_hari', label: '7 Hari' },
-    { key: '30_hari', label: '30 Hari' },
-    { key: 'bulan_ini', label: 'Bulan Ini' },
-    { key: 'custom', label: 'Custom' },
-];
-
-const periodPresets = [
-    { key: 'hari_ini', label: 'Hari Ini', desc: 'Transaksi hari ini' },
-    { key: '7_hari', label: '7 Hari Terakhir', desc: '1 minggu terakhir' },
-    { key: '30_hari', label: '30 Hari Terakhir', desc: '1 bulan terakhir' },
-    { key: 'bulan_ini', label: 'Bulan Ini', desc: 'Awal hingga akhir bulan ini' },
-    { key: 'bulan_lalu', label: 'Bulan Lalu', desc: 'Rekap bulan sebelumnya' },
-    { key: 'tahun_ini', label: 'Tahun Ini', desc: 'Performa tahun berjalan' },
-];
-
-const layananOptions = [
-    { key: 'semua', label: 'Semua Layanan' },
-    { key: 'reguler', label: 'Reguler' },
-    { key: 'express', label: 'Express' },
-    { key: 'ekonomi', label: 'Ekonomi' },
-    { key: 'kargo', label: 'Kargo' },
-];
-
-// Terapkan Filter Periode Cepat
-function applyPeriod(periodKey) {
-    if (periodKey === 'custom') {
-        showFilterDropdown.value = true;
-        return;
-    }
-
-    showFilterDropdown.value = false;
-    router.get(
-        route('dashboard'),
-        {
-            period: periodKey,
-            layanan: activeLayanan.value !== 'semua' ? activeLayanan.value : undefined,
-        },
-        {
-            preserveState: true,
-            preserveScroll: true,
-            only: ['stats', 'charts', 'latest', 'filters'],
-        }
-    );
-}
-
-// Terapkan Filter Rentang Tanggal Custom
-function applyCustomDateFilter() {
-    if (!customStartDate.value || !customEndDate.value) return;
-
-    showFilterDropdown.value = false;
-    router.get(
-        route('dashboard'),
-        {
-            period: 'custom',
-            start_date: customStartDate.value,
-            end_date: customEndDate.value,
-            layanan: activeLayanan.value !== 'semua' ? activeLayanan.value : undefined,
-        },
-        {
-            preserveState: true,
-            preserveScroll: true,
-            only: ['stats', 'charts', 'latest', 'filters'],
-        }
-    );
-}
-
-// Terapkan Filter Layanan
-function applyLayananFilter(layananKey) {
-    router.get(
-        route('dashboard'),
-        {
-            period: activePeriod.value,
-            start_date: activePeriod.value === 'custom' ? customStartDate.value : undefined,
-            end_date: activePeriod.value === 'custom' ? customEndDate.value : undefined,
-            layanan: layananKey !== 'semua' ? layananKey : undefined,
-        },
-        {
-            preserveState: true,
-            preserveScroll: true,
-            only: ['stats', 'charts', 'latest', 'filters'],
-        }
-    );
-}
-
-// Reset Filter ke Default
-function resetAllFilters() {
-    showFilterDropdown.value = false;
-    customStartDate.value = '';
-    customEndDate.value = '';
-    router.get(
-        route('dashboard'),
-        {},
-        {
-            preserveState: true,
-            preserveScroll: true,
-            only: ['stats', 'charts', 'latest', 'filters'],
-        }
-    );
-}
-
-// Menutup Dropdown jika klik di luar
-function handleDocumentClick(e) {
-    if (
-        showFilterDropdown.value &&
-        filterDropdownRef.value &&
-        !filterDropdownRef.value.contains(e.target)
-    ) {
-        showFilterDropdown.value = false;
-    }
-}
-
-// ── 1. KPI Cards (100% Data Database Terfilter & Dinamis) ────────────────────
-const totalPengiriman = computed(() => {
-    return Number(props.stats?.totalPengiriman ?? 0);
-});
-
-const dalamProses = computed(() => {
-    return Number(props.stats?.dalamProses ?? 0);
-});
-
-const paketTerkirim = computed(() => {
-    return Number(props.stats?.paketTerkirim ?? 0);
-});
-
-const paketBermasalah = computed(() => {
-    return Number(props.stats?.paketBermasalah ?? 0);
-});
-
-function fmtDelta(val) {
-    const num = Number(val || 0);
-    const sign = num > 0 ? '+' : '';
-    return `${sign}${num.toFixed(1).replace('.', ',')}%`;
-}
-
-// ── 2. Data Tren Pengiriman Chart.js ─────────────────────────────────────────
-const trenLabels = computed(() => {
-    return props.charts?.area?.labels || ['Jun 2026', 'Jul 2026', 'Agu 2026', 'Sep 2026', 'Okt 2026', 'Nov 2026'];
-});
-
-const trenShipmentsData = computed(() => {
-    const data = props.charts?.area?.seriesShipments || [];
-    return data.length > 0 ? data : [0, 0, 0, 0, 0, 0];
-});
-
-const trenRevenueData = computed(() => {
-    const data = props.charts?.area?.seriesRevenue || [];
-    return data.length > 0 ? data : [0, 0, 0, 0, 0, 0];
-});
-
-// ── 3. Distribusi Status Pengiriman (Donut Chart & Legend) ──────────────────
-const terkirimCount = computed(() => Number(props.charts?.status?.terkirim ?? 0));
-const dalamPerjalananCount = computed(() => Number(props.charts?.status?.dalam_perjalanan ?? 0));
-const diprosesCount = computed(() => Number(props.charts?.status?.diproses ?? 0));
-const bermasalahCount = computed(() => Number(props.charts?.status?.bermasalah ?? 0));
-
-const totalStatusCount = computed(() => {
-    return (
-        terkirimCount.value +
-        dalamPerjalananCount.value +
-        diprosesCount.value +
-        bermasalahCount.value ||
-        totalPengiriman.value ||
-        1
-    );
-});
-
-const statusData = computed(() => {
-    const total = totalStatusCount.value;
-
-    return [
-        {
-            key: 'terkirim',
-            label: 'Terkirim',
-            count: terkirimCount.value,
-            percent: total > 0 ? `${((terkirimCount.value / total) * 100).toFixed(1).replace('.', ',')}%` : '0,0%',
-            color: '#10B981',
-            dotClass: 'bg-[#10B981]',
-        },
-        {
-            key: 'dalam_perjalanan',
-            label: 'Dalam Perjalanan',
-            count: dalamPerjalananCount.value,
-            percent: total > 0 ? `${((dalamPerjalananCount.value / total) * 100).toFixed(1).replace('.', ',')}%` : '0,0%',
-            color: '#2563EB',
-            dotClass: 'bg-[#2563EB]',
-        },
-        {
-            key: 'diproses',
-            label: 'Diproses',
-            count: diprosesCount.value,
-            percent: total > 0 ? `${((diprosesCount.value / total) * 100).toFixed(1).replace('.', ',')}%` : '0,0%',
-            color: '#F59E0B',
-            dotClass: 'bg-[#F59E0B]',
-        },
-        {
-            key: 'bermasalah',
-            label: 'Bermasalah',
-            count: bermasalahCount.value,
-            percent: total > 0 ? `${((bermasalahCount.value / total) * 100).toFixed(1).replace('.', ',')}%` : '0,0%',
-            color: '#EF4444',
-            dotClass: 'bg-[#EF4444]',
-        },
-    ];
-});
-
-// ── 4. Distribusi Layanan ───────────────────────────────────────────────────
-const layananData = computed(() => {
-    const reguler = Number(props.charts?.layanan?.reguler ?? 0);
-    const express = Number(props.charts?.layanan?.express ?? 0);
-    const ekonomi = Number(props.charts?.layanan?.ekonomi ?? 0);
-    const kargo = Number(props.charts?.layanan?.kargo ?? 0);
-
-    const total = totalPengiriman.value || 1;
-    const maxVal = Math.max(reguler, express, ekonomi, kargo, 1);
-
-    return [
-        {
-            name: 'Reguler',
-            count: reguler,
-            percentText: `${reguler} paket (${((reguler / total) * 100).toFixed(1).replace('.', ',')}%)`,
-            barWidth: `${Math.round((reguler / maxVal) * 100)}%`,
-            barColor: 'bg-[#2563EB]',
-            boxBg: 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
-        },
-        {
-            name: 'Express',
-            count: express,
-            percentText: `${express} paket (${((express / total) * 100).toFixed(1).replace('.', ',')}%)`,
-            barWidth: `${Math.round((express / maxVal) * 100)}%`,
-            barColor: 'bg-[#8B5CF6]',
-            boxBg: 'bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400',
-        },
-        {
-            name: 'Ekonomi',
-            count: ekonomi,
-            percentText: `${ekonomi} paket (${((ekonomi / total) * 100).toFixed(1).replace('.', ',')}%)`,
-            barWidth: `${Math.round((ekonomi / maxVal) * 100)}%`,
-            barColor: 'bg-[#10B981]',
-            boxBg: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400',
-        },
-        {
-            name: 'Kargo',
-            count: kargo,
-            percentText: `${kargo} paket (${((kargo / total) * 100).toFixed(1).replace('.', ',')}%)`,
-            barWidth: `${Math.round((kargo / maxVal) * 100)}%`,
-            barColor: 'bg-[#F59E0B]',
-            boxBg: 'bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400',
-        },
-    ];
-});
-
-// ── 5. Top 5 Kota Tujuan ───────────────────────────────────────────────────
-const topKotaData = computed(() => {
-    const list = props.charts?.topKotaList || [];
-    if (list.length === 0) return [];
-
-    const maxVal = Math.max(...list.map((k) => Number(k.value || 0)), 1);
-
-    return list.map((k) => ({
-        name: k.name,
-        value: Number(k.value || 0),
-        width: `${Math.round((Number(k.value || 0) / maxVal) * 100)}%`,
-    }));
-});
-
-// ── 6. Tingkat Keberhasilan ────────────────────────────────────────────────
-const successRate = computed(() => {
-    return Number(props.stats?.successRate ?? 0);
-});
-
-const successRatePercentText = computed(() => {
-    return `${successRate.value.toFixed(1).replace('.', ',')}%`;
-});
-
-const successRateDelta = computed(() => {
-    return Number(props.stats?.successRateDeltaPercent ?? 0);
-});
-
-// ── 7. Tabel 5 Pengiriman Terbaru ──────────────────────────────────────────
-const recentShipments = computed(() => {
-    return props.latest?.data || [];
-});
-
-function formatDateTime(isoString) {
-    if (!isoString) return '-';
-    const date = new Date(isoString);
-    const day = String(date.getDate()).padStart(2, '0');
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-    const month = months[date.getMonth()];
-    const year = date.getFullYear();
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    return `${day} ${month} ${year}, ${hours}:${minutes}`;
-}
-
-function goDetail(id) {
-    if (id) {
-        router.visit(route('pengiriman.show', id));
-    }
-}
-
-// ── 8. Inisialisasi Realtime Pusher ─────────────────────────────────────────
-onMounted(async () => {
-    mounted.value = true;
-    window.addEventListener('click', handleDocumentClick);
-
-    try {
-        const { initEcho } = await import('@/echo');
-        await initEcho();
-
-        if (window.Echo) {
-            isPusherConnected.value = true;
-
-            // Dengarkan channel public 'dashboard'
-            window.Echo.channel('dashboard')
-                .listen('DashboardUpdated', () => {
-                    handleRealtimeUpdate();
-                })
-                .listen('.DashboardUpdated', () => {
-                    handleRealtimeUpdate();
-                });
-        }
-    } catch (err) {
-        console.warn('[Pusher] Koneksi realtime tidak dapat terhubung:', err);
-    }
-});
-
-function handleRealtimeUpdate() {
-    isRealtimeFlashing.value = true;
-    router.reload({
-        only: ['stats', 'charts', 'latest', 'filters'],
-        preserveScroll: true,
-        preserveState: true,
-        onFinish: () => {
-            setTimeout(() => {
-                isRealtimeFlashing.value = false;
-            }, 1200);
-        },
+    const props = defineProps({
+        stats: { type: Object, default: () => ({}) },
+        charts: { type: Object, default: () => ({}) },
+        latest: { type: Object, default: () => ({ data: [] }) },
+        filters: { type: Object, default: () => ({}) },
     });
-}
 
-onUnmounted(() => {
-    mounted.value = false;
-    window.removeEventListener('click', handleDocumentClick);
-    if (window.Echo) {
-        window.Echo.leave('dashboard');
+    // ── State Real-Time & Filter ──────────────────────────────────────────────
+    const mounted = ref(false);
+    const isPusherConnected = ref(false);
+    const activeTrenTab = ref('pengiriman'); // 'pengiriman' | 'ongkir'
+    const isRealtimeFlashing = ref(false);
+    const showFilterDropdown = ref(false);
+    const filterDropdownRef = ref(null);
+
+    // Filter Input State
+    const customStartDate = ref(props.filters?.start_date || '');
+    const customEndDate = ref(props.filters?.end_date || '');
+
+    watch(
+        () => props.filters,
+        (newFilters) => {
+            if (newFilters?.start_date) customStartDate.value = newFilters.start_date;
+            if (newFilters?.end_date) customEndDate.value = newFilters.end_date;
+        },
+        { deep: true },
+    );
+
+    const activePeriod = computed(() => props.filters?.period || 'bulan_ini');
+    const activePeriodLabel = computed(() => props.filters?.period_label || 'Bulan Ini');
+    const activeLayanan = computed(() => props.filters?.layanan || 'semua');
+    const deltaLabel = computed(() => props.filters?.delta_label || 'vs bulan lalu');
+
+    const isFilterActive = computed(() => {
+        return activePeriod.value !== 'bulan_ini' || activeLayanan.value !== 'semua';
+    });
+
+    // Pilihan Cepat Tombol Pills
+    const quickPills = [
+        { key: 'hari_ini', label: 'Hari Ini' },
+        { key: '7_hari', label: '7 Hari' },
+        { key: '30_hari', label: '30 Hari' },
+        { key: 'bulan_ini', label: 'Bulan Ini' },
+        { key: 'custom', label: 'Custom' },
+    ];
+
+    const periodPresets = [
+        { key: 'hari_ini', label: 'Hari Ini', desc: 'Transaksi hari ini' },
+        { key: '7_hari', label: '7 Hari Terakhir', desc: '1 minggu terakhir' },
+        { key: '30_hari', label: '30 Hari Terakhir', desc: '1 bulan terakhir' },
+        { key: 'bulan_ini', label: 'Bulan Ini', desc: 'Awal hingga akhir bulan ini' },
+        { key: 'bulan_lalu', label: 'Bulan Lalu', desc: 'Rekap bulan sebelumnya' },
+        { key: 'tahun_ini', label: 'Tahun Ini', desc: 'Performa tahun berjalan' },
+    ];
+
+    const layananOptions = [
+        { key: 'semua', label: 'Semua Layanan' },
+        { key: 'reguler', label: 'Reguler' },
+        { key: 'express', label: 'Express' },
+        { key: 'ekonomi', label: 'Ekonomi' },
+        { key: 'kargo', label: 'Kargo' },
+    ];
+
+    // Terapkan Filter Periode Cepat
+    function applyPeriod(periodKey) {
+        if (periodKey === 'custom') {
+            showFilterDropdown.value = true;
+            return;
+        }
+
+        showFilterDropdown.value = false;
+        router.get(
+            route('dashboard'),
+            {
+                period: periodKey,
+                layanan: activeLayanan.value !== 'semua' ? activeLayanan.value : undefined,
+            },
+            {
+                preserveState: true,
+                preserveScroll: true,
+                only: ['stats', 'charts', 'latest', 'filters'],
+            },
+        );
     }
-});
+
+    // Terapkan Filter Rentang Tanggal Custom
+    function applyCustomDateFilter() {
+        if (!customStartDate.value || !customEndDate.value) return;
+
+        showFilterDropdown.value = false;
+        router.get(
+            route('dashboard'),
+            {
+                period: 'custom',
+                start_date: customStartDate.value,
+                end_date: customEndDate.value,
+                layanan: activeLayanan.value !== 'semua' ? activeLayanan.value : undefined,
+            },
+            {
+                preserveState: true,
+                preserveScroll: true,
+                only: ['stats', 'charts', 'latest', 'filters'],
+            },
+        );
+    }
+
+    // Terapkan Filter Layanan
+    function applyLayananFilter(layananKey) {
+        router.get(
+            route('dashboard'),
+            {
+                period: activePeriod.value,
+                start_date: activePeriod.value === 'custom' ? customStartDate.value : undefined,
+                end_date: activePeriod.value === 'custom' ? customEndDate.value : undefined,
+                layanan: layananKey !== 'semua' ? layananKey : undefined,
+            },
+            {
+                preserveState: true,
+                preserveScroll: true,
+                only: ['stats', 'charts', 'latest', 'filters'],
+            },
+        );
+    }
+
+    // Reset Filter ke Default
+    function resetAllFilters() {
+        showFilterDropdown.value = false;
+        customStartDate.value = '';
+        customEndDate.value = '';
+        router.get(
+            route('dashboard'),
+            {},
+            {
+                preserveState: true,
+                preserveScroll: true,
+                only: ['stats', 'charts', 'latest', 'filters'],
+            },
+        );
+    }
+
+    // Menutup Dropdown jika klik di luar
+    function handleDocumentClick(e) {
+        if (
+            showFilterDropdown.value &&
+            filterDropdownRef.value &&
+            !filterDropdownRef.value.contains(e.target)
+        ) {
+            showFilterDropdown.value = false;
+        }
+    }
+
+    // ── 1. KPI Cards (100% Data Database Terfilter & Dinamis) ────────────────────
+    const totalPengiriman = computed(() => {
+        return Number(props.stats?.totalPengiriman ?? 0);
+    });
+
+    const dalamProses = computed(() => {
+        return Number(props.stats?.dalamProses ?? 0);
+    });
+
+    const paketTerkirim = computed(() => {
+        return Number(props.stats?.paketTerkirim ?? 0);
+    });
+
+    const paketBermasalah = computed(() => {
+        return Number(props.stats?.paketBermasalah ?? 0);
+    });
+
+    function fmtDelta(val) {
+        const num = Number(val || 0);
+        const sign = num > 0 ? '+' : '';
+        return `${sign}${num.toFixed(1).replace('.', ',')}%`;
+    }
+
+    // ── 2. Data Tren Pengiriman Chart.js ─────────────────────────────────────────
+    const trenLabels = computed(() => {
+        return (
+            props.charts?.area?.labels || [
+                'Jun 2026',
+                'Jul 2026',
+                'Agu 2026',
+                'Sep 2026',
+                'Okt 2026',
+                'Nov 2026',
+            ]
+        );
+    });
+
+    const trenShipmentsData = computed(() => {
+        const data = props.charts?.area?.seriesShipments || [];
+        return data.length > 0 ? data : [0, 0, 0, 0, 0, 0];
+    });
+
+    const trenRevenueData = computed(() => {
+        const data = props.charts?.area?.seriesRevenue || [];
+        return data.length > 0 ? data : [0, 0, 0, 0, 0, 0];
+    });
+
+    // ── 3. Distribusi Status Pengiriman (Donut Chart & Legend) ──────────────────
+    const terkirimCount = computed(() => Number(props.charts?.status?.terkirim ?? 0));
+    const dalamPerjalananCount = computed(() =>
+        Number(props.charts?.status?.dalam_perjalanan ?? 0),
+    );
+    const diprosesCount = computed(() => Number(props.charts?.status?.diproses ?? 0));
+    const bermasalahCount = computed(() => Number(props.charts?.status?.bermasalah ?? 0));
+
+    const totalStatusCount = computed(() => {
+        return (
+            terkirimCount.value +
+                dalamPerjalananCount.value +
+                diprosesCount.value +
+                bermasalahCount.value ||
+            totalPengiriman.value ||
+            1
+        );
+    });
+
+    const statusData = computed(() => {
+        const total = totalStatusCount.value;
+
+        return [
+            {
+                key: 'terkirim',
+                label: 'Terkirim',
+                count: terkirimCount.value,
+                percent:
+                    total > 0
+                        ? `${((terkirimCount.value / total) * 100).toFixed(1).replace('.', ',')}%`
+                        : '0,0%',
+                color: '#10B981',
+                dotClass: 'bg-[#10B981]',
+            },
+            {
+                key: 'dalam_perjalanan',
+                label: 'Dalam Perjalanan',
+                count: dalamPerjalananCount.value,
+                percent:
+                    total > 0
+                        ? `${((dalamPerjalananCount.value / total) * 100).toFixed(1).replace('.', ',')}%`
+                        : '0,0%',
+                color: '#2563EB',
+                dotClass: 'bg-[#2563EB]',
+            },
+            {
+                key: 'diproses',
+                label: 'Diproses',
+                count: diprosesCount.value,
+                percent:
+                    total > 0
+                        ? `${((diprosesCount.value / total) * 100).toFixed(1).replace('.', ',')}%`
+                        : '0,0%',
+                color: '#F59E0B',
+                dotClass: 'bg-[#F59E0B]',
+            },
+            {
+                key: 'bermasalah',
+                label: 'Bermasalah',
+                count: bermasalahCount.value,
+                percent:
+                    total > 0
+                        ? `${((bermasalahCount.value / total) * 100).toFixed(1).replace('.', ',')}%`
+                        : '0,0%',
+                color: '#EF4444',
+                dotClass: 'bg-[#EF4444]',
+            },
+        ];
+    });
+
+    // ── 4. Distribusi Layanan ───────────────────────────────────────────────────
+    const layananData = computed(() => {
+        const reguler = Number(props.charts?.layanan?.reguler ?? 0);
+        const express = Number(props.charts?.layanan?.express ?? 0);
+        const ekonomi = Number(props.charts?.layanan?.ekonomi ?? 0);
+        const kargo = Number(props.charts?.layanan?.kargo ?? 0);
+
+        const total = totalPengiriman.value || 1;
+        const maxVal = Math.max(reguler, express, ekonomi, kargo, 1);
+
+        return [
+            {
+                name: 'Reguler',
+                count: reguler,
+                percentText: `${reguler} paket (${((reguler / total) * 100).toFixed(1).replace('.', ',')}%)`,
+                barWidth: `${Math.round((reguler / maxVal) * 100)}%`,
+                barColor: 'bg-[#2563EB]',
+                boxBg: 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
+            },
+            {
+                name: 'Express',
+                count: express,
+                percentText: `${express} paket (${((express / total) * 100).toFixed(1).replace('.', ',')}%)`,
+                barWidth: `${Math.round((express / maxVal) * 100)}%`,
+                barColor: 'bg-[#8B5CF6]',
+                boxBg: 'bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400',
+            },
+            {
+                name: 'Ekonomi',
+                count: ekonomi,
+                percentText: `${ekonomi} paket (${((ekonomi / total) * 100).toFixed(1).replace('.', ',')}%)`,
+                barWidth: `${Math.round((ekonomi / maxVal) * 100)}%`,
+                barColor: 'bg-[#10B981]',
+                boxBg: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400',
+            },
+            {
+                name: 'Kargo',
+                count: kargo,
+                percentText: `${kargo} paket (${((kargo / total) * 100).toFixed(1).replace('.', ',')}%)`,
+                barWidth: `${Math.round((kargo / maxVal) * 100)}%`,
+                barColor: 'bg-[#F59E0B]',
+                boxBg: 'bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400',
+            },
+        ];
+    });
+
+    // ── 5. Top 5 Kota Tujuan ───────────────────────────────────────────────────
+    const topKotaData = computed(() => {
+        const list = props.charts?.topKotaList || [];
+        if (list.length === 0) return [];
+
+        const maxVal = Math.max(...list.map((k) => Number(k.value || 0)), 1);
+
+        return list.map((k) => ({
+            name: k.name,
+            value: Number(k.value || 0),
+            width: `${Math.round((Number(k.value || 0) / maxVal) * 100)}%`,
+        }));
+    });
+
+    // ── 6. Tingkat Keberhasilan ────────────────────────────────────────────────
+    const successRate = computed(() => {
+        return Number(props.stats?.successRate ?? 0);
+    });
+
+    const successRatePercentText = computed(() => {
+        return `${successRate.value.toFixed(1).replace('.', ',')}%`;
+    });
+
+    const successRateDelta = computed(() => {
+        return Number(props.stats?.successRateDeltaPercent ?? 0);
+    });
+
+    // ── 7. Tabel 5 Pengiriman Terbaru ──────────────────────────────────────────
+    const recentShipments = computed(() => {
+        return props.latest?.data || [];
+    });
+
+    function formatDateTime(isoString) {
+        if (!isoString) return '-';
+        const date = new Date(isoString);
+        const day = String(date.getDate()).padStart(2, '0');
+        const months = [
+            'Jan',
+            'Feb',
+            'Mar',
+            'Apr',
+            'Mei',
+            'Jun',
+            'Jul',
+            'Agu',
+            'Sep',
+            'Okt',
+            'Nov',
+            'Des',
+        ];
+        const month = months[date.getMonth()];
+        const year = date.getFullYear();
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        return `${day} ${month} ${year}, ${hours}:${minutes}`;
+    }
+
+    function goDetail(id) {
+        if (id) {
+            router.visit(route('pengiriman.show', id));
+        }
+    }
+
+    // ── 8. Inisialisasi Realtime Pusher ─────────────────────────────────────────
+    onMounted(async () => {
+        mounted.value = true;
+        window.addEventListener('click', handleDocumentClick);
+
+        try {
+            const { initEcho } = await import('@/echo');
+            await initEcho();
+
+            if (window.Echo) {
+                isPusherConnected.value = true;
+
+                // Dengarkan channel public 'dashboard'
+                window.Echo.channel('dashboard')
+                    .listen('DashboardUpdated', () => {
+                        handleRealtimeUpdate();
+                    })
+                    .listen('.DashboardUpdated', () => {
+                        handleRealtimeUpdate();
+                    });
+            }
+        } catch (err) {
+            console.warn('[Pusher] Koneksi realtime tidak dapat terhubung:', err);
+        }
+    });
+
+    function handleRealtimeUpdate() {
+        isRealtimeFlashing.value = true;
+        router.reload({
+            only: ['stats', 'charts', 'latest', 'filters'],
+            preserveScroll: true,
+            preserveState: true,
+            onFinish: () => {
+                setTimeout(() => {
+                    isRealtimeFlashing.value = false;
+                }, 1200);
+            },
+        });
+    }
+
+    onUnmounted(() => {
+        mounted.value = false;
+        window.removeEventListener('click', handleDocumentClick);
+        if (window.Echo) {
+            window.Echo.leave('dashboard');
+        }
+    });
 </script>
 
 <template>
@@ -437,7 +473,9 @@ onUnmounted(() => {
                 </div>
                 <div>
                     <div class="flex items-center gap-2.5">
-                        <h1 class="text-2xl font-black text-gray-900 dark:text-white tracking-tight leading-none font-heading">
+                        <h1
+                            class="text-2xl font-black text-gray-900 dark:text-white tracking-tight leading-none font-heading"
+                        >
                             Dashboard
                         </h1>
                         <!-- Badge Jika Filter Layanan Aktif -->
@@ -464,7 +502,9 @@ onUnmounted(() => {
                         <span
                             class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"
                         ></span>
-                        <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                        <span
+                            class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"
+                        ></span>
                     </span>
                     <span>Pusher Realtime Aktif</span>
                 </div>
@@ -481,7 +521,12 @@ onUnmounted(() => {
                     @click="showFilterDropdown = !showFilterDropdown"
                 >
                     <Calendar class="w-3.5 h-3.5 text-gray-500" />
-                    <span>Periode: <strong class="text-gray-900 dark:text-white">{{ activePeriodLabel }}</strong></span>
+                    <span
+                        >Periode:
+                        <strong class="text-gray-900 dark:text-white">{{
+                            activePeriodLabel
+                        }}</strong></span
+                    >
                     <ChevronDown
                         class="w-3.5 h-3.5 text-gray-400 ml-0.5 transition-transform"
                         :class="showFilterDropdown ? 'rotate-180' : ''"
@@ -489,7 +534,9 @@ onUnmounted(() => {
                 </button>
 
                 <!-- Tombol Pill Periode Cepat -->
-                <div class="flex items-center gap-1 bg-white dark:bg-[#111827] p-1 rounded-xl border border-gray-200/80 dark:border-gray-800 shadow-sm">
+                <div
+                    class="flex items-center gap-1 bg-white dark:bg-[#111827] p-1 rounded-xl border border-gray-200/80 dark:border-gray-800 shadow-sm"
+                >
                     <button
                         v-for="pill in quickPills"
                         :key="pill.key"
@@ -532,10 +579,14 @@ onUnmounted(() => {
                         class="absolute right-0 top-full mt-2 w-[340px] sm:w-[380px] bg-white dark:bg-[#111827] rounded-2xl border border-gray-200 dark:border-gray-800 shadow-2xl p-4 z-50 space-y-4"
                     >
                         <!-- Header Popover -->
-                        <div class="flex items-center justify-between pb-2.5 border-b border-gray-100 dark:border-gray-800">
+                        <div
+                            class="flex items-center justify-between pb-2.5 border-b border-gray-100 dark:border-gray-800"
+                        >
                             <div class="flex items-center gap-2">
                                 <Filter class="w-4 h-4 text-blue-600" />
-                                <span class="text-xs font-bold text-gray-900 dark:text-white">Filter Dashboard</span>
+                                <span class="text-xs font-bold text-gray-900 dark:text-white"
+                                    >Filter Dashboard</span
+                                >
                             </div>
                             <button
                                 type="button"
@@ -548,7 +599,9 @@ onUnmounted(() => {
 
                         <!-- 1. Pilihan Preset Periode -->
                         <div>
-                            <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">
+                            <label
+                                class="block text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2"
+                            >
                                 Rentang Waktu Preset
                             </label>
                             <div class="grid grid-cols-2 gap-1.5">
@@ -565,17 +618,23 @@ onUnmounted(() => {
                                     @click="applyPeriod(preset.key)"
                                 >
                                     <div class="leading-none">{{ preset.label }}</div>
-                                    <div class="text-[10px] text-gray-400 mt-1 truncate">{{ preset.desc }}</div>
+                                    <div class="text-[10px] text-gray-400 mt-1 truncate">
+                                        {{ preset.desc }}
+                                    </div>
                                 </button>
                             </div>
                         </div>
 
                         <!-- 2. Filter Berdasarkan Layanan -->
                         <div>
-                            <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">
+                            <label
+                                class="block text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2"
+                            >
                                 Filter Jenis Layanan
                             </label>
-                            <div class="flex flex-wrap gap-1 bg-gray-50 dark:bg-gray-800/50 p-1 rounded-xl">
+                            <div
+                                class="flex flex-wrap gap-1 bg-gray-50 dark:bg-gray-800/50 p-1 rounded-xl"
+                            >
                                 <button
                                     v-for="opt in layananOptions"
                                     :key="opt.key"
@@ -595,12 +654,16 @@ onUnmounted(() => {
 
                         <!-- 3. Rentang Tanggal Custom -->
                         <div>
-                            <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">
+                            <label
+                                class="block text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2"
+                            >
                                 Rentang Tanggal Custom
                             </label>
                             <div class="grid grid-cols-2 gap-2">
                                 <div>
-                                    <span class="text-[10px] text-gray-400 block mb-0.5">Dari Tanggal</span>
+                                    <span class="text-[10px] text-gray-400 block mb-0.5"
+                                        >Dari Tanggal</span
+                                    >
                                     <input
                                         v-model="customStartDate"
                                         type="date"
@@ -608,7 +671,9 @@ onUnmounted(() => {
                                     />
                                 </div>
                                 <div>
-                                    <span class="text-[10px] text-gray-400 block mb-0.5">Sampai Tanggal</span>
+                                    <span class="text-[10px] text-gray-400 block mb-0.5"
+                                        >Sampai Tanggal</span
+                                    >
                                     <input
                                         v-model="customEndDate"
                                         type="date"
@@ -619,7 +684,9 @@ onUnmounted(() => {
                         </div>
 
                         <!-- Tombol Aksi Popover -->
-                        <div class="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-800">
+                        <div
+                            class="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-800"
+                        >
                             <button
                                 type="button"
                                 class="text-xs font-semibold text-gray-500 hover:text-gray-800 dark:hover:text-gray-200"
@@ -654,8 +721,12 @@ onUnmounted(() => {
                         <Package class="w-6 h-6 stroke-[2]" />
                     </div>
                     <div class="flex-1 min-w-0">
-                        <span class="text-xs font-semibold text-gray-500 dark:text-gray-400">Total Pengiriman</span>
-                        <div class="text-3xl font-black text-gray-900 dark:text-white tracking-tight leading-none mt-1">
+                        <span class="text-xs font-semibold text-gray-500 dark:text-gray-400"
+                            >Total Pengiriman</span
+                        >
+                        <div
+                            class="text-3xl font-black text-gray-900 dark:text-white tracking-tight leading-none mt-1"
+                        >
                             {{ totalPengiriman }}
                         </div>
                         <div class="flex items-center gap-1.5 mt-2.5">
@@ -674,7 +745,9 @@ onUnmounted(() => {
                                 <ArrowDown v-else class="w-3 h-3 stroke-[2.5]" />
                                 {{ fmtDelta(stats.pengirimanDeltaPercent) }}
                             </span>
-                            <span class="text-xs text-gray-400 dark:text-gray-500">{{ deltaLabel }}</span>
+                            <span class="text-xs text-gray-400 dark:text-gray-500">{{
+                                deltaLabel
+                            }}</span>
                         </div>
                     </div>
                 </div>
@@ -695,8 +768,12 @@ onUnmounted(() => {
                         <Truck class="w-6 h-6 stroke-[2]" />
                     </div>
                     <div class="flex-1 min-w-0">
-                        <span class="text-xs font-semibold text-gray-500 dark:text-gray-400">Dalam Proses</span>
-                        <div class="text-3xl font-black text-gray-900 dark:text-white tracking-tight leading-none mt-1">
+                        <span class="text-xs font-semibold text-gray-500 dark:text-gray-400"
+                            >Dalam Proses</span
+                        >
+                        <div
+                            class="text-3xl font-black text-gray-900 dark:text-white tracking-tight leading-none mt-1"
+                        >
                             {{ dalamProses }}
                         </div>
                         <div class="flex items-center gap-1.5 mt-2.5">
@@ -715,7 +792,9 @@ onUnmounted(() => {
                                 <ArrowDown v-else class="w-3 h-3 stroke-[2.5]" />
                                 {{ fmtDelta(stats.dalamProsesDeltaPercent) }}
                             </span>
-                            <span class="text-xs text-gray-400 dark:text-gray-500">{{ deltaLabel }}</span>
+                            <span class="text-xs text-gray-400 dark:text-gray-500">{{
+                                deltaLabel
+                            }}</span>
                         </div>
                     </div>
                 </div>
@@ -736,8 +815,12 @@ onUnmounted(() => {
                         <CheckCircle2 class="w-6 h-6 stroke-[2]" />
                     </div>
                     <div class="flex-1 min-w-0">
-                        <span class="text-xs font-semibold text-gray-500 dark:text-gray-400">Paket Terkirim</span>
-                        <div class="text-3xl font-black text-gray-900 dark:text-white tracking-tight leading-none mt-1">
+                        <span class="text-xs font-semibold text-gray-500 dark:text-gray-400"
+                            >Paket Terkirim</span
+                        >
+                        <div
+                            class="text-3xl font-black text-gray-900 dark:text-white tracking-tight leading-none mt-1"
+                        >
                             {{ paketTerkirim }}
                         </div>
                         <div class="flex items-center gap-1.5 mt-2.5">
@@ -756,7 +839,9 @@ onUnmounted(() => {
                                 <ArrowDown v-else class="w-3 h-3 stroke-[2.5]" />
                                 {{ fmtDelta(stats.terkirimDeltaPercent) }}
                             </span>
-                            <span class="text-xs text-gray-400 dark:text-gray-500">{{ deltaLabel }}</span>
+                            <span class="text-xs text-gray-400 dark:text-gray-500">{{
+                                deltaLabel
+                            }}</span>
                         </div>
                     </div>
                 </div>
@@ -777,8 +862,12 @@ onUnmounted(() => {
                         <AlertTriangle class="w-6 h-6 stroke-[2]" />
                     </div>
                     <div class="flex-1 min-w-0">
-                        <span class="text-xs font-semibold text-gray-500 dark:text-gray-400">Paket Bermasalah</span>
-                        <div class="text-3xl font-black text-gray-900 dark:text-white tracking-tight leading-none mt-1">
+                        <span class="text-xs font-semibold text-gray-500 dark:text-gray-400"
+                            >Paket Bermasalah</span
+                        >
+                        <div
+                            class="text-3xl font-black text-gray-900 dark:text-white tracking-tight leading-none mt-1"
+                        >
                             {{ paketBermasalah }}
                         </div>
                         <div class="flex items-center gap-1.5 mt-2.5">
@@ -792,7 +881,9 @@ onUnmounted(() => {
                                 <ArrowDown v-else class="w-3 h-3 stroke-[2.5]" />
                                 {{ fmtDelta(stats.bermasalahDeltaPercent) }}
                             </span>
-                            <span class="text-xs text-gray-400 dark:text-gray-500">{{ deltaLabel }}</span>
+                            <span class="text-xs text-gray-400 dark:text-gray-500">{{
+                                deltaLabel
+                            }}</span>
                         </div>
                     </div>
                 </div>
@@ -812,11 +903,15 @@ onUnmounted(() => {
                 <div class="flex items-center justify-between mb-3">
                     <div class="flex items-center gap-2">
                         <TrendingUp class="w-5 h-5 text-[#2563EB]" />
-                        <h2 class="text-base font-bold text-gray-900 dark:text-white">Tren Pengiriman</h2>
+                        <h2 class="text-base font-bold text-gray-900 dark:text-white">
+                            Tren Pengiriman
+                        </h2>
                     </div>
 
                     <!-- Toggle Tab: Jumlah Pengiriman vs Total Ongkir -->
-                    <div class="flex items-center gap-1 bg-gray-100/80 dark:bg-gray-800 p-1 rounded-xl">
+                    <div
+                        class="flex items-center gap-1 bg-gray-100/80 dark:bg-gray-800 p-1 rounded-xl"
+                    >
                         <button
                             type="button"
                             class="px-3 py-1 rounded-lg text-xs font-semibold transition"
@@ -859,13 +954,20 @@ onUnmounted(() => {
             >
                 <div class="flex items-center gap-2 mb-4">
                     <Target class="w-5 h-5 text-[#2563EB]" />
-                    <h2 class="text-base font-bold text-gray-900 dark:text-white">Status Pengiriman</h2>
+                    <h2 class="text-base font-bold text-gray-900 dark:text-white">
+                        Status Pengiriman
+                    </h2>
                 </div>
 
                 <div class="flex flex-col sm:flex-row items-center justify-between gap-6 my-auto">
                     <!-- Doughnut Chart dengan Total Paket Asli Terfilter di tengah -->
                     <ChartJsDoughnut
-                        :data="[terkirimCount, dalamPerjalananCount, diprosesCount, bermasalahCount]"
+                        :data="[
+                            terkirimCount,
+                            dalamPerjalananCount,
+                            diprosesCount,
+                            bermasalahCount,
+                        ]"
                         :total="totalPengiriman"
                     />
 
@@ -877,12 +979,21 @@ onUnmounted(() => {
                             class="flex items-center justify-between text-xs py-1 border-b border-gray-50 dark:border-gray-800/50 last:border-none"
                         >
                             <div class="flex items-center gap-2.5">
-                                <span class="w-2.5 h-2.5 rounded-full shrink-0" :class="item.dotClass"></span>
-                                <span class="font-medium text-gray-700 dark:text-gray-300">{{ item.label }}</span>
+                                <span
+                                    class="w-2.5 h-2.5 rounded-full shrink-0"
+                                    :class="item.dotClass"
+                                ></span>
+                                <span class="font-medium text-gray-700 dark:text-gray-300">{{
+                                    item.label
+                                }}</span>
                             </div>
                             <div class="flex items-center gap-4 text-right">
-                                <span class="font-bold text-gray-900 dark:text-white w-7">{{ item.count }}</span>
-                                <span class="text-gray-400 dark:text-gray-500 w-11">{{ item.percent }}</span>
+                                <span class="font-bold text-gray-900 dark:text-white w-7">{{
+                                    item.count
+                                }}</span>
+                                <span class="text-gray-400 dark:text-gray-500 w-11">{{
+                                    item.percent
+                                }}</span>
                             </div>
                         </div>
                     </div>
@@ -898,7 +1009,9 @@ onUnmounted(() => {
             >
                 <div class="flex items-center gap-2 mb-4">
                     <Package class="w-5 h-5 text-[#2563EB]" />
-                    <h2 class="text-base font-bold text-gray-900 dark:text-white">Distribusi Layanan</h2>
+                    <h2 class="text-base font-bold text-gray-900 dark:text-white">
+                        Distribusi Layanan
+                    </h2>
                 </div>
 
                 <div class="space-y-4">
@@ -915,11 +1028,15 @@ onUnmounted(() => {
                             >
                                 <Package class="w-3.5 h-3.5" />
                             </div>
-                            <span class="font-medium text-gray-700 dark:text-gray-300">{{ l.name }}</span>
+                            <span class="font-medium text-gray-700 dark:text-gray-300">{{
+                                l.name
+                            }}</span>
                         </div>
 
                         <!-- Horizontal Progress Bar -->
-                        <div class="flex-1 bg-gray-100 dark:bg-gray-800 h-2.5 rounded-full overflow-hidden">
+                        <div
+                            class="flex-1 bg-gray-100 dark:bg-gray-800 h-2.5 rounded-full overflow-hidden"
+                        >
                             <div
                                 class="h-full rounded-full transition-all duration-500"
                                 :class="l.barColor"
@@ -928,7 +1045,9 @@ onUnmounted(() => {
                         </div>
 
                         <!-- Text paket & persentase -->
-                        <div class="text-right text-gray-500 dark:text-gray-400 font-medium whitespace-nowrap text-[11px] w-28 shrink-0">
+                        <div
+                            class="text-right text-gray-500 dark:text-gray-400 font-medium whitespace-nowrap text-[11px] w-28 shrink-0"
+                        >
                             {{ l.percentText }}
                         </div>
                     </div>
@@ -941,7 +1060,9 @@ onUnmounted(() => {
             >
                 <div class="flex items-center gap-2 mb-4">
                     <BarChart2 class="w-5 h-5 text-[#2563EB]" />
-                    <h2 class="text-base font-bold text-gray-900 dark:text-white">Top 5 Kota Tujuan</h2>
+                    <h2 class="text-base font-bold text-gray-900 dark:text-white">
+                        Top 5 Kota Tujuan
+                    </h2>
                 </div>
 
                 <div v-if="topKotaData.length > 0" class="space-y-3.5">
@@ -950,7 +1071,9 @@ onUnmounted(() => {
                         :key="k.name"
                         class="flex items-center justify-between gap-3 text-xs"
                     >
-                        <span class="font-medium text-gray-700 dark:text-gray-300 w-24 shrink-0 truncate">
+                        <span
+                            class="font-medium text-gray-700 dark:text-gray-300 w-24 shrink-0 truncate"
+                        >
                             {{ k.name }}
                         </span>
 
@@ -961,7 +1084,9 @@ onUnmounted(() => {
                             ></div>
                         </div>
 
-                        <span class="font-bold text-gray-700 dark:text-gray-300 w-6 text-right shrink-0">
+                        <span
+                            class="font-bold text-gray-700 dark:text-gray-300 w-6 text-right shrink-0"
+                        >
                             {{ k.value }}
                         </span>
                     </div>
@@ -977,13 +1102,17 @@ onUnmounted(() => {
             >
                 <div class="flex items-center gap-2 mb-4">
                     <Target class="w-5 h-5 text-[#2563EB]" />
-                    <h2 class="text-base font-bold text-gray-900 dark:text-white">Tingkat Keberhasilan</h2>
+                    <h2 class="text-base font-bold text-gray-900 dark:text-white">
+                        Tingkat Keberhasilan
+                    </h2>
                 </div>
 
                 <div class="flex items-center justify-between gap-4 my-auto">
                     <!-- Sisi Kiri: Angka & Delta Asli -->
                     <div>
-                        <div class="text-4xl font-black text-gray-900 dark:text-white tracking-tight leading-none">
+                        <div
+                            class="text-4xl font-black text-gray-900 dark:text-white tracking-tight leading-none"
+                        >
                             {{ successRatePercentText }}
                         </div>
                         <div class="text-xs text-gray-500 dark:text-gray-400 mt-2 font-medium">
@@ -998,11 +1127,16 @@ onUnmounted(() => {
                                         : 'text-rose-600 bg-rose-50 dark:bg-rose-950/40'
                                 "
                             >
-                                <ArrowUp v-if="successRateDelta >= 0" class="w-3 h-3 stroke-[2.5]" />
+                                <ArrowUp
+                                    v-if="successRateDelta >= 0"
+                                    class="w-3 h-3 stroke-[2.5]"
+                                />
                                 <ArrowDown v-else class="w-3 h-3 stroke-[2.5]" />
                                 {{ fmtDelta(successRateDelta) }}
                             </span>
-                            <span class="text-xs text-gray-400 dark:text-gray-500">{{ deltaLabel }}</span>
+                            <span class="text-xs text-gray-400 dark:text-gray-500">{{
+                                deltaLabel
+                            }}</span>
                         </div>
                     </div>
 
@@ -1041,7 +1175,9 @@ onUnmounted(() => {
             <div class="flex items-center justify-between mb-5">
                 <div class="flex items-center gap-2">
                     <div class="w-2.5 h-2.5 rounded-full bg-blue-600"></div>
-                    <h2 class="text-base font-bold text-gray-900 dark:text-white">5 Pengiriman Terbaru</h2>
+                    <h2 class="text-base font-bold text-gray-900 dark:text-white">
+                        5 Pengiriman Terbaru
+                    </h2>
                     <span v-if="isFilterActive" class="text-xs text-gray-400">
                         ({{ activePeriodLabel }})
                     </span>
@@ -1052,7 +1188,9 @@ onUnmounted(() => {
                     class="text-xs font-semibold text-[#2563EB] dark:text-blue-400 hover:underline flex items-center gap-1 group transition"
                 >
                     <span>Lihat Semua Pengiriman</span>
-                    <ArrowRight class="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                    <ArrowRight
+                        class="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform"
+                    />
                 </Link>
             </div>
 
@@ -1060,7 +1198,9 @@ onUnmounted(() => {
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
-                        <tr class="border-b border-gray-100 dark:border-gray-800 text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
+                        <tr
+                            class="border-b border-gray-100 dark:border-gray-800 text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider"
+                        >
                             <th class="pb-3 px-3">No. Resi</th>
                             <th class="pb-3 px-3">Pengirim</th>
                             <th class="pb-3 px-3">Tujuan</th>
@@ -1122,7 +1262,11 @@ onUnmounted(() => {
                             <!-- Status Badge dengan Icon -->
                             <td class="py-3.5 px-3">
                                 <span
-                                    v-if="p.status === 'dalam_perjalanan' || p.status === 'tiba_di_kota_tujuan' || p.status === 'sedang_diantar'"
+                                    v-if="
+                                        p.status === 'dalam_perjalanan' ||
+                                        p.status === 'tiba_di_kota_tujuan' ||
+                                        p.status === 'sedang_diantar'
+                                    "
                                     class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
                                 >
                                     <Truck class="w-3.5 h-3.5" />
@@ -1155,7 +1299,9 @@ onUnmounted(() => {
                             </td>
 
                             <!-- Tanggal -->
-                            <td class="py-3.5 px-3 text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                            <td
+                                class="py-3.5 px-3 text-gray-500 dark:text-gray-400 whitespace-nowrap"
+                            >
                                 {{ formatDateTime(p.created_at) }}
                             </td>
                         </tr>

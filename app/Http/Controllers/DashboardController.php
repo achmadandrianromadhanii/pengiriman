@@ -99,6 +99,7 @@ class DashboardController extends Controller
         ]));
 
         $data = Cache::remember($cacheKey, now()->addSeconds(10), function () use (
+            $now,
             $currentStart,
             $currentEnd,
             $prevStart,
@@ -108,6 +109,8 @@ class DashboardController extends Controller
             $deltaLabel,
             $layanan
         ): array {
+            $now = $now ? $now->copy() : now();
+
             // ── Helper filter layanan ───────────────────────────────────────
             $filterLayanan = function ($query) use ($layanan) {
                 if ($layanan && $layanan !== 'semua') {
@@ -399,7 +402,9 @@ class DashboardController extends Controller
             ->withQueryString()
             ->through(function ($p): array {
                 /** @var Pengiriman $p */
-                $isTerlambat = $p->estimasi_tiba->lt(today()) && ! in_array($p->status, ['terkirim', 'dibatalkan', 'gagal'], true);
+                $isTerlambat = $p->estimasi_tiba
+                    ? ($p->estimasi_tiba->lt(today()) && ! in_array($p->status, ['terkirim', 'dibatalkan', 'gagal'], true))
+                    : false;
 
                 return [
                     'id' => $p->id,
