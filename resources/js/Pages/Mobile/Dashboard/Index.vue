@@ -473,9 +473,9 @@ function serviceLabel(jenis) {
         <!-- 3. TREN PENGIRIMAN (CHART.JS LINE + TOGGLE JUMLAH/ONGKIR)          -->
         <!-- ═══════════════════════════════════════════════════════════════════ -->
         <div
-            class="bg-white dark:bg-[#121212] rounded-2xl p-4 border border-gray-100 dark:border-gray-800 shadow-[0_2px_10px_rgba(0,0,0,0.03)] mt-3"
+            class="bg-white dark:bg-[#121212] rounded-2xl p-4 border border-gray-100 dark:border-gray-800 shadow-[0_2px_10px_rgba(0,0,0,0.03)] mt-3 overflow-hidden"
         >
-            <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center justify-between mb-2">
                 <div class="flex items-center gap-2">
                     <TrendingUp class="w-4 h-4 text-blue-600 stroke-[2.5]" />
                     <h2 class="text-sm font-bold text-gray-900 dark:text-white">
@@ -512,9 +512,11 @@ function serviceLabel(jenis) {
                 </div>
             </div>
 
-            <!-- Canvas Chart.js Area/Line -->
-            <div class="w-full h-48">
+            <!-- Canvas Chart.js Area/Line dengan Height yang Pas & Responsif Penuh -->
+            <div class="w-full relative pt-1">
                 <ChartJsLine
+                    :is-mobile="true"
+                    height-class="h-[210px]"
                     :labels="trenLabels"
                     :shipments-data="trenShipments"
                     :revenue-data="trenRevenue"
@@ -527,7 +529,7 @@ function serviceLabel(jenis) {
         <!-- 4. STATUS PENGIRIMAN (CHART.JS DOUGHNUT + DETAIL LEGEND)           -->
         <!-- ═══════════════════════════════════════════════════════════════════ -->
         <div
-            class="bg-white dark:bg-[#121212] rounded-2xl p-4 border border-gray-100 dark:border-gray-800 shadow-[0_2px_10px_rgba(0,0,0,0.03)] mt-3"
+            class="bg-white dark:bg-[#121212] rounded-2xl p-4 border border-gray-100 dark:border-gray-800 shadow-[0_2px_10px_rgba(0,0,0,0.03)] mt-4"
         >
             <div class="flex items-center gap-2 mb-3">
                 <Compass class="w-4 h-4 text-blue-600 stroke-[2.5]" />

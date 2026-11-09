@@ -41,6 +41,14 @@ const props = defineProps({
         type: String,
         default: 'pengiriman', // 'pengiriman' | 'ongkir'
     },
+    isMobile: {
+        type: Boolean,
+        default: false,
+    },
+    heightClass: {
+        type: String,
+        default: 'h-[250px]',
+    },
 });
 
 // Plugin custom untuk menggambar callout pin pada titik puncak data nyata
@@ -76,7 +84,11 @@ const calloutPinPlugin = {
         const py = point.y;
         const boxW = 86;
         const boxH = 42;
-        const boxX = px - boxW / 2;
+        let boxX = px - boxW / 2;
+        if (boxX < 4) boxX = 4;
+        if (chart.width && boxX + boxW > chart.width - 4) {
+            boxX = chart.width - boxW - 4;
+        }
         const boxY = Math.max(8, py - boxH - 12);
 
         ctx.save();
@@ -163,6 +175,14 @@ const chartOptions = computed(() => {
     return {
         responsive: true,
         maintainAspectRatio: false,
+        layout: {
+            padding: {
+                left: props.isMobile ? 0 : 4,
+                right: props.isMobile ? 8 : 16,
+                top: 28,
+                bottom: props.isMobile ? 0 : 4,
+            },
+        },
         plugins: {
             legend: {
                 display: false,
@@ -201,12 +221,34 @@ const chartOptions = computed(() => {
                 },
                 ticks: {
                     color: '#94A3B8',
-                    font: { size: 11, family: "'Plus Jakarta Sans', sans-serif" },
+                    font: {
+                        size: props.isMobile ? 10 : 11,
+                        family: "'Plus Jakarta Sans', sans-serif",
+                        weight: '500',
+                    },
+                    maxRotation: 0,
+                    minRotation: 0,
+                    autoSkip: false,
+                    padding: props.isMobile ? 6 : 8,
+                    callback: function (val, index) {
+                        const rawLabel = props.labels[index] || '';
+                        if (props.isMobile) {
+                            if (rawLabel.includes(' - ')) {
+                                const parts = rawLabel.split(' - ');
+                                return parts[0];
+                            }
+                            const monthMatch = rawLabel.match(/^([A-Za-z]{3})/);
+                            if (monthMatch && rawLabel.length > 4) {
+                                return monthMatch[1];
+                            }
+                        }
+                        return rawLabel;
+                    },
                 },
             },
             y: {
                 title: {
-                    display: true,
+                    display: !props.isMobile,
                     text: isPengiriman ? 'Jumlah Paket' : 'Total Ongkir (Rp)',
                     color: '#64748B',
                     font: { size: 11, weight: '500', family: "'Plus Jakarta Sans', sans-serif" },
@@ -218,7 +260,11 @@ const chartOptions = computed(() => {
                 },
                 ticks: {
                     color: '#94A3B8',
-                    font: { size: 11, family: "'Plus Jakarta Sans', sans-serif" },
+                    font: {
+                        size: props.isMobile ? 10 : 11,
+                        family: "'Plus Jakarta Sans', sans-serif",
+                    },
+                    padding: props.isMobile ? 4 : 8,
                     stepSize: isPengiriman
                         ? Math.max(1, Math.ceil(Math.max(...(props.shipmentsData || [10]), 5) / 5))
                         : undefined,
@@ -239,7 +285,7 @@ const chartOptions = computed(() => {
 </script>
 
 <template>
-    <div class="w-full h-[260px] relative">
+    <div :class="heightClass" class="w-full relative">
         <Line :data="chartData" :options="chartOptions" :plugins="[calloutPinPlugin]" />
     </div>
 </template>
