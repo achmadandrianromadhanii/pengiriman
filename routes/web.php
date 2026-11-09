@@ -224,18 +224,6 @@ Route::middleware(['auth', 'admin.active'])->group(function () {
         ]);
     })->name('system.storage');
 
-    // =========================================================================
-    // BAHASA / LANGUAGE CENTER (Mobile Web)
-    // =========================================================================
-    // Fungsi: Menampilkan halaman pemilihan bahasa untuk mobile web.
-    // Cara Kerja: Render komponen Settings/Language.vue.
-    //             Semua data bahasa dikelola di frontend (registry.js).
-    //             Tidak memerlukan data dari server.
-    // =========================================================================
-    Route::get('/settings/language', function () {
-        return Inertia\Inertia::render('Settings/Language');
-    })->name('settings.language');
-
     // =====================================================================
     // KEAMANAN AKUN — DATA ASLI DARI DATABASE [UPDATE: SECURITY V2]
     // =====================================================================
@@ -315,10 +303,6 @@ Route::middleware(['auth', 'admin.active'])->group(function () {
             'has_webauthn'        => $hasWebauthn,
         ]);
     })->name('security.index');
-
-    Route::get('/profile/password', function () {
-        return Inertia\Inertia::render('Profile/Password');
-    })->name('password.edit');
 
     // ── [UPDATE: SECURITY V2] Logout semua perangkat lain ────────────
     Route::post('/profile/security/logout-others', [AuthenticatedSessionController::class, 'logoutOtherDevices'])

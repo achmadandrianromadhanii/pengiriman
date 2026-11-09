@@ -56,7 +56,7 @@ createInertiaApp({
         
         // [UPDATE: PERSISTENT LAYOUT FIX]
         // Fungsi: Pastikan Layout yang sesuai di-assign pada halaman yang memerlukannya.
-        const isStandalone = targetName.includes('Auth/') || targetName.includes('Splash') || targetName.includes('Settings/Language');
+        const isStandalone = targetName.includes('Auth/') || targetName.includes('Splash');
         if (page.default.layout === undefined && !isStandalone) {
             if (targetName.startsWith('Mobile/')) {
                 const layout = await import('@/Layouts/AppLayoutMobile.vue');

@@ -16,15 +16,12 @@
         Database,
         HardDrive,
         ShieldCheck,
-        LockKeyhole,
-        Languages,
         KeyRound,
         Trash2,
     } from 'lucide-vue-next';
 
     // [UPDATE: i18n] Import composable untuk translation
     import { useI18n } from '@/composables/useI18n.js';
-    import { findLanguage } from '@/i18n/registry.js';
 
     const props = defineProps({
         show: Boolean,
@@ -34,12 +31,8 @@
     const page = usePage();
     const user = computed(() => page.props.auth?.user);
 
-    // [UPDATE: i18n] Setup translation function dan locale info
-    // Fungsi: t() mengambil translation key, locale menyimpan kode bahasa aktif
-    const { t, locale } = useI18n();
-
-    // [UPDATE: i18n] Info bahasa aktif saat ini untuk ditampilkan di menu
-    const currentLangInfo = computed(() => findLanguage(locale.value));
+    // [UPDATE: i18n] Setup translation function
+    const { t } = useI18n();
     const currentTheme = ref('auto'); // light, dark, auto
 
     function syncThemeFromDom() {
@@ -432,26 +425,7 @@
                         <div
                             class="bg-white dark:bg-[#11131A] rounded-[24px] shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] border border-slate-100 dark:border-gray-800/60 overflow-hidden"
                         >
-                            <Link
-                                prefetch
-                                cacheFor="1m"
-                                :href="route('profile.edit')"
-                                @click="emit('close')"
-                                class="w-full flex items-center justify-between p-4 border-b border-gray-100/50 dark:border-gray-800/80 active:bg-slate-50 dark:active:bg-gray-800/30 transition-colors"
-                            >
-                                <div class="flex items-center gap-3.5">
-                                    <div
-                                        class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-[#2349F5] flex items-center justify-center"
-                                    >
-                                        <UserRound :size="20" stroke-width="2.5" />
-                                    </div>
-                                    <span
-                                        class="font-semibold text-[14px] text-slate-800 dark:text-gray-200"
-                                        >{{ t('menu.personalInfo') }}</span
-                                    >
-                                </div>
-                                <ChevronRight :size="18" class="text-gray-400" />
-                            </Link>
+                            <!-- Keamanan -->
                             <Link
                                 prefetch
                                 cacheFor="1m"
@@ -468,26 +442,6 @@
                                     <span
                                         class="font-semibold text-[14px] text-slate-800 dark:text-gray-200"
                                         >{{ t('menu.security') }}</span
-                                    >
-                                </div>
-                                <ChevronRight :size="18" class="text-gray-400" />
-                            </Link>
-                            <Link
-                                prefetch
-                                cacheFor="1m"
-                                :href="route('password.edit')"
-                                @click="emit('close')"
-                                class="w-full flex items-center justify-between p-4 active:bg-slate-50 dark:active:bg-gray-800/30 transition-colors"
-                            >
-                                <div class="flex items-center gap-3.5">
-                                    <div
-                                        class="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-900/20 text-orange-600 flex items-center justify-center"
-                                    >
-                                        <LockKeyhole :size="20" stroke-width="2.5" />
-                                    </div>
-                                    <span
-                                        class="font-semibold text-[14px] text-slate-800 dark:text-gray-200"
-                                        >{{ t('menu.changePassword') }}</span
                                     >
                                 </div>
                                 <ChevronRight :size="18" class="text-gray-400" />
@@ -604,55 +558,6 @@
                                 <ChevronRight :size="18" class="text-gray-400" />
                             </Link>
                         </div>
-                    </div>
-                </div>
-
-                <!-- ======================================================== -->
-                <!-- [UPDATE: i18n] KATEGORI BAHASA — Language Center          -->
-                <!-- Posisi: Setelah kategori Sistem, sebelum tombol Logout    -->
-                <!-- Fungsi: Link ke halaman pemilihan bahasa (Language.vue)   -->
-                <!-- ======================================================== -->
-                <div>
-                    <h3
-                        class="px-2 mb-3 text-[11px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest"
-                    >
-                        {{ t('menu.language') }}
-                    </h3>
-                    <div
-                        class="bg-white dark:bg-[#11131A] rounded-[24px] shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] border border-slate-100 dark:border-gray-800/60 overflow-hidden"
-                    >
-                        <Link
-                            prefetch
-                            cacheFor="1m"
-                            :href="route('settings.language')"
-                            @click="emit('close')"
-                            class="w-full flex items-center justify-between p-4 active:bg-slate-50 dark:active:bg-gray-800/30 transition-colors cursor-pointer outline-none"
-                        >
-                            <div class="flex items-center gap-3.5">
-                                <div
-                                    class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center"
-                                >
-                                    <Languages :size="20" stroke-width="2.5" />
-                                </div>
-                                <div>
-                                    <span
-                                        class="font-semibold text-[14px] text-slate-800 dark:text-gray-200"
-                                        >{{ t('menu.languageApp') }}</span
-                                    >
-                                    <!-- Tampilkan flag + nama bahasa aktif saat ini -->
-                                    <div
-                                        v-if="currentLangInfo"
-                                        class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 font-medium"
-                                    >
-                                        <span class="font-bold text-gray-400 uppercase mr-1">{{
-                                            currentLangInfo.locale.substring(0, 2)
-                                        }}</span>
-                                        {{ currentLangInfo.displayName }}
-                                    </div>
-                                </div>
-                            </div>
-                            <ChevronRight :size="18" class="text-gray-400" />
-                        </Link>
                     </div>
                 </div>
 
