@@ -225,68 +225,27 @@ Route::middleware(['auth', 'admin.active'])->group(function () {
     })->name('system.storage');
 
     // =====================================================================
-    // KEAMANAN AKUN — DATA ASLI DARI DATABASE [UPDATE: SECURITY V2]
+    // KEAMANAN AKUN — DATA ASLI DARI DATABASE
     // =====================================================================
     // Fungsi: Mengirim data keamanan ASLI ke halaman Security.
     // Cara Kerja:
-    //   1. Ambil 10 riwayat login terakhir dari tabel login_histories
-    //   2. Ambil semua sesi aktif dari tabel sessions + parse device_name
-    //   3. Kirim password_changed_at dari admin
+    //   1. Kirim password_changed_at & last_login dari admin
+    //   2. Ambil pengaturan keamanan (notifikasi, auto logout, biometrik)
+    //   3. Cek status kredensial WebAuthn
     // =====================================================================
     Route::get('/profile/security', function () {
         $admin = \Illuminate\Support\Facades\Auth::user();
 
-        // ── Riwayat Login Terakhir (10 terbaru) ─────────────────────
-        // [UPDATE: V2] Tambah device_name dari parseDeviceName()
-        $loginHistories = \App\Models\LoginHistory::where('admin_id', $admin->id)
-            ->orderByDesc('logged_in_at')
-            ->take(10)
-            ->get()
-            ->map(fn($h) => [
-                'id'           => $h->id,
-                'ip_address'   => $h->ip_address,
-                'browser'      => $h->browser,
-                'os'           => $h->os,
-                'device_type'  => $h->device_type,
-                'device_name'  => \App\Models\LoginHistory::parseDeviceName($h->user_agent ?? ''),
-                'logged_in_at' => $h->logged_in_at?->toIso8601String(),
-            ]);
-
-        // ── Sesi Aktif (dari tabel sessions) ────────────────────────
-        // [UPDATE: V2] Tambah device_name untuk setiap sesi
-        $currentSessionId = request()->session()->getId();
-        $activeSessions = \Illuminate\Support\Facades\DB::table('sessions')
-            ->where('user_id', $admin->id)
-            ->orderByDesc('last_activity')
-            ->get()
-            ->map(function ($s) use ($currentSessionId) {
-                $ua = $s->user_agent ?? '';
-                $parsed = \App\Models\LoginHistory::parseUserAgent($ua);
-                $deviceName = \App\Models\LoginHistory::parseDeviceName($ua);
-                return [
-                    'id'            => $s->id,
-                    'ip_address'    => $s->ip_address,
-                    'browser'       => $parsed['browser'],
-                    'os'            => $parsed['os'],
-                    'device_type'   => $parsed['device_type'],
-                    'device_name'   => $deviceName,
-                    'last_activity' => date('c', $s->last_activity),
-                    'is_current'    => $s->id === $currentSessionId,
-                ];
-            });
-
-        // ── [UPDATE: V3] Ambil pengaturan keamanan dari database ─────
+        // ── Ambil pengaturan keamanan dari database ──────────────────
         $settings = \App\Models\AdminSecuritySetting::getOrCreate($admin->id);
 
-        // ── [UPDATE: V3] Cek apakah admin punya kredensial WebAuthn ──
+        // ── Cek apakah admin punya kredensial WebAuthn ───────────────
         $hasWebauthn = \App\Models\WebauthnCredential::where('admin_id', $admin->id)->exists();
 
         return Inertia\Inertia::render('Profile/Security', [
             'password_changed_at' => $admin->password_changed_at?->toIso8601String(),
             'last_login'          => $admin->last_login?->toIso8601String(),
-            'login_histories'     => $loginHistories,
-            'active_sessions'     => $activeSessions,
-            // [UPDATE: V3] Data pengaturan keamanan dari database
+            // Data pengaturan keamanan dari database
             'security_settings'   => [
                 'login_notification' => $settings->login_notification,
                 'auto_logout'        => $settings->auto_logout,
@@ -295,19 +254,6 @@ Route::middleware(['auth', 'admin.active'])->group(function () {
             'has_webauthn'        => $hasWebauthn,
         ]);
     })->name('security.index');
-
-    // ── [UPDATE: SECURITY V2] Logout semua perangkat lain ────────────
-    Route::post('/profile/security/logout-others', [AuthenticatedSessionController::class, 'logoutOtherDevices'])
-        ->name('security.logout-others');
-
-    // ── [UPDATE: SECURITY V2] Hapus seluruh riwayat login ────────────
-    // Fungsi: Menghapus semua record login_histories milik admin saat ini.
-    // Cara Kerja: DELETE dari tabel login_histories WHERE admin_id = current.
-    Route::delete('/profile/security/clear-history', function () {
-        $admin = \Illuminate\Support\Facades\Auth::user();
-        \App\Models\LoginHistory::where('admin_id', $admin->id)->delete();
-        return back();
-    })->name('security.clear-history');
 
     // =====================================================================
     // [UPDATE: SECURITY V6] Toggle pengaturan keamanan — simpan ke database

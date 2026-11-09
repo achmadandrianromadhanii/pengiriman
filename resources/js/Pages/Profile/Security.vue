@@ -1,55 +1,33 @@
 <!-- =========================================================================
-     HALAMAN KEAMANAN AKUN (MOBILE) — DATA ASLI DARI DATABASE V3
+     HALAMAN KEAMANAN AKUN (MOBILE) — DATA ASLI DARI DATABASE
      =========================================================================
      Fungsi: Menampilkan informasi keamanan akun admin secara REALTIME.
-     Cara Kerja:
-       - Password status: Dari props password_changed_at (database)
-       - Riwayat Login: Dari props login_histories (tabel login_histories)
-       - Sesi Aktif: Dari props active_sessions (tabel sessions)
-       - Perangkat Saat Ini: Deteksi otomatis dari navigator.userAgent
-       - Toggle Settings: Disimpan di DATABASE (sinkron lintas perangkat)
-       - Logout Devices: POST ke route security.logout-others
-       - Hapus Riwayat: DELETE ke route security.clear-history
-       - WebAuthn: Bottom sheet untuk registrasi biometrik (Passkeys)
-     [UPDATE: SECURITY V3]
-       - Toggle kini tersimpan di database (bukan localStorage)
-       - WebAuthn/Passkeys bottom sheet untuk registrasi biometrik
-       - IP ditampilkan di perangkat saat ini
+     Komponen yang ditampilkan:
+       - Status Keamanan: Hero banner status proteksi akun
+       - Password: Status Password & Terakhir Diubah
+       - Pengaturan: Notifikasi Login, Auto Logout, dan Biometrik (WebAuthn)
      ========================================================================= -->
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { Head, usePage, router } from '@inertiajs/vue3';
-import { initEcho } from '../../echo.js';
-// [UPDATE: HEADLESS UI SWITCH] Import ikon Lucide yang digunakan di halaman keamanan
-// Power: ikon tombol logout semua perangkat
 import {
     ChevronLeft,
     ShieldCheck,
     KeyRound,
-    Smartphone,
-    Monitor,
-    Tablet,
     Clock,
-    Power,
     CheckCircle2,
     AlertTriangle,
     Bell,
     Timer,
     Fingerprint,
-    Wifi,
-    Trash2,
     X
 } from 'lucide-vue-next';
-
-
 
 // ── Props dari backend (data asli dari database) ─────────────────────────
 const props = defineProps({
     password_changed_at: { type: String, default: null },
     last_login: { type: String, default: null },
-    login_histories: { type: Array, default: () => [] },
-    active_sessions: { type: Array, default: () => [] },
-    // [UPDATE: V6] Pengaturan keamanan dari database
+    // Pengaturan keamanan dari database
     security_settings: {
         type: Object,
         default: () => ({
@@ -63,17 +41,7 @@ const props = defineProps({
 
 const page = usePage();
 
-// ── State UI ─────────────────────────────────────────────────────────────
-const isLoggingOut = ref(false);
-const logoutDone = ref(false);
-const isClearingHistory = ref(false);
-const clearHistoryDone = ref(false);
-
-// ── [UPDATE: FINAL] Toggle state dari DATABASE (source of truth = backend props)
-// Cara Kerja:
-//   - UI toggle dikontrol oleh props `security_settings` (data dari server).
-//   - Saat user klik, kita POST/DELETE ke backend.
-//   - Toggle baru berubah saat Inertia mengirim props terbaru (sinkron database).
+// ── Toggle state dari DATABASE (source of truth = backend props) ─────────
 const loginNotification = computed(() => !!props.security_settings.login_notification);
 const autoLogout = computed(() => !!props.security_settings.auto_logout);
 const biometricEnabled = computed(() => !!props.security_settings.biometric_enabled);
@@ -81,43 +49,16 @@ const biometricSupported = ref(false);
 const isUpdatingSetting = ref(null);
 
 // ── WebAuthn Bottom Sheet state ──────────────────────────────────────────
-// Fungsi: Mengontrol tampilan dan status bottom sheet registrasi biometrik.
 const showBiometricSheet = ref(false);
 const biometricRegistering = ref(false);
 const biometricError = ref('');
 
-// ── [UPDATE: V6] Inisialisasi dukungan biometric & Realtime Session ──
-let echoChannel = null;
-
-onMounted(async () => {
+onMounted(() => {
     // Cek dukungan biometric (WebAuthn / PublicKeyCredential API)
-    // Sesuai W3C WebAuthn spec: https://www.w3.org/TR/webauthn-3/
     biometricSupported.value = !!(window.PublicKeyCredential);
-
-    // [UPDATE: REALTIME SESSION]
-    // Inisialisasi Echo & listen ke channel private admin
-    await initEcho();
-    const adminId = page.props.auth?.user?.id;
-    if (adminId && window.Echo) {
-        echoChannel = window.Echo.private(`App.Models.Admin.${adminId}`);
-        echoChannel.listen('SessionUpdated', () => {
-            // Ketika ada sesi login baru atau device logout, update data tanpa full refresh
-            router.reload({ only: ['active_sessions', 'login_histories'] });
-        });
-    }
 });
 
-onUnmounted(() => {
-    if (echoChannel && window.Echo) {
-        const adminId = page.props.auth?.user?.id;
-        window.Echo.leave(`App.Models.Admin.${adminId}`);
-    }
-});
-
-// ── [UPDATE: FINAL] Watch props — hanya untuk mematikan loading UI ─────
-// Catatan: Checked state switch berasal dari computed(props...), jadi
-// watch ini tidak mengubah "state visual" toggle; hanya mengakhiri
-// mode disable ketika props backend sudah tersinkron.
+// ── Watch props — mematikan status update toggle ─────────────────────────
 watch(() => props.security_settings, () => {
     isUpdatingSetting.value = null;
 }, { deep: true });
@@ -263,7 +204,7 @@ async function registerBiometric() {
         router.post(route('security.webauthn.register'), {
             credential_id: credentialId,
             public_key: publicKey,
-            device_name: currentDevice.value.deviceName,
+            device_name: getDeviceName(),
         }, {
             preserveScroll: true,
             onSuccess: async () => {
@@ -325,126 +266,15 @@ function disableBiometric() {
     });
 }
 
-// =====================================================================
-// [UPDATE: FINAL REVISION] DETEKSI PERANGKAT SAAT INI (Dari Session Backend)
-// =====================================================================
-// Fungsi: Mengambil data session saat ini dari props active_sessions agar
-//         mendapatkan data yang sama dengan backend (termasuk IP Address).
-// =====================================================================
-const currentDevice = computed(() => {
-    // Cari session yang memiliki flag is_current
-    const currentSession = props.active_sessions.find(s => s.is_current);
-    if (currentSession) {
-        return {
-            browser: currentSession.browser,
-            os: currentSession.os,
-            deviceType: currentSession.device_type,
-            deviceName: currentSession.device_name || currentSession.browser,
-            ipAddress: currentSession.ip_address
-        };
-    }
-
-    // Fallback jika session belum termuat
-    return {
-        browser: 'Unknown',
-        os: 'Unknown',
-        deviceType: 'Desktop',
-        deviceName: 'Desktop PC',
-        ipAddress: '127.0.0.1'
-    };
-});
-
-// ── Ikon perangkat berdasarkan tipe ─────────────────────────────────────
-function getDeviceIcon(type) {
-    if (type === 'Mobile') return Smartphone;
-    if (type === 'Tablet') return Tablet;
-    return Monitor;
-}
-
-// =====================================================================
-// [UPDATE: V4] LOGOUT SEMUA PERANGKAT — Termasuk perangkat saat ini
-// =====================================================================
-// Fungsi: Mengakhiri SELURUH sesi yang aktif (termasuk perangkat ini).
-// Cara Kerja:
-//   1. Dialog konfirmasi muncul (SweetAlert2, lazy-loaded).
-//   2. POST ke route security.logout-others dengan flag logout_current=true.
-//   3. Backend menghapus semua session + invalidate session saat ini.
-//   4. User diarahkan ke halaman login.
-// =====================================================================
-// =====================================================================
-// [UPDATE: FINAL REVISION] LOGOUT SEMUA PERANGKAT (Logout Others)
-// =====================================================================
-// Fungsi: Menghapus semua sesi aktif KECUALI sesi saat ini (Logout Others).
-// Sesuai revisi: "Device sekarang tetap login... Session lain dihapus... Realtime"
-// =====================================================================
-async function logoutAllDevices() {
-    if (isLoggingOut.value) return;
-
-    const Swal = (await import('sweetalert2')).default;
-    const res = await Swal.fire({
-        icon: 'warning',
-        title: 'Logout perangkat lain?',
-        text: 'Semua sesi aktif di perangkat lain akan diakhiri. Perangkat ini akan tetap login.',
-        showCancelButton: true,
-        confirmButtonText: 'Ya, Logout Perangkat Lain',
-        cancelButtonText: 'Batal',
-        confirmButtonColor: '#EF4444',
-    });
-
-    if (!res.isConfirmed) return;
-
-    isLoggingOut.value = true;
-    // [UPDATE: FINAL REVISION] Ubah logout_current menjadi false
-    router.post(route('security.logout-others'), { logout_current: false }, {
-        preserveScroll: true,
-        onSuccess: () => {
-            isLoggingOut.value = false;
-            logoutDone.value = true;
-            setTimeout(() => { logoutDone.value = false; }, 3000);
-            
-            // Tampilkan toast berhasil
-            Swal.fire({
-                toast: true,
-                position: 'top-end',
-                showConfirmButton: false,
-                timer: 3000,
-                icon: 'success',
-                title: 'Perangkat lain berhasil dilogout'
-            });
-        },
-        onError: () => { isLoggingOut.value = false; },
-    });
-}
-
-// =====================================================================
-// HAPUS RIWAYAT LOGIN
-// =====================================================================
-async function clearLoginHistory() {
-    if (isClearingHistory.value) return;
-
-    const Swal = (await import('sweetalert2')).default;
-    const res = await Swal.fire({
-        icon: 'warning',
-        title: 'Hapus semua riwayat login?',
-        text: 'Semua data riwayat login akan dihapus permanen.',
-        showCancelButton: true,
-        confirmButtonText: 'Ya, Hapus',
-        cancelButtonText: 'Batal',
-        confirmButtonColor: '#EF4444',
-    });
-
-    if (!res.isConfirmed) return;
-
-    isClearingHistory.value = true;
-    router.delete(route('security.clear-history'), {
-        preserveScroll: true,
-        onSuccess: () => {
-            isClearingHistory.value = false;
-            clearHistoryDone.value = true;
-            setTimeout(() => { clearHistoryDone.value = false; }, 3000);
-        },
-        onError: () => { isClearingHistory.value = false; },
-    });
+// ── Deteksi nama perangkat untuk pendaftaran biometrik ──────────────────
+function getDeviceName() {
+    const ua = navigator.userAgent;
+    if (/iPhone/i.test(ua)) return 'iPhone';
+    if (/iPad/i.test(ua)) return 'iPad';
+    if (/Android/i.test(ua)) return 'Android Device';
+    if (/Macintosh/i.test(ua)) return 'Mac';
+    if (/Windows/i.test(ua)) return 'Windows PC';
+    return 'Mobile Device';
 }
 
 // ── Format tanggal Indonesia ─────────────────────────────────────────────
@@ -462,21 +292,6 @@ function formatDateTime(dateString) {
     const tanggal = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
     const jam = d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
     return `${tanggal} • ${jam} WIB`;
-}
-
-// ── Format waktu relatif ────────────────────────────────────────────────
-function formatTimeAgo(dateString) {
-    if (!dateString) return '-';
-    const diffMs = new Date() - new Date(dateString);
-    const diffMin = Math.floor(diffMs / 60000);
-    const diffHour = Math.floor(diffMin / 60);
-    const diffDay = Math.floor(diffHour / 24);
-
-    if (diffMin < 1) return 'Baru saja';
-    if (diffMin < 60) return `${diffMin} menit lalu`;
-    if (diffHour < 24) return `${diffHour} jam lalu`;
-    if (diffDay < 7) return `${diffDay} hari lalu`;
-    return formatDate(dateString);
 }
 
 // ── Badge password perlu diperbarui (>90 hari) ──────────────────────────
@@ -573,89 +388,6 @@ function goBack() {
                 </div>
             </div>
 
-            <!-- ============================================================ -->
-            <!-- 2. PERANGKAT SAAT INI                                        -->
-            <!-- ============================================================ -->
-            <div>
-                <h3 class="px-2 mb-3 text-[11px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest">Perangkat Saat Ini</h3>
-                <div class="bg-white dark:bg-[#11131A] rounded-[24px] shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] border border-slate-100 dark:border-gray-800/60 overflow-hidden">
-                    <div class="flex items-center justify-between p-4">
-                        <div class="flex items-center gap-3.5">
-                            <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 flex items-center justify-center">
-                                <component :is="getDeviceIcon(currentDevice.deviceType)" :size="20" stroke-width="2.5" />
-                            </div>
-                            <div>
-                                <span class="font-semibold text-[14px] text-slate-800 dark:text-gray-200 block">{{ currentDevice.deviceName }}</span>
-                                <span class="text-[11px] text-slate-400 dark:text-gray-500 font-medium">{{ currentDevice.os }} • {{ currentDevice.browser }} • {{ currentDevice.ipAddress }}</span>
-                            </div>
-                        </div>
-                        <div class="px-2.5 py-1 rounded-full bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-[9px] font-bold tracking-wider uppercase flex items-center gap-1">
-                            <Wifi :size="10" stroke-width="3" /> Online
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ============================================================ -->
-            <!-- 3. PERANGKAT AKTIF                                           -->
-            <!-- ============================================================ -->
-            <div v-if="active_sessions.length > 0">
-                <h3 class="px-2 mb-3 text-[11px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest">Perangkat Aktif ({{ active_sessions.length }})</h3>
-                <div class="bg-white dark:bg-[#11131A] rounded-[24px] shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] border border-slate-100 dark:border-gray-800/60 overflow-hidden divide-y divide-gray-100/50 dark:divide-gray-800/80">
-                    <div v-for="session in active_sessions" :key="session.id" class="flex items-center justify-between p-4">
-                        <div class="flex items-center gap-3.5">
-                            <div class="w-10 h-10 rounded-xl flex items-center justify-center"
-                                 :class="session.is_current ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600' : 'bg-slate-100 dark:bg-gray-800/50 text-slate-500'">
-                                <component :is="getDeviceIcon(session.device_type)" :size="20" stroke-width="2.5" />
-                            </div>
-                            <div>
-                                <span class="font-semibold text-[14px] text-slate-800 dark:text-gray-200 block">{{ session.device_name || session.browser }}</span>
-                                <span class="text-[11px] text-slate-400 dark:text-gray-500 font-medium">{{ session.os }} • {{ session.ip_address }} • {{ formatTimeAgo(session.last_activity) }}</span>
-                            </div>
-                        </div>
-                        <div v-if="session.is_current" class="px-2.5 py-1 rounded-full bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-[9px] font-bold tracking-wider uppercase">Aktif</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ============================================================ -->
-            <!-- 4. RIWAYAT LOGIN                                             -->
-            <!-- ============================================================ -->
-            <div v-if="login_histories.length > 0">
-                <div class="flex items-center justify-between px-2 mb-3">
-                    <h3 class="text-[11px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest">Riwayat Login</h3>
-                    <button @click="clearLoginHistory" :disabled="isClearingHistory"
-                            class="flex items-center gap-1 text-[11px] font-bold text-red-500 dark:text-red-400 active:opacity-60 transition-opacity outline-none" aria-label="Hapus semua riwayat login">
-                        <Trash2 :size="13" stroke-width="2.5" /> Hapus
-                    </button>
-                </div>
-                <div class="bg-white dark:bg-[#11131A] rounded-[24px] shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] border border-slate-100 dark:border-gray-800/60 overflow-hidden divide-y divide-gray-100/50 dark:divide-gray-800/80">
-                    <div v-for="history in login_histories" :key="history.id" class="flex items-center gap-3.5 p-4">
-                        <div class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-gray-800/50 text-slate-500 flex items-center justify-center">
-                            <component :is="getDeviceIcon(history.device_type)" :size="18" stroke-width="2.5" />
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <span class="font-semibold text-[13px] text-slate-800 dark:text-gray-200 block">{{ history.browser }} • {{ history.os }}</span>
-                            <span class="text-[11px] text-slate-400 dark:text-gray-500 font-medium block">
-                                <template v-if="history.device_name">{{ history.device_name }} • </template>{{ history.ip_address }}
-                            </span>
-                            <span class="text-[10px] text-slate-300 dark:text-gray-600 font-medium">{{ formatDateTime(history.logged_in_at) }}</span>
-                        </div>
-                        <div class="px-2 py-0.5 rounded-full bg-green-50 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-[9px] font-bold tracking-wider uppercase shrink-0">{{ t('common.success') }}</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Fallback riwayat kosong -->
-            <div v-else>
-                <h3 class="px-2 mb-3 text-[11px] font-bold text-slate-400 dark:text-gray-500 uppercase tracking-widest">Riwayat Login</h3>
-                <div class="bg-white dark:bg-[#11131A] rounded-[24px] shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)] border border-slate-100 dark:border-gray-800/60 p-4">
-                    <div class="flex items-center gap-3 text-slate-500 dark:text-gray-400">
-                        <Clock :size="16" />
-                        <span class="text-[13px] font-medium">Login terakhir: {{ last_login ? formatDateTime(last_login) : 'Baru saja' }}</span>
-                    </div>
-                </div>
-            </div>
 
             <!-- ============================================================ -->
             <!-- 6. PENGATURAN — Toggle disimpan di DATABASE (sinkron)        -->
@@ -752,18 +484,6 @@ function goBack() {
             </div>
 
             <!-- ============================================================ -->
-            <!-- 5. LOGOUT SEMUA PERANGKAT                                    -->
-            <!-- ============================================================ -->
-            <div class="pt-2 pb-4">
-                <!-- [UPDATE: V4] Ikon Power menggantikan LogOut sesuai revisi -->
-                <button @click="logoutAllDevices" :disabled="isLoggingOut"
-                    class="w-full flex items-center justify-center gap-2 py-4 rounded-[22px] bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 font-bold active:scale-[0.97] hover:bg-red-100 dark:hover:bg-red-500/20 transition-all duration-200 outline-none">
-                    <Power :size="20" stroke-width="2.5" :class="isLoggingOut ? 'animate-spin' : ''" />
-                    {{ isLoggingOut ? 'Memproses...' : 'Logout Semua Perangkat' }}
-                </button>
-            </div>
-
-            <!-- ============================================================ -->
             <!-- 7. BIOMETRIC BOTTOM SHEET (WebAuthn/Passkeys)                -->
             <!-- ============================================================ -->
             <!-- Fungsi: Overlay bottom sheet untuk registrasi biometrik.      -->
@@ -828,22 +548,6 @@ function goBack() {
                             </div>
                         </div>
                     </transition>
-                </div>
-            </transition>
-
-            <!-- Toast: Logout berhasil -->
-            <transition enter-active-class="transition duration-300 ease-out" enter-from-class="translate-y-4 opacity-0" enter-to-class="translate-y-0 opacity-100"
-                        leave-active-class="transition duration-200 ease-in" leave-from-class="translate-y-0 opacity-100" leave-to-class="translate-y-4 opacity-0">
-                <div v-if="logoutDone" class="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-5 py-3 rounded-full bg-emerald-500 text-white font-bold text-[13px] shadow-lg shadow-emerald-500/30 w-max whitespace-nowrap">
-                    <CheckCircle2 :size="18" stroke-width="3" /> Semua sesi berhasil diakhiri
-                </div>
-            </transition>
-
-            <!-- Toast: Riwayat dihapus -->
-            <transition enter-active-class="transition duration-300 ease-out" enter-from-class="translate-y-4 opacity-0" enter-to-class="translate-y-0 opacity-100"
-                        leave-active-class="transition duration-200 ease-in" leave-from-class="translate-y-0 opacity-100" leave-to-class="translate-y-4 opacity-0">
-                <div v-if="clearHistoryDone" class="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-5 py-3 rounded-full bg-emerald-500 text-white font-bold text-[13px] shadow-lg shadow-emerald-500/30 w-max whitespace-nowrap">
-                    <CheckCircle2 :size="18" stroke-width="3" /> Riwayat login berhasil dihapus
                 </div>
             </transition>
         </main>
