@@ -27,6 +27,14 @@ const props = defineProps({
         type: [Number, String],
         default: 128,
     },
+    sizeClass: {
+        type: String,
+        default: 'w-44 h-44',
+    },
+    centerLabel: {
+        type: String,
+        default: 'Total',
+    },
 });
 
 const chartData = computed(() => ({
@@ -43,10 +51,45 @@ const chartData = computed(() => ({
     ],
 }));
 
+// Plugin untuk menggambar teks persentase di dalam irisan donat
+const segmentPercentagesPlugin = {
+    id: 'segmentPercentages',
+    afterDraw(chart) {
+        const { ctx } = chart;
+        const meta = chart.getDatasetMeta(0);
+        if (!meta || !meta.data || meta.data.length === 0) return;
+
+        const totalVal = props.data.reduce((a, b) => a + (Number(b) || 0), 0);
+        if (totalVal <= 0) return;
+
+        meta.data.forEach((element, index) => {
+            const value = Number(props.data[index]) || 0;
+            if (value <= 0) return;
+            const percentage = (value / totalVal) * 100;
+            if (percentage < 6) return; // Lewati jika segmen terlalu sempit
+
+            const angle = (element.startAngle + element.endAngle) / 2;
+            const radius = (element.innerRadius + element.outerRadius) / 2;
+            const x = element.x + Math.cos(angle) * radius;
+            const y = element.y + Math.sin(angle) * radius;
+
+            ctx.save();
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 9px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+            ctx.shadowBlur = 3;
+            ctx.fillText(percentage.toFixed(1).replace('.', ',') + '%', x, y);
+            ctx.restore();
+        });
+    },
+};
+
 const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
-    cutout: '72%',
+    cutout: '70%',
     plugins: {
         legend: {
             display: false,
@@ -80,12 +123,14 @@ const chartOptions = {
 </script>
 
 <template>
-    <div class="relative w-44 h-44 flex items-center justify-center shrink-0">
-        <Doughnut :data="chartData" :options="chartOptions" />
+    <div :class="sizeClass" class="relative flex items-center justify-center shrink-0">
+        <Doughnut :data="chartData" :options="chartOptions" :plugins="[segmentPercentagesPlugin]" />
         <!-- Center label inside doughnut hole -->
         <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
-            <span class="text-[11px] font-medium text-gray-500 dark:text-gray-400">Total Paket</span>
-            <span class="text-2xl font-black text-gray-900 dark:text-white tracking-tight leading-none mt-0.5">
+            <span class="text-[10px] font-medium text-gray-500 dark:text-gray-400 leading-tight">
+                {{ centerLabel }}
+            </span>
+            <span class="text-xl sm:text-2xl font-black text-gray-900 dark:text-white tracking-tight leading-none mt-0.5">
                 {{ total }}
             </span>
         </div>

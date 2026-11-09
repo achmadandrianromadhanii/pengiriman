@@ -1,662 +1,1003 @@
 <script setup>
-    import { useI18n } from '@/composables/useI18n.js';
-    const { t } = useI18n();
-    import AppLayoutMobile from '@/Layouts/AppLayoutMobile.vue';
-    import { defineAsyncComponent, computed, onMounted, onUnmounted, ref } from 'vue';
-    import { Head, router, Link } from '@inertiajs/vue3';
-    import {
-        Wallet, Box, Settings, CheckCircle2, TrendingUp, PieChart, Circle,
-        MapPin, Activity, Clock, Search, Truck,
-        ArrowUpRight, ArrowDownRight, Minus, Zap, Server, ChevronRight
-    } from 'lucide-vue-next';
+import { useI18n } from '@/composables/useI18n.js';
+const { t } = useI18n();
+import AppLayoutMobile from '@/Layouts/AppLayoutMobile.vue';
+import ChartJsLine from '@/Components/ChartJsLine.vue';
+import ChartJsDoughnut from '@/Components/ChartJsDoughnut.vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { Head, router, Link } from '@inertiajs/vue3';
+import {
+    BarChart3,
+    BarChart2,
+    Package,
+    Truck,
+    CheckCircle2,
+    AlertTriangle,
+    TrendingUp,
+    Target,
+    Calendar,
+    ChevronDown,
+    ChevronRight,
+    ArrowUp,
+    ArrowDown,
+    ArrowRight,
+    Filter,
+    X,
+    RotateCcw,
+    Layers,
+    Clock,
+    Wallet,
+    MapPin,
+    Settings,
+    Compass
+} from 'lucide-vue-next';
 
-    const ApexAreaChart = defineAsyncComponent(() => import('@/Components/ApexAreaChart.vue'));
-    const ApexRadialBar = defineAsyncComponent(() => import('@/Components/ApexRadialBar.vue'));
-    const ApexDonutChart = defineAsyncComponent(() => import('@/Components/ApexDonutChart.vue'));
-    const ApexBarChart = defineAsyncComponent(() => import('@/Components/ApexBarChart.vue'));
+defineOptions({ layout: AppLayoutMobile });
 
-    defineOptions({ layout: AppLayoutMobile });
+const props = defineProps({
+    stats: { type: Object, default: () => ({}) },
+    charts: { type: Object, default: () => ({}) },
+    latest: { type: Object, default: () => ({ data: [] }) },
+    filters: { type: Object, default: () => ({}) },
+});
 
-    const props = defineProps({
-        stats: { type: Object, required: true },
-        charts: { type: Object, required: true },
-        latest: { type: Object, required: true },
-    });
+// ── State Real-Time & Filter ──────────────────────────────────────────────
+const mounted = ref(false);
+const isPusherConnected = ref(false);
+const activeTrenTab = ref('pengiriman'); // 'pengiriman' | 'ongkir'
+const isRealtimeFlashing = ref(false);
+const showFilterModal = ref(false);
 
-    const mounted = ref(false);
-    const showCharts = ref(false);
-    const searchQuery = ref('');
+// Filter Input State
+const customStartDate = ref(props.filters?.start_date || '');
+const customEndDate = ref(props.filters?.end_date || '');
 
-    const animPendapatan = ref(0);
-    const animKirim = ref(0);
-    const animSuccess = ref(0);
-    const animKendala = ref(0);
+watch(
+    () => props.filters,
+    (newFilters) => {
+        if (newFilters?.start_date) customStartDate.value = newFilters.start_date;
+        if (newFilters?.end_date) customEndDate.value = newFilters.end_date;
+    },
+    { deep: true }
+);
 
-    const loadCharts = () => {
-        if (!showCharts.value && mounted.value) {
-            showCharts.value = true;
-            window.removeEventListener('scroll', loadCharts);
-            window.removeEventListener('mousemove', loadCharts);
-            window.removeEventListener('touchstart', loadCharts);
+const activePeriod = computed(() => props.filters?.period || 'bulan_ini');
+const activePeriodLabel = computed(() => props.filters?.period_label || 'Bulan Ini');
+const activeLayanan = computed(() => props.filters?.layanan || 'semua');
+const deltaLabel = computed(() => props.filters?.delta_label || 'vs bulan lalu');
+
+const isFilterActive = computed(() => {
+    return activePeriod.value !== 'bulan_ini' || activeLayanan.value !== 'semua';
+});
+
+const periodPresets = [
+    { key: 'hari_ini', label: 'Hari Ini', desc: 'Transaksi hari ini' },
+    { key: '7_hari', label: '7 Hari Terakhir', desc: '1 minggu terakhir' },
+    { key: '30_hari', label: '30 Hari Terakhir', desc: '1 bulan terakhir' },
+    { key: 'bulan_ini', label: 'Bulan Ini', desc: 'Awal hingga akhir bulan' },
+    { key: 'bulan_lalu', label: 'Bulan Lalu', desc: 'Rekap bulan sebelumnya' },
+    { key: 'tahun_ini', label: 'Tahun Ini', desc: 'Tahun berjalan' },
+];
+
+const layananOptions = [
+    { key: 'semua', label: 'Semua Layanan' },
+    { key: 'reguler', label: 'Reguler' },
+    { key: 'express', label: 'Express' },
+    { key: 'ekonomi', label: 'Ekonomi' },
+    { key: 'kargo', label: 'Kargo' },
+];
+
+// Terapkan Filter Periode
+function applyPeriod(periodKey) {
+    showFilterModal.value = false;
+    router.get(
+        route('dashboard'),
+        {
+            period: periodKey,
+            layanan: activeLayanan.value !== 'semua' ? activeLayanan.value : undefined,
+        },
+        {
+            preserveState: true,
+            preserveScroll: true,
+            only: ['stats', 'charts', 'latest', 'filters'],
         }
-    };
+    );
+}
 
-    onMounted(async () => {
-        mounted.value = true;
+// Terapkan Filter Rentang Tanggal Custom
+function applyCustomDateFilter() {
+    if (!customStartDate.value || !customEndDate.value) return;
 
-        window.addEventListener('scroll', loadCharts, { once: true, passive: true });
-        window.addEventListener('mousemove', loadCharts, { once: true, passive: true });
-        window.addEventListener('touchstart', loadCharts, { once: true, passive: true });
+    showFilterModal.value = false;
+    router.get(
+        route('dashboard'),
+        {
+            period: 'custom',
+            start_date: customStartDate.value,
+            end_date: customEndDate.value,
+            layanan: activeLayanan.value !== 'semua' ? activeLayanan.value : undefined,
+        },
+        {
+            preserveState: true,
+            preserveScroll: true,
+            only: ['stats', 'charts', 'latest', 'filters'],
+        }
+    );
+}
 
-        animPendapatan.value = Number(props.stats.totalPendapatan || 0);
-        animKirim.value = Number(props.stats.totalPengiriman || 0);
-        animSuccess.value = Number(props.stats.successRate || 0);
-        animKendala.value = Number(props.stats.paketBermasalah || 0);
+// Terapkan Filter Layanan
+function applyLayananFilter(layananKey) {
+    router.get(
+        route('dashboard'),
+        {
+            period: activePeriod.value,
+            start_date: activePeriod.value === 'custom' ? customStartDate.value : undefined,
+            end_date: activePeriod.value === 'custom' ? customEndDate.value : undefined,
+            layanan: layananKey !== 'semua' ? layananKey : undefined,
+        },
+        {
+            preserveState: true,
+            preserveScroll: true,
+            only: ['stats', 'charts', 'latest', 'filters'],
+        }
+    );
+}
 
-        setTimeout(async () => {
-            const { initEcho } = await import('@/echo');
-            await initEcho();
+// Reset Filter ke Default
+function resetFilters() {
+    showFilterModal.value = false;
+    customStartDate.value = '';
+    customEndDate.value = '';
+    router.get(
+        route('dashboard'),
+        {},
+        {
+            preserveState: true,
+            preserveScroll: true,
+            only: ['stats', 'charts', 'latest', 'filters'],
+        }
+    );
+}
 
-            if (window.Echo) {
-                window.Echo.channel('dashboard').listen('DashboardUpdated', (e) => {
-                    router.reload({
-                        only: ['stats', 'charts', 'latest'],
-                        preserveScroll: true,
-                        preserveState: true,
-                    });
-                });
-            }
-        }, 5000);
-    });
+// ── Inisialisasi Realtime Pusher WebSocket ─────────────────────────────────
+onMounted(async () => {
+    mounted.value = true;
+    setupPusher();
+});
 
-    onUnmounted(() => {
-        mounted.value = false;
-        window.removeEventListener('scroll', loadCharts);
-        window.removeEventListener('mousemove', loadCharts);
-        window.removeEventListener('touchstart', loadCharts);
+onUnmounted(() => {
+    mounted.value = false;
+    if (window.Echo) {
+        window.Echo.leave('dashboard');
+    }
+});
+
+async function setupPusher() {
+    try {
+        const { initEcho } = await import('@/echo');
+        await initEcho();
 
         if (window.Echo) {
-            window.Echo.leave('dashboard');
+            window.Echo.connector?.pusher?.connection?.bind('connected', () => {
+                isPusherConnected.value = true;
+            });
+            window.Echo.connector?.pusher?.connection?.bind('disconnected', () => {
+                isPusherConnected.value = false;
+            });
+            if (window.Echo.connector?.pusher?.connection?.state === 'connected') {
+                isPusherConnected.value = true;
+            }
+
+            window.Echo.channel('dashboard').listen('DashboardUpdated', (e) => {
+                handleRealtimeUpdate(e);
+            });
         }
+    } catch (err) {
+        console.warn('[Dashboard Realtime Mobile] Echo init fallback:', err);
+    }
+}
+
+function handleRealtimeUpdate(payload) {
+    isRealtimeFlashing.value = true;
+    setTimeout(() => {
+        isRealtimeFlashing.value = false;
+    }, 1200);
+
+    router.reload({
+        only: ['stats', 'charts', 'latest', 'filters'],
+        preserveScroll: true,
+        preserveState: true,
     });
+}
 
-    const pengirimanDeltaText = computed(() => {
-        const d = Number(props.stats.pengirimanDelta || 0);
-        const sign = d > 0 ? '+' : '';
-        return `${sign}${d} ${t("dashboard.vsLastMonth")}`;
-    });
-    const pengirimanDeltaTone = computed(() => {
-        const d = Number(props.stats.pengirimanDelta || 0);
-        return d > 0 ? 'pos' : d < 0 ? 'neutral' : 'neutral';
-    });
+// ── Data & Metrik 100% dari Database ──────────────────────────────────────
+const totalPengiriman = computed(() => Number(props.stats?.totalPengiriman || 0));
+const dalamProses = computed(() => Number(props.stats?.dalamProses || 0));
+const terkirimCount = computed(() => Number(props.stats?.paketTerkirim || 0));
+const bermasalahCount = computed(() => Number(props.stats?.paketBermasalah || 0));
 
-    const growthPercent = computed(() => {
-        const p = Number(props.stats.pendapatanDeltaPercent || 0);
-        return Math.abs(p) >= 100 ? Math.round(p) : Number(p.toFixed(1));
-    });
-    const growthIsPositive = computed(() => Number(props.stats.pendapatanDeltaPercent || 0) >= 0);
+const dalamPerjalananCount = computed(() => Number(props.charts?.status?.dalam_perjalanan || 0));
+const diprosesCount = computed(() => Number(props.charts?.status?.diproses || 0));
 
-    function statusLabel(s) {
-        const map = {
-            pending: t('shipment.pending'),
-            diproses: t('shipment.processing'),
-            dalam_perjalanan: t('shipment.inTransit'),
-            tiba_di_kota_tujuan: t('shipment.arrivedCity'),
-            sedang_diantar: t('shipment.outForDelivery'),
-            terkirim: t('shipment.delivered'),
-            gagal: t('shipment.failed'),
-            dibatalkan: t('shipment.cancelled'),
-        };
-        return map[s] || s;
+// Delta percentages
+const successRatePercent = computed(() => Number(props.stats?.successRate || 0));
+const successRateDelta = computed(() => Number(props.stats?.successRateDeltaPercent || 0));
+const successRatePercentText = computed(() => {
+    const val = successRatePercent.value;
+    return val % 1 === 0 ? `${val}%` : `${val.toFixed(1).replace('.', ',')}%`;
+});
+
+// Tren Chart Data
+const trenLabels = computed(() => props.charts?.area?.labels || ['Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov']);
+const trenShipments = computed(() => props.charts?.area?.seriesShipments || [0, 0, 0, 0, 0, 0]);
+const trenRevenue = computed(() => props.charts?.area?.seriesRevenue || [0, 0, 0, 0, 0, 0]);
+
+// Distribusi Layanan
+const regulerCount = computed(() => Number(props.charts?.layanan?.reguler || 0));
+const expressCount = computed(() => Number(props.charts?.layanan?.express || 0));
+const ekonomiCount = computed(() => Number(props.charts?.layanan?.ekonomi || 0));
+const kargoCount = computed(() => Number(props.charts?.layanan?.kargo || 0));
+
+const maxLayananValue = computed(() => {
+    return Math.max(regulerCount.value, expressCount.value, ekonomiCount.value, kargoCount.value, 1);
+});
+
+// Top 5 Kota
+const topKotaList = computed(() => {
+    const list = props.charts?.topKotaList || [];
+    return list.slice(0, 5);
+});
+
+const maxKotaValue = computed(() => {
+    if (!topKotaList.value.length) return 1;
+    return Math.max(...topKotaList.value.map(k => k.value), 1);
+});
+
+// 5 Pengiriman Terbaru
+const recentShipments = computed(() => {
+    return props.latest?.data || [];
+});
+
+function fmtDelta(val) {
+    const num = Number(val || 0);
+    const sign = num > 0 ? '+' : '';
+    const formatted = num % 1 === 0 ? num : num.toFixed(1).replace('.', ',');
+    return `${sign}${formatted}%`;
+}
+
+function serviceBadgeClass(jenis) {
+    switch (jenis) {
+        case 'reguler':
+            return 'bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300';
+        case 'express':
+            return 'bg-purple-50 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300';
+        case 'ekonomi':
+            return 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300';
+        case 'kargo':
+            return 'bg-amber-50 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300';
+        default:
+            return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300';
     }
+}
 
-    function statusBadgeClass(s) {
-        return (
-            {
-                pending: 'badge-gray',
-                diproses: 'badge-amber',
-                dalam_perjalanan: 'badge-blue',
-                tiba_di_kota_tujuan: 'badge-indigo',
-                sedang_diantar: 'badge-indigo',
-                terkirim: 'badge-green',
-                gagal: 'badge-red',
-                dibatalkan: 'badge-gray',
-            }[s] || 'badge-gray'
-        );
+function serviceLabel(jenis) {
+    switch (jenis) {
+        case 'reguler': return 'Reguler';
+        case 'express': return 'Express';
+        case 'ekonomi': return 'Ekonomi';
+        case 'kargo': return 'Kargo';
+        default: return jenis ? jenis.charAt(0).toUpperCase() + jenis.slice(1) : '-';
     }
-
-    function statusDotClass(s) {
-        return (
-            {
-                pending: 'bg-gray-400',
-                diproses: 'bg-amber-400',
-                dalam_perjalanan: 'bg-blue-500',
-                tiba_di_kota_tujuan: 'bg-indigo-500',
-                sedang_diantar: 'bg-indigo-500',
-                terkirim: 'bg-emerald-500',
-                gagal: 'bg-red-500',
-                dibatalkan: 'bg-gray-400',
-            }[s] || 'bg-gray-400'
-        );
-    }
-
-    function fmtDateIso(iso) {
-        if (!iso) return '-';
-        const d = new Date(iso);
-        return new Intl.DateTimeFormat('id-ID', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric',
-            timeZone: 'Asia/Jakarta',
-        }).format(d);
-    }
-
-    function fmtTimeIso(iso) {
-        if (!iso) return '-';
-        const d = new Date(iso);
-        return new Intl.DateTimeFormat('id-ID', {
-            hour: '2-digit',
-            minute: '2-digit',
-            timeZone: 'Asia/Jakarta',
-        }).format(d);
-    }
-
-    function goDetail(id) {
-        router.visit(route('pengiriman.show', id));
-    }
-
-    function handleSearch() {
-        const q = searchQuery.value.trim();
-        if (q) {
-            router.visit(route('tracking.search') + '?resi=' + encodeURIComponent(q));
-        }
-    }
-
-    function getNominalClass(value) {
-        const digits = String(Math.round(Number(value) || 0)).length;
-        if (digits >= 9) return 'text-xl';
-        if (digits >= 7) return 'text-2xl';
-        return 'text-3xl';
-    }
+}
 </script>
 
 <template>
-    <Head title="Dashboard" />
+    <Head title="Dashboard Mobile" />
 
-    <!-- ============================================================== -->
-    <!-- MOBILE LAYOUT (Premium Enterprise Dashboard)                     -->
-    <!-- ============================================================== -->
+    <!-- Container Utama Dashboard Mobile -->
     <div
-        class="flex flex-col relative pb-[100px] min-h-screen bg-[#F7F9FC] dark:bg-[#0A0A0A] font-sans transform-gpu"
+        class="flex flex-col font-sans transition-opacity duration-300"
+        :class="{ 'opacity-70': isRealtimeFlashing }"
     >
-        <!-- ============================================================ -->
-        <!-- DECORATIVE CANVAS (Full Bleed 100vw, Hardware Accelerated)   -->
-        <!-- ============================================================ -->
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <!-- 1. HERO BANNER CARD (GRADIENT BIRU-UNGU)                           -->
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
         <div
-            aria-hidden="true"
-            class="absolute z-0 pointer-events-none overflow-hidden"
-            style="
-                top: -72px;
-                width: 100vw;
-                left: 50%;
-                transform: translateX(-50%);
-                height: calc(42vh + 72px);
-                min-height: 380px;
-                border-bottom-left-radius: 40% 40px;
-                border-bottom-right-radius: 60% 70px;
-            "
+            class="rounded-[26px] p-5 text-white shadow-lg relative overflow-hidden"
+            style="background: linear-gradient(135deg, #1E40AF 0%, #3B82F6 40%, #6366F1 75%, #7C3AED 100%);"
         >
-            <!-- Layer 1: Primary Gradient -->
+            <!-- Background Glow Dekoratif Ringan (GPU-accelerated) -->
             <div
-                class="absolute inset-0"
-                style="background: linear-gradient(150deg, #2563EB 0%, #4F46E5 50%, #7C3AED 100%);"
+                class="absolute -top-12 -right-12 w-48 h-48 bg-white/10 rounded-full blur-2xl pointer-events-none"
+            ></div>
+            <div
+                class="absolute -bottom-10 -left-10 w-40 h-40 bg-purple-500/20 rounded-full blur-xl pointer-events-none"
             ></div>
 
-            <!-- Layer 2: Secondary Overlay -->
-            <div
-                class="absolute inset-0"
-                style="
-                    background: linear-gradient(210deg, #60A5FA 0%, #818CF8 50%, #A78BFA 100%);
-                    opacity: 0.3;
-                    mix-blend-mode: overlay;
-                "
-            ></div>
-
-            <!-- Layer 3: Contour Pattern -->
-            <svg
-                aria-hidden="true"
-                class="absolute inset-0 w-full h-full"
-                style="opacity: 0.05"
-                viewBox="0 0 1440 450"
-                preserveAspectRatio="none"
-                xmlns="http://www.w3.org/2000/svg"
-            >
-                <path fill="none" stroke="#FFFFFF" stroke-width="1.5" d="M-100,50 C400,300 1000,300 1540,50" />
-                <path fill="none" stroke="#FFFFFF" stroke-width="1.2" d="M-100,120 C400,370 1000,370 1540,120" />
-                <path fill="none" stroke="#FFFFFF" stroke-width="1.0" d="M-100,190 C400,440 1000,440 1540,190" />
-                <path fill="none" stroke="#FFFFFF" stroke-width="0.8" d="M-100,260 C400,510 1000,510 1540,260" />
-            </svg>
-
-            <!-- Layer 4: Wave Flow -->
-            <svg
-                aria-hidden="true"
-                class="absolute inset-0 w-full h-full"
-                style="opacity: 0.03"
-                viewBox="0 0 1440 450"
-                preserveAspectRatio="none"
-                xmlns="http://www.w3.org/2000/svg"
-            >
-                <path fill="none" stroke="#FFFFFF" stroke-width="1.5" d="M0,450 Q360,200 720,250 T1440,50" />
-                <path fill="none" stroke="#FFFFFF" stroke-width="1.0" d="M0,380 Q360,130 720,180 T1440,-20" />
-            </svg>
-
-            <!-- Layer 5: Glow Effect (Dioptimasi GPU Friendly) -->
-            <div
-                class="absolute left-1/2 top-1/3 -translate-x-1/2 -translate-y-1/2 w-full h-full rounded-full pointer-events-none"
-                style="
-                    background: radial-gradient(circle, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0) 65%);
-                "
-            ></div>
-        </div>
-
-        <!-- ============================================================ -->
-        <!-- KONTEN DASHBOARD (di atas background canvas, z-10)           -->
-        <!-- ============================================================ -->
-        <div class="px-5 mt-5 flex flex-col relative z-10">
-
-            <!-- 1. HERO KPI (Pusat Kendali Operasional) -->
-            <div
-                class="rounded-[24px] bg-gradient-to-br from-[#1D4ED8] via-[#4338CA] to-[#6D28D9] shadow-[0_8px_20px_rgba(29,78,216,0.25)] p-5 flex flex-col justify-between relative overflow-hidden anim-slide-up"
-                style="min-height: 160px"
-            >
-                <div
-                    class="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"
-                ></div>
-
-                <!-- Baris Atas: Label + Resi Count + Status -->
-                <div class="flex items-center justify-between relative z-10 mb-2">
-                    <div class="flex items-center gap-2">
-                        <div
-                            class="w-7 h-7 rounded-full bg-white/20 text-white flex items-center justify-center backdrop-blur-sm"
-                        >
-                            <Wallet :size="14" stroke-width="2.5" />
-                        </div>
-                        <span class="text-[11px] font-bold text-blue-100 uppercase tracking-widest"
-                            >{{ t("dashboard.todayRevenue") }}</span
-                        >
-                    </div>
-                    <div class="flex items-center gap-1.5 bg-white/15 backdrop-blur-sm px-2.5 py-1 rounded-full">
-                        <div class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></div>
-                        <span class="text-[9px] font-bold text-white/90 uppercase tracking-wider">{{ t("dashboard.operational") }}</span>
-                    </div>
-                </div>
-
-                <!-- Baris Tengah: Nominal + Mini Sparkline -->
-                <div class="flex items-end justify-between relative z-10">
-                    <div>
-                        <div
-                            :class="getNominalClass(animPendapatan)"
-                            style="font-family: 'Inter Tight', 'Geist', sans-serif"
-                            class="font-bold text-white tracking-tighter drop-shadow-sm leading-tight"
-                        >
-                            Rp {{ new Intl.NumberFormat('id-ID').format(Math.round(animPendapatan)) }}
-                        </div>
-                    </div>
-                    <svg class="w-20 h-8 text-white/30" viewBox="0 0 80 32" fill="none" aria-hidden="true">
-                        <polyline
-                            points="0,28 10,24 20,26 30,18 40,20 50,12 60,14 70,6 80,8"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            fill="none"
-                        />
-                        <polyline
-                            points="0,28 10,24 20,26 30,18 40,20 50,12 60,14 70,6 80,8 80,32 0,32"
-                            fill="currentColor"
-                            opacity="0.15"
-                        />
-                    </svg>
-                </div>
-
-                <!-- Baris Bawah: Growth % + Jumlah Resi -->
-                <div class="flex items-center gap-3 mt-2 relative z-10">
+            <!-- Header Banner: Judul + Tombol Filter -->
+            <div class="flex items-center justify-between relative z-10">
+                <div class="flex items-center gap-2.5">
                     <div
-                        class="flex items-center gap-1 text-[11px] font-bold rounded-full px-2 py-0.5"
-                        :class="growthIsPositive
-                            ? 'bg-emerald-500/20 text-emerald-300'
-                            : 'bg-red-500/20 text-red-300'"
+                        class="w-8 h-8 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center shrink-0 border border-white/20"
                     >
-                        <ArrowUpRight v-if="growthIsPositive" :size="12" />
-                        <ArrowDownRight v-else :size="12" />
-                        {{ growthIsPositive ? '+' : '' }}{{ growthPercent }}%
+                        <BarChart3 class="w-4 h-4 text-white stroke-[2.5]" />
                     </div>
-                    <span class="text-[11px] font-medium text-blue-200/80">
-                        {{ new Intl.NumberFormat('id-ID').format(Math.round(animKirim)) }} Resi
+                    <div>
+                        <h1 class="text-base font-black tracking-tight text-white leading-tight">
+                            Dashboard
+                        </h1>
+                        <p class="text-[11px] text-blue-100 font-normal leading-tight mt-0.5">
+                            Ringkasan pengiriman {{ activePeriodLabel.toLowerCase() }}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Tombol Dropdown Filter -->
+                <button
+                    type="button"
+                    @click="showFilterModal = true"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white text-gray-800 text-[11px] font-bold shadow-sm active:scale-95 transition-transform"
+                >
+                    <Calendar class="w-3 h-3 text-blue-600" />
+                    <span>{{ activePeriodLabel }}</span>
+                    <ChevronDown class="w-3 h-3 text-gray-500" />
+                </button>
+            </div>
+
+            <!-- 4 Kartu KPI Horizontal Grid -->
+            <div class="grid grid-cols-4 gap-2 mt-4 relative z-10">
+                <!-- 1. Total Kirim -->
+                <div
+                    class="bg-white/15 backdrop-blur-md rounded-xl py-2.5 px-1 flex flex-col items-center justify-center border border-white/20 text-center"
+                >
+                    <Package class="w-4 h-4 text-blue-200 stroke-[2.2]" />
+                    <span class="text-base sm:text-lg font-black text-white leading-tight mt-1">
+                        {{ totalPengiriman }}
+                    </span>
+                    <span class="text-[10px] text-white/80 font-medium leading-tight mt-0.5">
+                        Total Kirim
+                    </span>
+                </div>
+
+                <!-- 2. Proses -->
+                <div
+                    class="bg-white/15 backdrop-blur-md rounded-xl py-2.5 px-1 flex flex-col items-center justify-center border border-white/20 text-center"
+                >
+                    <Truck class="w-4 h-4 text-amber-300 stroke-[2.2]" />
+                    <span class="text-base sm:text-lg font-black text-white leading-tight mt-1">
+                        {{ dalamProses }}
+                    </span>
+                    <span class="text-[10px] text-white/80 font-medium leading-tight mt-0.5">
+                        Proses
+                    </span>
+                </div>
+
+                <!-- 3. Terkirim -->
+                <div
+                    class="bg-white/15 backdrop-blur-md rounded-xl py-2.5 px-1 flex flex-col items-center justify-center border border-white/20 text-center"
+                >
+                    <CheckCircle2 class="w-4 h-4 text-emerald-300 stroke-[2.2]" />
+                    <span class="text-base sm:text-lg font-black text-white leading-tight mt-1">
+                        {{ terkirimCount }}
+                    </span>
+                    <span class="text-[10px] text-white/80 font-medium leading-tight mt-0.5">
+                        Terkirim
+                    </span>
+                </div>
+
+                <!-- 4. Bermasalah -->
+                <div
+                    class="bg-white/15 backdrop-blur-md rounded-xl py-2.5 px-1 flex flex-col items-center justify-center border border-white/20 text-center"
+                >
+                    <AlertTriangle class="w-4 h-4 text-rose-300 stroke-[2.2]" />
+                    <span class="text-base sm:text-lg font-black text-white leading-tight mt-1">
+                        {{ bermasalahCount }}
+                    </span>
+                    <span class="text-[10px] text-white/80 font-medium leading-tight mt-0.5">
+                        Bermasalah
                     </span>
                 </div>
             </div>
+        </div>
 
-            <!-- 2. SEARCH BAR (Sticky on scroll) -->
-            <div class="sticky top-0 z-30 mt-4 mb-1">
-                <div class="relative">
-                    <Search
-                        :size="16"
-                        class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-                    />
-                    <input
-                        v-model="searchQuery"
-                        type="text"
-                        :placeholder="t('dashboard.searchReceiptPlaceholder')"
-                        :aria-label="t('dashboard.searchReceiptPlaceholder')"
-                        class="w-full h-11 pl-10 pr-4 rounded-2xl bg-white dark:bg-[#111111] border border-gray-200 dark:border-gray-800 text-[13px] text-gray-700 dark:text-gray-200 placeholder-gray-400 shadow-[0_2px_12px_rgba(0,0,0,0.03)] focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition"
-                        @keyup.enter="handleSearch"
-                    />
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <!-- 2. QUICK ACTIONS (4 BUTTONS: Resi, Tracking, Tarif, Pengaturan)    -->
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <div
+            class="bg-white dark:bg-[#121212] rounded-2xl p-3 border border-gray-100 dark:border-gray-800 shadow-[0_2px_10px_rgba(0,0,0,0.03)] mt-3"
+        >
+            <div class="grid grid-cols-4 gap-2 text-center">
+                <!-- Resi -->
+                <Link
+                    :href="route('pengiriman.index')"
+                    class="flex flex-col items-center justify-center active:scale-95 transition-transform"
+                >
+                    <div
+                        class="w-11 h-11 rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-1.5 shadow-sm"
+                    >
+                        <Package class="w-5 h-5 stroke-[2]" />
+                    </div>
+                    <span class="text-[11px] font-semibold text-gray-700 dark:text-gray-300">
+                        Resi
+                    </span>
+                </Link>
+
+                <!-- Tracking -->
+                <Link
+                    :href="route('tracking.search')"
+                    class="flex flex-col items-center justify-center active:scale-95 transition-transform"
+                >
+                    <div
+                        class="w-11 h-11 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-1.5 shadow-sm"
+                    >
+                        <MapPin class="w-5 h-5 stroke-[2]" />
+                    </div>
+                    <span class="text-[11px] font-semibold text-gray-700 dark:text-gray-300">
+                        Tracking
+                    </span>
+                </Link>
+
+                <!-- Tarif -->
+                <Link
+                    :href="route('tarif.index')"
+                    class="flex flex-col items-center justify-center active:scale-95 transition-transform"
+                >
+                    <div
+                        class="w-11 h-11 rounded-2xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-1.5 shadow-sm"
+                    >
+                        <Wallet class="w-5 h-5 stroke-[2]" />
+                    </div>
+                    <span class="text-[11px] font-semibold text-gray-700 dark:text-gray-300">
+                        Tarif
+                    </span>
+                </Link>
+
+                <!-- Pengaturan -->
+                <Link
+                    :href="route('settings.index')"
+                    class="flex flex-col items-center justify-center active:scale-95 transition-transform"
+                >
+                    <div
+                        class="w-11 h-11 rounded-2xl bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 flex items-center justify-center mb-1.5 shadow-sm"
+                    >
+                        <Settings class="w-5 h-5 stroke-[2]" />
+                    </div>
+                    <span class="text-[11px] font-semibold text-gray-700 dark:text-gray-300">
+                        Pengaturan
+                    </span>
+                </Link>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <!-- 3. TREN PENGIRIMAN (CHART.JS LINE + TOGGLE JUMLAH/ONGKIR)          -->
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <div
+            class="bg-white dark:bg-[#121212] rounded-2xl p-4 border border-gray-100 dark:border-gray-800 shadow-[0_2px_10px_rgba(0,0,0,0.03)] mt-3"
+        >
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-2">
+                    <TrendingUp class="w-4 h-4 text-blue-600 stroke-[2.5]" />
+                    <h2 class="text-sm font-bold text-gray-900 dark:text-white">
+                        Tren Pengiriman
+                    </h2>
+                </div>
+
+                <!-- Toggle Segmented Buttons -->
+                <div class="inline-flex p-0.5 rounded-lg bg-gray-100 dark:bg-gray-800 text-[11px] font-bold">
+                    <button
+                        type="button"
+                        @click="activeTrenTab = 'pengiriman'"
+                        class="px-2.5 py-1 rounded-md transition-all duration-150"
+                        :class="
+                            activeTrenTab === 'pengiriman'
+                                ? 'bg-blue-600 text-white shadow-sm'
+                                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900'
+                        "
+                    >
+                        Jumlah
+                    </button>
+                    <button
+                        type="button"
+                        @click="activeTrenTab = 'ongkir'"
+                        class="px-2.5 py-1 rounded-md transition-all duration-150"
+                        :class="
+                            activeTrenTab === 'ongkir'
+                                ? 'bg-blue-600 text-white shadow-sm'
+                                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900'
+                        "
+                    >
+                        Ongkir
+                    </button>
                 </div>
             </div>
 
-            <!-- 3. QUICK ACTION (4-Grid Launcher) -->
-            <div class="grid grid-cols-4 gap-2.5 mt-3 anim-slide-up" style="animation-delay: 100ms">
-                <Link prefetch cacheFor="1m" :href="route('pengiriman.index')"
-                    :aria-label="t('dashboard.viewAllShipments')"
-                    class="flex flex-col items-center justify-center py-3 bg-white dark:bg-[#111111] rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.02)] border border-gray-100 dark:border-gray-800 active:scale-90 transition-transform"
-                >
-                    <div class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 flex items-center justify-center mb-1.5">
-                        <Box :size="20" stroke-width="2" />
-                    </div>
-                    <span class="text-[10px] font-semibold text-gray-600 dark:text-gray-400">{{ t("dashboard.receipt") }}</span>
-                </Link>
-                <Link prefetch cacheFor="1m" :href="route('tracking.search')"
-                    :aria-label="t('nav.tracking')"
-                    class="flex flex-col items-center justify-center py-3 bg-white dark:bg-[#111111] rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.02)] border border-gray-100 dark:border-gray-800 active:scale-90 transition-transform"
-                >
-                    <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 flex items-center justify-center mb-1.5">
-                        <MapPin :size="20" stroke-width="2" />
-                    </div>
-                    <span class="text-[10px] font-semibold text-gray-600 dark:text-gray-400">Tracking</span>
-                </Link>
-                <Link prefetch cacheFor="1m" :href="route('tarif.index')"
-                    :aria-label="t('nav.tariff')"
-                    class="flex flex-col items-center justify-center py-3 bg-white dark:bg-[#111111] rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.02)] border border-gray-100 dark:border-gray-800 active:scale-90 transition-transform"
-                >
-                    <div class="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-500/10 text-amber-600 flex items-center justify-center mb-1.5">
-                        <Wallet :size="20" stroke-width="2" />
-                    </div>
-                    <span class="text-[10px] font-semibold text-gray-600 dark:text-gray-400">Tarif</span>
-                </Link>
-                <Link prefetch cacheFor="1m" :href="route('settings.index')"
-                    :aria-label="t('dashboard.settings')"
-                    class="flex flex-col items-center justify-center py-3 bg-white dark:bg-[#111111] rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.02)] border border-gray-100 dark:border-gray-800 active:scale-90 transition-transform"
-                >
-                    <div class="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-500/10 text-purple-600 flex items-center justify-center mb-1.5">
-                        <Settings :size="20" stroke-width="2" />
-                    </div>
-                    <span class="text-[10px] font-semibold text-gray-600 dark:text-gray-400">{{ t("dashboard.settings") }}</span>
-                </Link>
+            <!-- Canvas Chart.js Area/Line -->
+            <div class="w-full h-48">
+                <ChartJsLine
+                    :labels="trenLabels"
+                    :shipments-data="trenShipments"
+                    :revenue-data="trenRevenue"
+                    :active-tab="activeTrenTab"
+                />
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <!-- 4. STATUS PENGIRIMAN (CHART.JS DOUGHNUT + DETAIL LEGEND)           -->
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <div
+            class="bg-white dark:bg-[#121212] rounded-2xl p-4 border border-gray-100 dark:border-gray-800 shadow-[0_2px_10px_rgba(0,0,0,0.03)] mt-3"
+        >
+            <div class="flex items-center gap-2 mb-3">
+                <Compass class="w-4 h-4 text-blue-600 stroke-[2.5]" />
+                <h2 class="text-sm font-bold text-gray-900 dark:text-white">
+                    Status Pengiriman
+                </h2>
             </div>
 
-            <!-- 4. OPERATIONAL STRIP -->
-            <div class="mt-4 flex items-center gap-3 px-1 overflow-x-auto scrollbar-hide anim-slide-up" style="animation-delay: 150ms">
-                <div class="flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1.5 rounded-full border border-emerald-200/50 dark:border-emerald-800/50 shrink-0">
-                    <Zap :size="11" class="text-emerald-500" />
-                    <span class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">{{ t("dashboard.apiOnline") }}</span>
-                </div>
-                <div class="flex items-center gap-1.5 bg-blue-50 dark:blue-500/10 px-3 py-1.5 rounded-full border border-blue-200/50 dark:border-blue-800/50 shrink-0">
-                    <Truck :size="11" class="text-blue-500" />
-                    <span class="text-[10px] font-bold text-blue-600 dark:text-blue-400 whitespace-nowrap">{{ t("dashboard.activeCouriers") }}</span>
-                </div>
-                <div class="flex items-center gap-1.5 bg-violet-50 dark:bg-violet-500/10 px-3 py-1.5 rounded-full border border-violet-200/50 dark:border-violet-800/50 shrink-0">
-                    <Server :size="11" class="text-violet-500" />
-                    <span class="text-[10px] font-bold text-violet-600 dark:text-violet-400 whitespace-nowrap">{{ t("dashboard.stableServer") }}</span>
-                </div>
-            </div>
+            <div class="flex items-center justify-between gap-4">
+                <!-- Donut Chart -->
+                <ChartJsDoughnut
+                    size-class="w-36 h-36"
+                    center-label="Total"
+                    :data="[terkirimCount, dalamPerjalananCount, diprosesCount, bermasalahCount]"
+                    :total="totalPengiriman"
+                />
 
-            <!-- SECTION WRAPPER -->
-            <div class="mt-4 flex flex-col gap-4">
-
-                <!-- 5. KPI SUMMARY (2 Cards — Mini Trend + Badge) -->
-                <div class="grid grid-cols-2 gap-3 anim-slide-up" style="animation-delay: 200ms">
-                    <div class="bg-white dark:bg-[#111111] rounded-[22px] p-4 shadow-[0_2px_12px_rgba(0,0,0,0.02)] border border-gray-100 dark:border-gray-800">
-                        <div class="flex items-center justify-between mb-2">
-                            <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{{ t("dashboard.totalShipments") }}</div>
-                            <div class="w-8 h-8 rounded-full bg-indigo-50 dark:bg-indigo-500/10 text-indigo-500 flex items-center justify-center">
-                                <Box :size="16" stroke-width="2" />
-                            </div>
-                        </div>
-                        <div
-                            class="font-bold text-gray-800 dark:text-gray-200 text-xl leading-none"
-                            style="font-family: 'Inter Tight', sans-serif"
-                        >
-                            {{ new Intl.NumberFormat('id-ID').format(Math.round(animKirim)) }}
-                        </div>
-                        <div class="flex items-center gap-1 mt-1.5">
-                            <span
-                                class="text-[10px] font-bold flex items-center gap-0.5"
-                                :class="pengirimanDeltaTone === 'pos' ? 'text-emerald-500' : 'text-gray-400'"
-                            >
-                                <ArrowUpRight v-if="pengirimanDeltaTone === 'pos'" :size="10" />
-                                <Minus v-else :size="10" />
-                                {{ pengirimanDeltaText }}
-                            </span>
-                        </div>
-                    </div>
-
-                    <div class="bg-white dark:bg-[#111111] rounded-[22px] p-4 shadow-[0_2px_12px_rgba(0,0,0,0.02)] border border-gray-100 dark:border-gray-800">
-                        <div class="flex items-center justify-between mb-2">
-                            <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{{ t("dashboard.successRate") }}</div>
-                            <div class="w-8 h-8 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
-                                <CheckCircle2 :size="16" stroke-width="2" />
-                            </div>
-                        </div>
-                        <div
-                            class="font-bold text-gray-800 dark:text-gray-200 text-xl leading-none"
-                            style="font-family: 'Inter Tight', sans-serif"
-                        >
-                            {{ Number(animSuccess).toFixed(1) }}%
-                        </div>
-                        <div class="text-[10px] text-gray-400 mt-1.5">{{ t("dashboard.successRateDesc") }}</div>
-                    </div>
-                </div>
-
-                <!-- 6. TREN PENDAPATAN (Area Spline) -->
-                <div
-                    class="bg-white dark:bg-[#111111] rounded-[22px] p-5 shadow-[0_2px_12px_rgba(0,0,0,0.02)] border border-gray-100 dark:border-gray-800 anim-slide-up hover:scale-[1.01] transition-transform"
-                    style="animation-delay: 300ms"
-                >
-                    <div class="flex items-center justify-between mb-3">
+                <!-- Detail Legend List -->
+                <div class="flex-1 space-y-2.5 pl-2">
+                    <!-- Terkirim -->
+                    <div class="flex items-center justify-between text-xs">
                         <div class="flex items-center gap-2">
-                            <TrendingUp :size="16" class="text-gray-400" />
-                            <span
-                                class="font-bold text-[12px] text-gray-800 dark:text-gray-200 uppercase tracking-wide"
-                                style="font-family: 'Plus Jakarta Sans', sans-serif"
-                                >{{ t("dashboard.revenueTrend") }}</span
-                            >
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                            <span class="text-gray-600 dark:text-gray-400 font-medium">Terkirim</span>
                         </div>
-                        <span
-                            class="bg-gray-50 dark:bg-gray-800/50 text-gray-500 text-[9px] font-bold px-2 py-1 rounded-md uppercase"
-                            >{{ t("dashboard.twelveMonths") }}</span
-                        >
+                        <span class="font-bold text-gray-900 dark:text-white">
+                            {{ terkirimCount }}
+                        </span>
                     </div>
-                    <div
-                        v-if="!showCharts"
-                        class="h-[180px] w-full bg-gray-50 dark:bg-gray-800/50 animate-pulse rounded-2xl"
-                    ></div>
-                    <div v-else class="h-[180px] w-full -ml-3">
-                        <ApexAreaChart
-                            :labels="charts.area.labels"
-                            :seriesRevenue="charts.area.seriesRevenue"
-                            :seriesShipments="charts.area.seriesShipments"
-                            height="180"
-                        />
+
+                    <!-- Perjalanan -->
+                    <div class="flex items-center justify-between text-xs">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                            <span class="text-gray-600 dark:text-gray-400 font-medium">Perjalanan</span>
+                        </div>
+                        <span class="font-bold text-gray-900 dark:text-white">
+                            {{ dalamPerjalananCount }}
+                        </span>
+                    </div>
+
+                    <!-- Diproses -->
+                    <div class="flex items-center justify-between text-xs">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                            <span class="text-gray-600 dark:text-gray-400 font-medium">Diproses</span>
+                        </div>
+                        <span class="font-bold text-gray-900 dark:text-white">
+                            {{ diprosesCount }}
+                        </span>
+                    </div>
+
+                    <!-- Bermasalah -->
+                    <div class="flex items-center justify-between text-xs">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+                            <span class="text-gray-600 dark:text-gray-400 font-medium">Bermasalah</span>
+                        </div>
+                        <span class="font-bold text-gray-900 dark:text-white">
+                            {{ bermasalahCount }}
+                        </span>
                     </div>
                 </div>
+            </div>
+        </div>
 
-                <!-- 7. STATUS PENGIRIMAN (Radial Bar) -->
-                <div
-                    class="bg-white dark:bg-[#111111] rounded-[22px] p-5 shadow-[0_2px_12px_rgba(0,0,0,0.02)] border border-gray-100 dark:border-gray-800 anim-slide-up hover:scale-[1.01] transition-transform"
-                    style="animation-delay: 400ms"
-                >
-                    <div class="flex items-center gap-2 mb-3">
-                        <PieChart :size="16" class="text-gray-400" />
-                        <span
-                            class="font-bold text-[12px] text-gray-800 dark:text-gray-200 uppercase tracking-wide"
-                            style="font-family: 'Plus Jakarta Sans', sans-serif"
-                            >{{ t("dashboard.shipmentStatus") }}</span
-                        >
-                    </div>
-                    <div
-                        v-if="!showCharts"
-                        class="h-[180px] w-full bg-gray-50 dark:bg-gray-800/50 animate-pulse rounded-2xl"
-                    ></div>
-                    <div
-                        v-else
-                        class="h-[180px] w-full flex items-center justify-center transform scale-110"
-                    >
-                        <ApexRadialBar
-                            :labels="charts.radial.labels"
-                            :series="charts.radial.series"
-                            height="180"
-                        />
-                    </div>
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <!-- 5. DUA KOLOM: DISTRIBUSI LAYANAN & TOP 5 KOTA TUJUAN              -->
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <div class="grid grid-cols-2 gap-2.5 mt-3">
+            <!-- Distribusi Layanan -->
+            <div
+                class="bg-white dark:bg-[#121212] rounded-2xl p-3 border border-gray-100 dark:border-gray-800 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex flex-col justify-between"
+            >
+                <div class="flex items-center gap-1.5 mb-2.5">
+                    <Package class="w-3.5 h-3.5 text-blue-600 stroke-[2.2]" />
+                    <h3 class="text-[11px] font-bold text-gray-900 dark:text-white truncate">
+                        Distribusi Layanan
+                    </h3>
                 </div>
 
-                <!-- 8. DISTRIBUSI LAYANAN (Donut) -->
-                <div
-                    class="bg-white dark:bg-[#111111] rounded-[22px] p-5 shadow-[0_2px_12px_rgba(0,0,0,0.02)] border border-gray-100 dark:border-gray-800 anim-slide-up relative overflow-hidden hover:scale-[1.01] transition-transform"
-                    style="animation-delay: 500ms"
-                >
-                    <div class="flex items-center gap-2 mb-3 relative z-10">
-                        <Circle :size="16" class="text-gray-400" />
-                        <span
-                            class="font-bold text-[12px] text-gray-800 dark:text-gray-200 uppercase tracking-wide"
-                            style="font-family: 'Plus Jakarta Sans', sans-serif"
-                            >{{ t("dashboard.serviceDistribution") }}</span
-                        >
+                <div class="space-y-2">
+                    <!-- Reguler -->
+                    <div>
+                        <div class="flex items-center justify-between text-[10px] mb-1">
+                            <span class="font-medium text-gray-600 dark:text-gray-400">Reguler</span>
+                            <span class="font-bold text-gray-800 dark:text-gray-200">{{ regulerCount }}</span>
+                        </div>
+                        <div class="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1.5 overflow-hidden">
+                            <div
+                                class="bg-blue-600 h-1.5 rounded-full transition-all duration-500"
+                                :style="{ width: `${Math.round((regulerCount / maxLayananValue) * 100)}%` }"
+                            ></div>
+                        </div>
                     </div>
-                    <div
-                        v-if="!showCharts"
-                        class="h-[180px] w-full bg-gray-50 dark:bg-gray-800/50 animate-pulse rounded-2xl"
-                    ></div>
-                    <div
-                        v-else
-                        class="h-[180px] w-full flex items-center justify-center relative z-10 transform scale-110"
-                    >
-                        <ApexDonutChart
-                            :labels="charts.donut.labels"
-                            :series="charts.donut.series"
-                            height="180"
-                        />
-                    </div>
-                </div>
 
-                <!-- 9. TOP 5 KOTA (Bar Chart) -->
-                <div
-                    class="bg-white dark:bg-[#111111] rounded-[22px] p-5 shadow-[0_2px_12px_rgba(0,0,0,0.02)] border border-gray-100 dark:border-gray-800 anim-slide-up hover:scale-[1.01] transition-transform"
-                    style="animation-delay: 600ms"
-                >
-                    <div class="flex items-center gap-2 mb-3">
-                        <MapPin :size="16" class="text-gray-400" />
-                        <span
-                            class="font-bold text-[12px] text-gray-800 dark:text-gray-200 uppercase tracking-wide"
-                            style="font-family: 'Plus Jakarta Sans', sans-serif"
-                            >{{ t("dashboard.topDestinations") }}</span
-                        >
+                    <!-- Express -->
+                    <div>
+                        <div class="flex items-center justify-between text-[10px] mb-1">
+                            <span class="font-medium text-gray-600 dark:text-gray-400">Express</span>
+                            <span class="font-bold text-gray-800 dark:text-gray-200">{{ expressCount }}</span>
+                        </div>
+                        <div class="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1.5 overflow-hidden">
+                            <div
+                                class="bg-purple-600 h-1.5 rounded-full transition-all duration-500"
+                                :style="{ width: `${Math.round((expressCount / maxLayananValue) * 100)}%` }"
+                            ></div>
+                        </div>
                     </div>
-                    <div
-                        v-if="!showCharts"
-                        class="h-[180px] w-full bg-gray-50 dark:bg-gray-800/50 animate-pulse rounded-2xl"
-                    ></div>
-                    <div v-else class="h-[180px] w-full -ml-3">
-                        <ApexBarChart
-                            :labels="charts.bar.labels"
-                            :series="charts.bar.series"
-                            height="180"
-                        />
+
+                    <!-- Ekonomi -->
+                    <div>
+                        <div class="flex items-center justify-between text-[10px] mb-1">
+                            <span class="font-medium text-gray-600 dark:text-gray-400">Ekonomi</span>
+                            <span class="font-bold text-gray-800 dark:text-gray-200">{{ ekonomiCount }}</span>
+                        </div>
+                        <div class="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1.5 overflow-hidden">
+                            <div
+                                class="bg-emerald-500 h-1.5 rounded-full transition-all duration-500"
+                                :style="{ width: `${Math.round((ekonomiCount / maxLayananValue) * 100)}%` }"
+                            ></div>
+                        </div>
+                    </div>
+
+                    <!-- Kargo -->
+                    <div>
+                        <div class="flex items-center justify-between text-[10px] mb-1">
+                            <span class="font-medium text-gray-600 dark:text-gray-400">Kargo</span>
+                            <span class="font-bold text-gray-800 dark:text-gray-200">{{ kargoCount }}</span>
+                        </div>
+                        <div class="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1.5 overflow-hidden">
+                            <div
+                                class="bg-amber-500 h-1.5 rounded-full transition-all duration-500"
+                                :style="{ width: `${Math.round((kargoCount / maxLayananValue) * 100)}%` }"
+                            ></div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- 10. AKTIVITAS TERBARU (Timeline Style) -->
-            <div class="mt-4">
-                <div class="flex items-center justify-between mb-4 px-1">
+            <!-- Top 5 Kota Tujuan -->
+            <div
+                class="bg-white dark:bg-[#121212] rounded-2xl p-3 border border-gray-100 dark:border-gray-800 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex flex-col justify-between"
+            >
+                <div class="flex items-center gap-1.5 mb-2.5">
+                    <BarChart2 class="w-3.5 h-3.5 text-blue-600 stroke-[2.2]" />
+                    <h3 class="text-[11px] font-bold text-gray-900 dark:text-white truncate">
+                        Top 5 Kota Tujuan
+                    </h3>
+                </div>
+
+                <div v-if="topKotaList.length > 0" class="space-y-1.5">
+                    <div
+                        v-for="(k, idx) in topKotaList"
+                        :key="idx"
+                        class="flex items-center gap-1.5 text-[10px]"
+                    >
+                        <span class="w-12 truncate text-gray-600 dark:text-gray-400 font-medium">
+                            {{ k.name }}
+                        </span>
+                        <div class="flex-1 bg-gray-100 dark:bg-gray-800 rounded-full h-1.5 overflow-hidden">
+                            <div
+                                class="bg-blue-600 h-1.5 rounded-full transition-all duration-500"
+                                :style="{ width: `${Math.round((k.value / maxKotaValue) * 100)}%` }"
+                            ></div>
+                        </div>
+                        <span class="w-4 text-right font-bold text-gray-800 dark:text-gray-200">
+                            {{ k.value }}
+                        </span>
+                    </div>
+                </div>
+                <div v-else class="text-[10px] text-gray-400 text-center py-4">
+                    Belum ada data kota
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <!-- 6. TINGKAT KEBERHASILAN (RADIAL PROGRESS GAUGE)                     -->
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <div
+            class="bg-white dark:bg-[#121212] rounded-2xl p-4 border border-gray-100 dark:border-gray-800 shadow-[0_2px_10px_rgba(0,0,0,0.03)] mt-3"
+        >
+            <div class="flex items-center gap-2 mb-2">
+                <Target class="w-4 h-4 text-blue-600 stroke-[2.5]" />
+                <h2 class="text-sm font-bold text-gray-900 dark:text-white">
+                    Tingkat Keberhasilan
+                </h2>
+            </div>
+
+            <div class="flex items-center justify-between">
+                <div>
+                    <div class="text-3xl font-black text-gray-900 dark:text-white tracking-tight leading-none">
+                        {{ successRatePercentText }}
+                    </div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-1.5 font-medium">
+                        Paket berhasil terkirim
+                    </div>
+
+                    <div class="flex items-center gap-1.5 mt-2">
+                        <span
+                            class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-bold"
+                            :class="
+                                successRateDelta >= 0
+                                    ? 'text-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 dark:text-emerald-400'
+                                    : 'text-rose-700 bg-rose-50 dark:bg-rose-950/40 dark:text-rose-400'
+                            "
+                        >
+                            <ArrowUp v-if="successRateDelta >= 0" class="w-2.5 h-2.5 stroke-[2.5]" />
+                            <ArrowDown v-else class="w-2.5 h-2.5 stroke-[2.5]" />
+                            {{ fmtDelta(successRateDelta) }}
+                        </span>
+                        <span class="text-[11px] text-gray-400 dark:text-gray-500">
+                            {{ deltaLabel }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Circular Progress Ring SVG -->
+                <div class="relative w-16 h-16 shrink-0 flex items-center justify-center">
+                    <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                        <!-- Background track -->
+                        <path
+                            class="text-gray-100 dark:text-gray-800"
+                            stroke="currentColor"
+                            stroke-width="3.5"
+                            fill="none"
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                        />
+                        <!-- Active progress stroke -->
+                        <path
+                            class="text-emerald-500 transition-all duration-700 ease-out"
+                            stroke="currentColor"
+                            stroke-width="3.5"
+                            stroke-linecap="round"
+                            fill="none"
+                            :stroke-dasharray="`${Math.min(100, Math.max(0, successRatePercent))}, 100`"
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                        />
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <!-- 7. PENGIRIMAN TERBARU (LIST TRANSAKSI REALTIME)                   -->
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <div
+            class="bg-white dark:bg-[#121212] rounded-2xl p-4 border border-gray-100 dark:border-gray-800 shadow-[0_2px_10px_rgba(0,0,0,0.03)] mt-3 mb-6"
+        >
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-2">
+                    <Calendar class="w-4 h-4 text-blue-600 stroke-[2.5]" />
+                    <h2 class="text-sm font-bold text-gray-900 dark:text-white">
+                        Pengiriman Terbaru
+                    </h2>
+                </div>
+
+                <Link
+                    :href="route('pengiriman.index')"
+                    class="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 group"
+                >
+                    <span>Lihat Semua</span>
+                    <ArrowRight class="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                </Link>
+            </div>
+
+            <!-- List Item Pengiriman -->
+            <div v-if="recentShipments.length > 0" class="divide-y divide-gray-100 dark:divide-gray-800/80">
+                <div
+                    v-for="p in recentShipments"
+                    :key="p.id"
+                    @click="router.visit(route('pengiriman.show', p.id))"
+                    class="py-2.5 first:pt-0 last:pb-0 flex items-center justify-between gap-2 cursor-pointer active:bg-gray-50/70 dark:active:bg-gray-900/50 rounded-lg px-1 transition-colors"
+                >
+                    <!-- Kiri: Titik hijau + Resi + Pengirim & Tujuan -->
+                    <div class="flex items-start gap-2 min-w-0">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0 mt-1"></span>
+                        <div class="min-w-0">
+                            <span class="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline block leading-tight">
+                                {{ p.nomor_resi }}
+                            </span>
+                            <p class="text-[11px] text-gray-500 dark:text-gray-400 truncate leading-tight mt-0.5">
+                                {{ p.pengirim_nama }} • {{ p.tujuan_kota || 'Tujuan' }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Kanan: Badge Layanan + Badge Status + Chevron -->
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <!-- Badge Layanan -->
+                        <span
+                            class="px-2 py-0.5 rounded text-[10px] font-semibold"
+                            :class="serviceBadgeClass(p.jenis_layanan)"
+                        >
+                            {{ serviceLabel(p.jenis_layanan) }}
+                        </span>
+
+                        <!-- Badge Status -->
+                        <span
+                            v-if="p.status === 'dalam_perjalanan' || p.status === 'tiba_di_kota_tujuan' || p.status === 'sedang_diantar'"
+                            class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300"
+                        >
+                            <Truck class="w-3 h-3" />
+                            <span>Dalam Perjalanan</span>
+                        </span>
+
+                        <span
+                            v-else-if="p.status === 'terkirim'"
+                            class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
+                        >
+                            <CheckCircle2 class="w-3 h-3" />
+                            <span>Terkirim</span>
+                        </span>
+
+                        <span
+                            v-else-if="p.status === 'gagal' || p.status === 'dibatalkan'"
+                            class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-rose-50 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300"
+                        >
+                            <AlertTriangle class="w-3 h-3" />
+                            <span>Bermasalah</span>
+                        </span>
+
+                        <span
+                            v-else
+                            class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
+                        >
+                            <Clock class="w-3 h-3" />
+                            <span>Diproses</span>
+                        </span>
+
+                        <ChevronRight class="w-3.5 h-3.5 text-gray-400" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fallback Jika Kosong -->
+            <div v-else class="text-xs text-gray-400 text-center py-6">
+                Tidak ada data transaksi pengiriman pada filter ini.
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <!-- BOTTOM SHEET FILTER MODAL (UNTUK FILTER MOBILE)                    -->
+        <!-- ═══════════════════════════════════════════════════════════════════ -->
+        <div
+            v-if="showFilterModal"
+            class="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm transition-opacity"
+            @click.self="showFilterModal = false"
+        >
+            <div
+                class="w-full max-w-lg bg-white dark:bg-[#18181B] rounded-t-[28px] p-5 shadow-2xl border-t border-gray-100 dark:border-gray-800 max-h-[85vh] overflow-y-auto"
+            >
+                <!-- Drag handle bar -->
+                <div class="w-12 h-1 bg-gray-300 dark:bg-gray-700 rounded-full mx-auto mb-4"></div>
+
+                <div class="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-gray-800">
                     <div class="flex items-center gap-2">
-                        <Activity :size="18" class="text-emerald-500" />
-                        <span class="font-bold text-[15px] text-gray-900 dark:text-white">{{ t("dashboard.recentActivity") }}</span>
+                        <Filter class="w-4 h-4 text-blue-600" />
+                        <h3 class="text-sm font-bold text-gray-900 dark:text-white">
+                            Filter Data Dashboard
+                        </h3>
                     </div>
-                    <div
-                        class="flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-900/30 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-800"
+                    <button
+                        type="button"
+                        @click="showFilterModal = false"
+                        class="p-1.5 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-800"
                     >
-                        <div class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
-                        <span class="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">{{ t("dashboard.live") }}</span>
+                        <X class="w-4 h-4" />
+                    </button>
+                </div>
+
+                <!-- Pilihan Preset Periode -->
+                <div class="mt-4">
+                    <label class="text-xs font-bold text-gray-700 dark:text-gray-300 mb-2 block">
+                        Pilih Periode
+                    </label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button
+                            v-for="p in periodPresets"
+                            :key="p.key"
+                            type="button"
+                            @click="applyPeriod(p.key)"
+                            class="p-2.5 rounded-xl border text-left transition-all active:scale-95"
+                            :class="
+                                activePeriod === p.key
+                                    ? 'border-blue-600 bg-blue-50/70 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                                    : 'border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+                            "
+                        >
+                            <div class="text-xs font-bold">{{ p.label }}</div>
+                            <div class="text-[10px] text-gray-400 mt-0.5">{{ p.desc }}</div>
+                        </button>
                     </div>
                 </div>
 
-                <div v-if="!mounted" class="space-y-3">
-                    <div class="h-16 w-full bg-gray-200 dark:bg-gray-800 animate-pulse rounded-2xl"></div>
-                    <div class="h-16 w-full bg-gray-200 dark:bg-gray-800 animate-pulse rounded-2xl"></div>
-                    <div class="h-16 w-full bg-gray-200 dark:bg-gray-800 animate-pulse rounded-2xl"></div>
-                </div>
-
-                <div v-else class="bg-white dark:bg-[#111111] rounded-[22px] border border-gray-100 dark:border-gray-800 shadow-[0_2px_12px_rgba(0,0,0,0.02)] overflow-hidden">
-                    <div
-                        v-for="(p, idx) in latest.data"
-                        :key="'tl-' + p.id"
-                        class="flex items-start gap-3 px-4 py-3.5 cursor-pointer active:bg-gray-50 dark:active:bg-white/5 transition"
-                        :class="idx !== latest.data.length - 1 ? 'border-b border-gray-100 dark:border-gray-800/50' : ''"
-                        @click="goDetail(p.id)"
-                    >
-                        <div class="flex flex-col items-center pt-1 shrink-0">
-                            <div
-                                class="w-2.5 h-2.5 rounded-full ring-2 ring-white dark:ring-[#111111]"
-                                :class="statusDotClass(p.status)"
-                            ></div>
-                            <div
-                                v-if="idx !== latest.data.length - 1"
-                                class="w-px flex-1 min-h-[24px] bg-gray-200 dark:bg-gray-700 mt-1"
-                            ></div>
+                <!-- Filter Kustom Rentang Tanggal -->
+                <div class="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800">
+                    <label class="text-xs font-bold text-gray-700 dark:text-gray-300 mb-2 block">
+                        Rentang Tanggal Kustom
+                    </label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <span class="text-[10px] text-gray-400 mb-1 block">Dari Tanggal</span>
+                            <input
+                                v-model="customStartDate"
+                                type="date"
+                                class="w-full text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white"
+                            />
                         </div>
-
-                        <div class="flex-1 min-w-0">
-                            <div class="flex items-center justify-between gap-2">
-                                <span class="font-bold text-[13px] text-primary truncate">{{ p.nomor_resi }}</span>
-                                <span
-                                    :class="statusBadgeClass(p.status)"
-                                    class="rounded-lg px-2 py-0.5 text-[10px] shrink-0"
-                                >{{ statusLabel(p.status) }}</span>
-                            </div>
-                            <div class="flex items-center gap-2 mt-1">
-                                <span class="text-[11px] text-gray-500 dark:text-gray-400 truncate">
-                                    {{ p.pengirim_nama }} → {{ p.tujuan_kota || '-' }}
-                                </span>
-                            </div>
-                            <div class="flex items-center gap-1.5 mt-1">
-                                <Clock :size="10" class="text-gray-400" />
-                                <span class="text-[10px] text-gray-400">{{ fmtTimeIso(p.created_at) }} · {{ fmtDateIso(p.created_at) }}</span>
-                            </div>
+                        <div>
+                            <span class="text-[10px] text-gray-400 mb-1 block">Sampai Tanggal</span>
+                            <input
+                                v-model="customEndDate"
+                                type="date"
+                                class="w-full text-xs px-2.5 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white"
+                            />
                         </div>
-
-                        <ChevronRight :size="14" class="text-gray-300 dark:text-gray-600 shrink-0 mt-1" />
                     </div>
-
-                    <div
-                        v-if="latest.data.length === 0"
-                        class="py-8 text-center text-[13px] text-gray-500"
+                    <button
+                        type="button"
+                        @click="applyCustomDateFilter"
+                        :disabled="!customStartDate || !customEndDate"
+                        class="w-full mt-2.5 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold disabled:opacity-50 active:scale-95 transition-transform"
                     >
-                        Belum ada data.
+                        Terapkan Rentang Tanggal
+                    </button>
+                </div>
+
+                <!-- Filter Jenis Layanan -->
+                <div class="mt-4 pt-3 border-t border-gray-100 dark:border-gray-800">
+                    <label class="text-xs font-bold text-gray-700 dark:text-gray-300 mb-2 block">
+                        Jenis Layanan
+                    </label>
+                    <div class="flex flex-wrap gap-1.5">
+                        <button
+                            v-for="layanan in layananOptions"
+                            :key="layanan.key"
+                            type="button"
+                            @click="applyLayananFilter(layanan.key)"
+                            class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all active:scale-95"
+                            :class="
+                                activeLayanan === layanan.key
+                                    ? 'bg-blue-600 text-white border-blue-600'
+                                    : 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-700'
+                            "
+                        >
+                            {{ layanan.label }}
+                        </button>
                     </div>
                 </div>
-            </div>
 
-            <!-- CTA: LIHAT SEMUA PENGIRIMAN -->
-            <div class="mt-4 mb-4">
-                <button
-                    class="w-full py-4 bg-gray-900 dark:bg-gray-700 text-white rounded-2xl font-bold text-[14px] shadow-lg active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
-                    type="button"
-                    @click="router.visit(route('pengiriman.index'))"
-                >
-                    Lihat Semua Pengiriman
-                    <ChevronRight :size="16" />
-                </button>
+                <!-- Tombol Reset -->
+                <div class="mt-5 pt-3 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
+                    <button
+                        type="button"
+                        @click="resetFilters"
+                        class="inline-flex items-center gap-1.5 text-xs font-bold text-gray-500 hover:text-rose-600"
+                    >
+                        <RotateCcw class="w-3.5 h-3.5" />
+                        <span>Reset ke Default</span>
+                    </button>
+                    <button
+                        type="button"
+                        @click="showFilterModal = false"
+                        class="px-4 py-1.5 rounded-lg bg-gray-200 dark:bg-gray-700 text-xs font-bold text-gray-800 dark:text-white"
+                    >
+                        Tutup
+                    </button>
+                </div>
             </div>
         </div>
     </div>
