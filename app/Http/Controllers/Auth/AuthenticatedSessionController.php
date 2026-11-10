@@ -94,7 +94,7 @@ class AuthenticatedSessionController extends Controller
             'browser'     => $parsed['browser'],
             'os'          => $parsed['os'],
             'device_type' => $parsed['device_type'],
-            'logged_in_at'=> now(),
+            'logged_in_at' => now(),
         ]);
 
         // ── Update last_login timestamp ──────────────────────────────
@@ -155,7 +155,7 @@ class AuthenticatedSessionController extends Controller
             'browser'     => $parsed['browser'],
             'os'          => $parsed['os'],
             'device_type' => $parsed['device_type'],
-            'logged_in_at'=> now(),
+            'logged_in_at' => now(),
         ]);
 
         // ── Update last_login timestamp ──────────────────────────────

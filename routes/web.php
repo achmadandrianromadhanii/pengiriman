@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\KotaController;
 use App\Http\Controllers\LaporanController;
@@ -18,6 +20,10 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
     Route::post('/login', [AuthenticatedSessionController::class, 'store'])->middleware('throttle:login');
+    Route::post('/register', [RegisterController::class, 'store'])->name('register');
+    // OAuth Social Login
+    Route::get('/auth/{provider}/redirect', [SocialAuthController::class, 'redirect'])->name('social.redirect');
+    Route::get('/auth/{provider}/callback', [SocialAuthController::class, 'callback'])->name('social.callback');
     // [UPDATE: V3] Route untuk verifikasi login biometrik (WebAuthn)
     Route::post('/login/biometric', [AuthenticatedSessionController::class, 'storeBiometric'])->name('login.biometric')->middleware('throttle:login');
 });

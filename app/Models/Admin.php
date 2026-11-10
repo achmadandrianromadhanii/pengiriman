@@ -31,6 +31,8 @@ class Admin extends Authenticatable
         'email',
         'password',
         'foto',
+        'provider_name',
+        'provider_id',
         'status',
         'last_login',
         'password_changed_at', // [UPDATE: SECURITY] Kapan password terakhir diubah

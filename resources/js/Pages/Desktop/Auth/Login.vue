@@ -74,13 +74,13 @@ const isRegisterSubmitting = ref(false);
 const showRegisterPassword = ref(false);
 const showRegisterPasswordConfirm = ref(false);
 
-// ── Password Strength System (Sesuai Kode Pengguna) ──────────────────────
+// ── Password Strength System (Sesuai Kode Popover Pengguna) ──────────────
 const passwordRules = [
-    { id: 'length', label: 'At least 12 characters long', test: (v) => (v || '').length >= 12, weight: 20 },
-    { id: 'uppercase', label: 'Contains uppercase letter', test: (v) => /[A-Z]/.test(v || ''), weight: 20 },
-    { id: 'lowercase', label: 'Contains lowercase letter', test: (v) => /[a-z]/.test(v || ''), weight: 20 },
-    { id: 'number', label: 'Contains number', test: (v) => /[0-9]/.test(v || ''), weight: 20 },
-    { id: 'special', label: 'Contains special character (!@#$...)', test: (v) => /[^a-zA-Z0-9]/.test(v || ''), weight: 20 }
+    { id: 'length', label: 'Minimal 12 karakter', test: (v) => (v || '').length >= 12, weight: 20 },
+    { id: 'uppercase', label: 'Mengandung huruf besar (A-Z)', test: (v) => /[A-Z]/.test(v || ''), weight: 20 },
+    { id: 'lowercase', label: 'Mengandung huruf kecil (a-z)', test: (v) => /[a-z]/.test(v || ''), weight: 20 },
+    { id: 'number', label: 'Mengandung angka (0-9)', test: (v) => /[0-9]/.test(v || ''), weight: 20 },
+    { id: 'special', label: 'Mengandung karakter spesial (!@#$...)', test: (v) => /[^a-zA-Z0-9]/.test(v || ''), weight: 20 }
 ];
 
 // Login Password Strength
@@ -114,11 +114,11 @@ const loginPasswordColor = computed(() => {
 
 const loginPasswordLabel = computed(() => {
     if (loginPasswordScore.value === 0) return '';
-    if (loginPasswordScore.value <= 20) return 'Too Weak';
-    if (loginPasswordScore.value <= 40) return 'Weak';
-    if (loginPasswordScore.value <= 60) return 'Fair';
-    if (loginPasswordScore.value <= 80) return 'Strong';
-    return 'Very Strong';
+    if (loginPasswordScore.value <= 20) return 'Terlalu Lemah';
+    if (loginPasswordScore.value <= 40) return 'Lemah';
+    if (loginPasswordScore.value <= 60) return 'Cukup';
+    if (loginPasswordScore.value <= 80) return 'Kuat';
+    return 'Sangat Kuat';
 });
 
 function onLoginPasswordFocus() {
@@ -163,11 +163,11 @@ const registerPasswordColor = computed(() => {
 
 const registerPasswordLabel = computed(() => {
     if (registerPasswordScore.value === 0) return '';
-    if (registerPasswordScore.value <= 20) return 'Too Weak';
-    if (registerPasswordScore.value <= 40) return 'Weak';
-    if (registerPasswordScore.value <= 60) return 'Fair';
-    if (registerPasswordScore.value <= 80) return 'Strong';
-    return 'Very Strong';
+    if (registerPasswordScore.value <= 20) return 'Terlalu Lemah';
+    if (registerPasswordScore.value <= 40) return 'Lemah';
+    if (registerPasswordScore.value <= 60) return 'Cukup';
+    if (registerPasswordScore.value <= 80) return 'Kuat';
+    return 'Sangat Kuat';
 });
 
 function onRegisterPasswordFocus() {
@@ -195,23 +195,8 @@ function getSeverityBadgeClass(severity) {
 }
 
 function handleSocialLogin(provider) {
-    getSwal().then((Swal) => {
-        Swal.fire({
-            title: `Lanjutkan dengan ${provider}`,
-            text: `Integrasi autentikasi ${provider} sedang disiapkan. Silakan gunakan opsi 'Login dengan email' untuk masuk ke akun admin.`,
-            icon: 'info',
-            confirmButtonText: 'Login dengan Email',
-            confirmButtonColor: '#1677FF',
-            showCancelButton: true,
-            cancelButtonText: 'Tutup',
-        }).then((result) => {
-            if (result.isConfirmed) {
-                viewMode.value = 'login';
-            }
-        });
-    }).catch(() => {
-        viewMode.value = 'login';
-    });
+    const p = provider.toLowerCase();
+    window.location.href = `/auth/${p}/redirect`;
 }
 
 function handleRegister() {
@@ -228,6 +213,17 @@ function openTermsModal(title) {
             confirmButtonColor: '#1677FF',
         });
     });
+}
+
+function isPasswordCompliant(v) {
+    if (!v) return false;
+    return (
+        v.length >= 12 &&
+        /[A-Z]/.test(v) &&
+        /[a-z]/.test(v) &&
+        /[0-9]/.test(v) &&
+        /[^a-zA-Z0-9]/.test(v)
+    );
 }
 
 function submitRegister() {
@@ -251,8 +247,8 @@ function submitRegister() {
     if (!registerForm.password) {
         registerErrors.value.password = 'Masukkan password.';
         hasError = true;
-    } else if (registerForm.password.length < 6) {
-        registerErrors.value.password = 'Password minimal 6 karakter.';
+    } else if (!isPasswordCompliant(registerForm.password)) {
+        registerErrors.value.password = 'Password wajib memenuhi seluruh 5 syarat (min 12 karakter, huruf besar, huruf kecil, angka, dan karakter khusus).';
         hasError = true;
     }
 
@@ -268,24 +264,20 @@ function submitRegister() {
 
     isRegisterSubmitting.value = true;
 
-    setTimeout(() => {
-        isRegisterSubmitting.value = false;
-        getSwal().then((Swal) => {
-            Swal.fire({
-                title: 'Pendaftaran Berhasil Diajukan',
-                html: `Akun atas nama <b>${registerForm.name}</b> (${registerForm.email}) berhasil diajukan.<br><br><span class="text-xs text-slate-500">Permintaan aktivasi akun Anda sedang diverifikasi oleh IT / Superadmin SoftSend. Silakan login setelah akun disetujui.</span>`,
-                icon: 'success',
-                confirmButtonText: 'Lanjut ke Login',
-                confirmButtonColor: '#1677FF',
-            }).then(() => {
-                form.email = registerForm.email;
-                viewMode.value = 'login';
-            });
-        }).catch(() => {
-            form.email = registerForm.email;
-            viewMode.value = 'login';
-        });
-    }, 700);
+    router.post('/register', {
+        name: registerForm.name.trim(),
+        email: registerForm.email.trim(),
+        password: registerForm.password,
+        password_confirmation: registerForm.password_confirmation,
+    }, {
+        onError: (errs) => {
+            isRegisterSubmitting.value = false;
+            registerErrors.value = errs;
+        },
+        onFinish: () => {
+            isRegisterSubmitting.value = false;
+        },
+    });
 }
 
 let progressTimer = null;
@@ -480,6 +472,12 @@ onBeforeUnmount(() => {
                             </p>
                         </div>
 
+                        <!-- Alert Pesan Error jika Callback OAuth / Login Gagal -->
+                        <div v-if="$page.props.errors?.email" class="mb-3 p-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 text-red-600 dark:text-red-400 text-xs flex items-center gap-2">
+                            <AlertCircle class="w-4 h-4 shrink-0" />
+                            <span>{{ $page.props.errors.email }}</span>
+                        </div>
+
                         <!-- 2 Tombol Pilihan Login Sosial (Google & Facebook) -->
                         <div class="flex flex-col gap-2.5">
                             <!-- 1. Google -->
@@ -590,9 +588,9 @@ onBeforeUnmount(() => {
                                         class="underline-input !border-0 !rounded-none !bg-transparent !p-0 !ring-0 !shadow-none !outline-none focus:!ring-0 focus:!border-0 focus:!outline-none"
                                     />
                                 </div>
-                                <p v-if="localEmailError || form.errors.email" class="error-msg">
+                                <p v-if="localEmailError || form.errors.email || $page.props.errors?.email" class="error-msg">
                                     <AlertCircle class="w-3.5 h-3.5 shrink-0" />
-                                    <span>{{ localEmailError || form.errors.email }}</span>
+                                    <span>{{ localEmailError || form.errors.email || $page.props.errors?.email }}</span>
                                 </p>
                             </div>
 

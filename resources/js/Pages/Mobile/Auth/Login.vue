@@ -211,15 +211,8 @@
     }
 
     function handleSocialLogin(provider) {
-        getSwal().then((Swal) => {
-            Swal.fire({
-                title: `Lanjutkan dengan ${provider}`,
-                text: `Integrasi autentikasi ${provider} sedang disiapkan. Silakan gunakan opsi login dengan email/username untuk masuk ke akun Anda.`,
-                icon: 'info',
-                confirmButtonText: 'Mengerti',
-                confirmButtonColor: '#2563EB',
-            });
-        });
+        const p = provider.toLowerCase();
+        window.location.href = `/auth/${p}/redirect`;
     }
 
     function handleRegister() {
@@ -236,6 +229,17 @@
                 confirmButtonColor: '#2563EB',
             });
         });
+    }
+
+    function isPasswordCompliant(v) {
+        if (!v) return false;
+        return (
+            v.length >= 12 &&
+            /[A-Z]/.test(v) &&
+            /[a-z]/.test(v) &&
+            /[0-9]/.test(v) &&
+            /[^a-zA-Z0-9]/.test(v)
+        );
     }
 
     function submitRegister() {
@@ -259,8 +263,8 @@
         if (!registerForm.password) {
             registerErrors.value.password = 'Buat password anda.';
             hasError = true;
-        } else if (registerForm.password.length < 6) {
-            registerErrors.value.password = 'Password minimal 6 karakter.';
+        } else if (!isPasswordCompliant(registerForm.password)) {
+            registerErrors.value.password = 'Password wajib memenuhi 5 syarat popover: minimal 12 karakter, huruf besar, huruf kecil, angka, dan simbol khusus.';
             hasError = true;
         }
 
@@ -279,26 +283,21 @@
 
         isRegisterSubmitting.value = true;
 
-        setTimeout(() => {
-            isRegisterSubmitting.value = false;
-            getSwal()
-                .then((Swal) => {
-                    Swal.fire({
-                        title: 'Pendaftaran Berhasil Diajukan',
-                        html: `Akun atas nama <b>${registerForm.name}</b> (${registerForm.email}) berhasil diajukan.<br><br><span class="text-xs text-slate-500">Permintaan aktivasi akun Anda sedang diverifikasi oleh IT / Superadmin SoftSend. Silakan login setelah akun disetujui.</span>`,
-                        icon: 'success',
-                        confirmButtonText: 'Lanjut ke Login',
-                        confirmButtonColor: '#2563EB',
-                    }).then(() => {
-                        form.email = registerForm.email;
-                        viewMode.value = 'login';
-                    });
-                })
-                .catch(() => {
-                    form.email = registerForm.email;
-                    viewMode.value = 'login';
-                });
-        }, 600);
+        router.post('/register', {
+            name: registerForm.name.trim(),
+            email: registerForm.email.trim(),
+            password: registerForm.password,
+            password_confirmation: registerForm.password_confirmation,
+        }, {
+            onError: (errs) => {
+                isRegisterSubmitting.value = false;
+                registerErrors.value = errs;
+                triggerShake();
+            },
+            onFinish: () => {
+                isRegisterSubmitting.value = false;
+            },
+        });
     }
 
     // ── Watcher: form.errors ──────────────────────────────────────────────
@@ -597,11 +596,11 @@
                                 />
                             </div>
                             <p
-                                v-if="localEmailError || form.errors.email"
+                                v-if="localEmailError || form.errors.email || $page.props.errors?.email"
                                 class="text-[10.5px] text-rose-500 mt-0.5 flex items-center gap-1 leading-none"
                             >
                                 <AlertCircle class="w-3 h-3 shrink-0" />
-                                {{ localEmailError || form.errors.email }}
+                                {{ localEmailError || form.errors.email || $page.props.errors?.email }}
                             </p>
                         </div>
 
