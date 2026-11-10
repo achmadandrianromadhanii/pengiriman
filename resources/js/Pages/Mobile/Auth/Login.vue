@@ -33,6 +33,7 @@
         User, // Input nama lengkap register
     } from 'lucide-vue-next';
     import { getSwal } from '@/lib/alert';
+    import PasswordStrengthPopover from '@/Components/PasswordStrengthPopover.vue';
 
     // ── Layout ─────────────────────────────────────────────────────────────
     defineOptions({ layout: AuthLayout });
@@ -380,6 +381,34 @@
         }
     }
 
+    // ── Password Strength Popover Handlers ────────────────────────────────
+    const showLoginPasswordPopover = ref(false);
+    const showRegisterPasswordPopover = ref(false);
+
+    function onLoginPasswordFocus() {
+        onFieldFocus();
+        showLoginPasswordPopover.value = true;
+    }
+
+    function onLoginPasswordBlur() {
+        onFieldBlur();
+        setTimeout(() => {
+            showLoginPasswordPopover.value = false;
+        }, 180);
+    }
+
+    function onRegisterPasswordFocus() {
+        onFieldFocus();
+        showRegisterPasswordPopover.value = true;
+    }
+
+    function onRegisterPasswordBlur() {
+        onFieldBlur();
+        setTimeout(() => {
+            showRegisterPasswordPopover.value = false;
+        }, 180);
+    }
+
     onMounted(() => {
         if (typeof document !== 'undefined') {
             document.documentElement.classList.add('login-page-active');
@@ -577,7 +606,7 @@
                         </div>
 
                         <!-- Input 2: Password -->
-                        <div>
+                        <div class="relative">
                             <div
                                 class="flex items-center gap-2.5 border-b border-slate-200 dark:border-slate-800 pb-1.5 transition-colors focus-within:border-[#2563EB]"
                             >
@@ -587,8 +616,8 @@
                                     :type="showPassword ? 'text' : 'password'"
                                     autocomplete="current-password"
                                     placeholder="Masukkan password anda"
-                                    @focus="onFieldFocus"
-                                    @blur="onFieldBlur"
+                                    @focus="onLoginPasswordFocus"
+                                    @blur="onLoginPasswordBlur"
                                     class="w-full bg-transparent text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none border-none p-0 focus:ring-0 leading-tight"
                                 />
                                 <button
@@ -601,6 +630,10 @@
                                     <Eye v-else class="w-4 h-4" stroke-width="1.75" />
                                 </button>
                             </div>
+                            <PasswordStrengthPopover
+                                :show="showLoginPasswordPopover"
+                                :value="form.password"
+                            />
                             <p
                                 v-if="form.errors.password"
                                 class="text-[10.5px] text-rose-500 mt-0.5 flex items-center gap-1 leading-none"
@@ -784,7 +817,7 @@
                         </div>
 
                         <!-- 3. Password -->
-                        <div>
+                        <div class="relative">
                             <div
                                 class="flex items-center gap-2.5 border-b border-slate-200 dark:border-slate-800 pb-1.5 transition-colors focus-within:border-[#2563EB]"
                             >
@@ -794,8 +827,8 @@
                                     :type="showRegisterPassword ? 'text' : 'password'"
                                     autocomplete="new-password"
                                     placeholder="Buat password anda"
-                                    @focus="onFieldFocus"
-                                    @blur="onFieldBlur"
+                                    @focus="onRegisterPasswordFocus"
+                                    @blur="onRegisterPasswordBlur"
                                     class="w-full bg-transparent text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none border-none p-0 focus:ring-0 leading-tight"
                                 />
                                 <button
@@ -808,6 +841,10 @@
                                     <Eye v-else class="w-4 h-4" stroke-width="1.75" />
                                 </button>
                             </div>
+                            <PasswordStrengthPopover
+                                :show="showRegisterPasswordPopover"
+                                :value="registerForm.password"
+                            />
                             <p
                                 v-if="registerErrors.password"
                                 class="text-[10.5px] text-rose-500 mt-0.5 flex items-center gap-1 leading-none"
