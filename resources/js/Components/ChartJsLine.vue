@@ -175,6 +175,9 @@ const chartOptions = computed(() => {
     return {
         responsive: true,
         maintainAspectRatio: false,
+        animation: {
+            duration: props.isMobile ? 350 : 700,
+        },
         layout: {
             padding: {
                 left: props.isMobile ? 0 : 4,

@@ -17,7 +17,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // [UPDATE: SERVER-SIDE DEVICE ROUTING]
+        // Mengganti default Inertia ResponseFactory dengan ResponsiveResponseFactory
+        // agar rute otomatis mengarahkan ke folder Mobile/ atau Desktop/ di server.
+        $this->app->singleton(\Inertia\ResponseFactory::class, \App\Services\Inertia\ResponsiveResponseFactory::class);
     }
 
     /**

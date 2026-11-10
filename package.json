@@ -28,7 +28,6 @@
     },
     "dependencies": {
         "@headlessui/vue": "^1.7.23",
-        "apexcharts": "^5.13.0",
         "bootstrap-icons": "^1.13.1",
         "chart.js": "^4.6.1",
         "leaflet": "^1.9.4",
@@ -38,7 +37,6 @@
         "radix-vue": "^1.9.17",
         "sweetalert2": "^11.26.21",
         "vue-chartjs": "^5.3.4",
-        "vue3-apexcharts": "^1.11.1",
         "ziggy-js": "^2.6.1"
     }
 }

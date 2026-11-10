@@ -318,7 +318,7 @@ function serviceLabel(jenis) {
             <div class="flex items-center justify-between relative z-10">
                 <div class="flex items-center gap-2.5">
                     <div
-                        class="w-8 h-8 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center shrink-0 border border-white/20"
+                        class="w-8 h-8 rounded-xl bg-white/25 flex items-center justify-center shrink-0 border border-white/20"
                     >
                         <BarChart3 class="w-4 h-4 text-white stroke-[2.5]" />
                     </div>
@@ -348,7 +348,7 @@ function serviceLabel(jenis) {
             <div class="grid grid-cols-4 gap-2 mt-4 relative z-10">
                 <!-- 1. Total Kirim -->
                 <div
-                    class="bg-white/15 backdrop-blur-md rounded-xl py-2.5 px-1 flex flex-col items-center justify-center border border-white/20 text-center"
+                    class="bg-white/20 rounded-xl py-2.5 px-1 flex flex-col items-center justify-center border border-white/20 text-center"
                 >
                     <Package class="w-4 h-4 text-blue-200 stroke-[2.2]" />
                     <span class="text-base sm:text-lg font-black text-white leading-tight mt-1">
@@ -361,7 +361,7 @@ function serviceLabel(jenis) {
 
                 <!-- 2. Proses -->
                 <div
-                    class="bg-white/15 backdrop-blur-md rounded-xl py-2.5 px-1 flex flex-col items-center justify-center border border-white/20 text-center"
+                    class="bg-white/20 rounded-xl py-2.5 px-1 flex flex-col items-center justify-center border border-white/20 text-center"
                 >
                     <Truck class="w-4 h-4 text-amber-300 stroke-[2.2]" />
                     <span class="text-base sm:text-lg font-black text-white leading-tight mt-1">
@@ -374,7 +374,7 @@ function serviceLabel(jenis) {
 
                 <!-- 3. Terkirim -->
                 <div
-                    class="bg-white/15 backdrop-blur-md rounded-xl py-2.5 px-1 flex flex-col items-center justify-center border border-white/20 text-center"
+                    class="bg-white/20 rounded-xl py-2.5 px-1 flex flex-col items-center justify-center border border-white/20 text-center"
                 >
                     <CheckCircle2 class="w-4 h-4 text-emerald-300 stroke-[2.2]" />
                     <span class="text-base sm:text-lg font-black text-white leading-tight mt-1">
@@ -387,7 +387,7 @@ function serviceLabel(jenis) {
 
                 <!-- 4. Bermasalah -->
                 <div
-                    class="bg-white/15 backdrop-blur-md rounded-xl py-2.5 px-1 flex flex-col items-center justify-center border border-white/20 text-center"
+                    class="bg-white/20 rounded-xl py-2.5 px-1 flex flex-col items-center justify-center border border-white/20 text-center"
                 >
                     <AlertTriangle class="w-4 h-4 text-rose-300 stroke-[2.2]" />
                     <span class="text-base sm:text-lg font-black text-white leading-tight mt-1">
@@ -877,7 +877,7 @@ function serviceLabel(jenis) {
         <!-- ═══════════════════════════════════════════════════════════════════ -->
         <div
             v-if="showFilterModal"
-            class="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm transition-opacity"
+            class="fixed inset-0 z-50 flex items-end justify-center bg-black/60 transition-opacity"
             @click.self="showFilterModal = false"
         >
             <div

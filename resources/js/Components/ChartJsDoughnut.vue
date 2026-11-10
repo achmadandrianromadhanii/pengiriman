@@ -89,6 +89,9 @@ const segmentPercentagesPlugin = {
 const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
+    animation: {
+        duration: 400,
+    },
     cutout: '70%',
     plugins: {
         legend: {

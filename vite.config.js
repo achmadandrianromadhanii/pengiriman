@@ -46,7 +46,7 @@ export default defineConfig({
             output: {
                 manualChunks(id) {
                     if (id.includes('node_modules')) {
-                        if (id.includes('apexcharts') || id.includes('vue3-apexcharts')) {
+                        if (id.includes('chart.js') || id.includes('vue-chartjs')) {
                             return 'vendor-charts';
                         }
                         if (id.includes('lucide-vue-next')) {
@@ -79,8 +79,8 @@ export default defineConfig({
             'nprogress',
             'sweetalert2',
             'ziggy-js',
-            'vue3-apexcharts',
-            'apexcharts',
+            'chart.js',
+            'vue-chartjs',
             'pusher-js',
             'laravel-echo',
         ],
