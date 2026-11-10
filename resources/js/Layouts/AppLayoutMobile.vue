@@ -43,6 +43,7 @@
     <div class="min-h-screen bg-body-light dark:bg-body-dark transition-colors duration-200">
         <!-- Mobile Drawer (Hanya aktif saat hamburger dibuka) -->
         <Sidebar
+            v-if="mobileOpen"
             :collapsed="false"
             :mobile-open="mobileOpen"
             :is-mobile="true"

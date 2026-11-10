@@ -89,8 +89,9 @@ const segmentPercentagesPlugin = {
 const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
+    devicePixelRatio: typeof window !== 'undefined' ? Math.min(window.devicePixelRatio || 1, 1.5) : 1,
     animation: {
-        duration: 400,
+        duration: 350,
     },
     cutout: '70%',
     plugins: {

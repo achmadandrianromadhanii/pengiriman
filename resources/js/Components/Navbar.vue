@@ -301,7 +301,7 @@
          Fungsi: Mengurangi durasi transisi dari 400ms ke 200ms.
          Alasan: 200ms lebih responsif di HP Android tanpa mengorbankan visual. -->
     <header
-        class="sticky top-0 z-50 flex items-center justify-between px-4 md:px-5 border-b border-gray-200/50 dark:border-white/10 shadow-sm bg-white/90 dark:bg-[#0A0A0A]/90 md:bg-white/80 md:dark:bg-black/50 backdrop-blur-xl transition duration-200 ease-spring"
+        class="sticky top-0 z-50 flex items-center justify-between px-4 md:px-5 border-b border-gray-200/60 dark:border-white/10 shadow-sm bg-white dark:bg-[#0A0A0A] md:bg-white/80 md:dark:bg-black/50 md:backdrop-blur-xl transition duration-200 ease-spring"
         :class="isMobile ? 'h-[72px]' : 'h-14'"
     >
         <!-- MOBILE VIEW (Satu Header Terpusat) -->

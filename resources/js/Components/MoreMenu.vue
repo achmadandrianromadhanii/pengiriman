@@ -117,11 +117,11 @@
     >
         <div
             v-show="show"
-            class="fixed inset-0 z-[70] bg-slate-50 dark:bg-slate-950 flex flex-col md:hidden overflow-hidden backdrop-blur-md"
+            class="fixed inset-0 z-[70] bg-slate-50 dark:bg-slate-950 flex flex-col md:hidden overflow-hidden"
         >
-            <!-- Background Layer untuk Blur / Efek Transisi -->
+            <!-- Background Layer / Efek Transisi -->
             <div
-                class="absolute inset-0 z-0 bg-slate-50/80 dark:bg-[#080B14]/90 backdrop-blur-lg pointer-events-none transition-colors duration-300"
+                class="absolute inset-0 z-0 bg-slate-50 dark:bg-[#080B14] pointer-events-none transition-colors duration-300"
             ></div>
 
             <!-- Hero Header with Full Bleed Gradient & Semi Circle -->

@@ -306,12 +306,14 @@ function serviceLabel(jenis) {
             class="rounded-[26px] p-5 text-white shadow-lg relative overflow-hidden"
             style="background: linear-gradient(135deg, #1E40AF 0%, #3B82F6 40%, #6366F1 75%, #7C3AED 100%);"
         >
-            <!-- Background Glow Dekoratif Ringan (GPU-accelerated) -->
+            <!-- Background Glow Dekoratif Ringan (GPU-friendly Radial Gradient) -->
             <div
-                class="absolute -top-12 -right-12 w-48 h-48 bg-white/10 rounded-full blur-2xl pointer-events-none"
+                class="absolute -top-12 -right-12 w-48 h-48 rounded-full pointer-events-none"
+                style="background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);"
             ></div>
             <div
-                class="absolute -bottom-10 -left-10 w-40 h-40 bg-purple-500/20 rounded-full blur-xl pointer-events-none"
+                class="absolute -bottom-10 -left-10 w-40 h-40 rounded-full pointer-events-none"
+                style="background: radial-gradient(circle, rgba(168, 85, 247, 0.25) 0%, transparent 70%);"
             ></div>
 
             <!-- Header Banner: Judul + Tombol Filter -->

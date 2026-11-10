@@ -99,10 +99,12 @@ Dikonfigurasi di [`vite.config.js`](file:///c:/xampp/htdocs/pengiriman/vite.conf
 
 Untuk mempertahankan skor Google Lighthouse 95-100% dan rendering 60 FPS pada HP Android menengah ke bawah:
 
-### A. Larangan CSS `backdrop-filter: blur(...)`
-- **Jangan gunakan** class `backdrop-blur-*` pada kartu atau elemen scrollable di tampilan mobile.
-- Efek blur memaksa GPU browser HP melakukan rasterisasi ulang pada setiap frame scroll, menyebabkan stutter/lag.
+### A. Larangan CSS `backdrop-filter: blur(...)` pada Elemen Bergerak & Menempel
+- **Jangan gunakan** class `backdrop-blur-*` pada elemen `fixed` (BottomNav) atau `sticky` (Navbar) di tampilan mobile.
+- Efek blur pada elemen menempel memaksa GPU browser HP melakukan rasterisasi ulang pada setiap frame scroll (60fps), menyebabkan stutter/lag.
 - **Gunakan warna solid dengan transparansi RGBA**, misalnya:
+  - Header Navbar: `bg-white dark:bg-[#0A0A0A]` dengan `md:backdrop-blur-xl` (hanya blur di desktop).
+  - Floating BottomNav: `bg-white/95 dark:bg-card-dark/95 shadow-lg` (tanpa blur atau blend-mode).
   - Background overlay: `bg-black/60` (BUKAN `bg-black/40 backdrop-blur-sm`).
   - Card glassmorphism: `bg-white/20 border border-white/20` (tanpa `backdrop-blur`).
 
@@ -110,10 +112,20 @@ Untuk mempertahankan skor Google Lighthouse 95-100% dan rendering 60 FPS pada HP
 - Gunakan komponen pembungkus:
   - [`resources/js/Components/ChartJsLine.vue`](file:///c:/xampp/htdocs/pengiriman/resources/js/Components/ChartJsLine.vue)
   - [`resources/js/Components/ChartJsDoughnut.vue`](file:///c:/xampp/htdocs/pengiriman/resources/js/Components/ChartJsDoughnut.vue)
-- Animasi chart pada mobile dibatasi maksimal 350-400ms (`animation: { duration: 350 }`) untuk menghemat baterai dan siklus CPU/GPU.
+- Animasi chart pada mobile dibatasi maksimal 300-350ms (`animation: { duration: 300 }`) untuk menghemat baterai dan siklus CPU/GPU.
+- `devicePixelRatio` pada mobile dibatasi maksimal 1.5 (`Math.min(window.devicePixelRatio || 1, 1.5)`) untuk memangkas penggunaan VRAM GPU hingga 4x lipat di layar HP Full HD / AMOLED tanpa mengurangi ketajaman mata.
 - `responsive: true`, `maintainAspectRatio: false` dengan container berdimensi pasti (`h-[140px]`, `h-[160px]`, dsb.).
 
-### C. Realtime (Pusher & Laravel Echo)
+### C. Akselerasi Touch Scrolling Hardware (Android Momentum)
+- Pada `@media (max-width: 767px)` di `app.css`:
+  - `html { scroll-behavior: auto !important; -webkit-overflow-scrolling: touch; }`
+  - `body { touch-action: pan-y; -webkit-overflow-scrolling: touch; overscroll-behavior-y: none; }`
+  - Ini memberikan kendali scroll langsung ke hardware compositor Android Chrome tanpa jeda sentuh 100ms.
+
+### D. Lazy Mounting Drawer
+- Komponen drawer seperti `<Sidebar>` di `AppLayoutMobile.vue` wajib menggunakan `v-if="mobileOpen"`, sehingga saat user browsing biasa ratusan node DOM dan listener drawer tidak membebani memori HP.
+
+### E. Realtime (Pusher & Laravel Echo)
 - Semua data pengiriman, status, dan metrik dashboard terhubung secara realtime via Laravel Echo (`resources/js/echo.js`).
 - Event listeners harus di-cleanup pada lifecycle hook `onUnmounted()` di setiap komponen Vue untuk mencegah *memory leak* di HP.
 
