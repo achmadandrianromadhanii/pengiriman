@@ -79,7 +79,7 @@ const props = defineProps({
     },
     size: {
         type: String,
-        default: 'normal', // 'normal', 'flexible', 'compact'
+        default: 'normal', // 'normal', 'compact'
     },
 });
 
@@ -92,18 +92,36 @@ const errorMessage = ref('');
 let widgetId = null;
 let retryTimeout = null;
 
+// Pendaftaran callback global resmi Cloudflare Turnstile
+if (typeof window !== 'undefined') {
+    window.__cfTurnstileLoaded = window.__cfTurnstileLoaded || false;
+    window.__cfTurnstileCallbacks = window.__cfTurnstileCallbacks || [];
+
+    window.cfTurnstileOnloadCallback = function () {
+        window.__cfTurnstileLoaded = true;
+        while (window.__cfTurnstileCallbacks && window.__cfTurnstileCallbacks.length > 0) {
+            const cb = window.__cfTurnstileCallbacks.shift();
+            try {
+                cb();
+            } catch (e) {
+                console.error('Error invoking turnstile callback:', e);
+            }
+        }
+    };
+}
+
 function renderTurnstile() {
     if (!widgetContainer.value) return;
 
-    // Pastikan elemen sudah terlihat di DOM (tidak display: none atau sedang transisi)
+    // Pastikan elemen sudah terlihat di DOM (tidak display: none atau sedang dalam animasi transisi)
     if (widgetContainer.value.offsetParent === null) {
         if (retryTimeout) clearTimeout(retryTimeout);
         retryTimeout = setTimeout(renderTurnstile, 80);
         return;
     }
 
-    if (!window.turnstile) {
-        // Tunggu hingga script turnstile siap
+    // Pastikan API turnstile sudah siap
+    if (!window.turnstile || typeof window.turnstile.render !== 'function') {
         if (retryTimeout) clearTimeout(retryTimeout);
         retryTimeout = setTimeout(renderTurnstile, 100);
         return;
@@ -145,18 +163,19 @@ function renderTurnstile() {
                 emit('update:modelValue', '');
 
                 const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-                
+
                 if (code === '600010' || code === '300030' || String(code).includes('domain')) {
                     if (isLocal) {
-                        errorMessage.value = "Domain 'localhost' belum didaftarkan di Cloudflare Turnstile. Silakan tambahkan 'localhost' dan '127.0.0.1' di pengaturan domain situs Cloudflare Anda.";
+                        errorMessage.value =
+                            "Domain 'localhost' belum didaftarkan di Cloudflare Turnstile. Silakan tambahkan 'localhost' dan '127.0.0.1' di pengaturan domain situs Cloudflare Anda.";
                     } else {
-                        errorMessage.value = "Domain ini belum diizinkan di Cloudflare Turnstile (Error " + code + ").";
+                        errorMessage.value = 'Domain ini belum diizinkan di Cloudflare Turnstile (Error ' + code + ').';
                     }
                 } else if (code === '110200') {
-                    // Widget already rendered, ignore
+                    // Widget already rendered, abaikan
                     return;
                 } else {
-                    errorMessage.value = "Verifikasi Cloudflare gagal (Kode: " + (code || 'ERR') + "). Silakan coba lagi.";
+                    errorMessage.value = 'Verifikasi Cloudflare gagal (Kode: ' + (code || 'ERR') + '). Silakan coba lagi.';
                 }
 
                 emit('error', code);
@@ -193,30 +212,27 @@ defineExpose({
 });
 
 function initScript() {
+    // Jika window.turnstile sudah siap, langsung render (JANGAN panggil turnstile.ready() jika ada async/defer)
+    if (window.turnstile && typeof window.turnstile.render === 'function') {
+        renderTurnstile();
+        return;
+    }
+
+    // Daftarkan callback render jika script sedang/akan dimuat
+    window.__cfTurnstileCallbacks.push(renderTurnstile);
+
     if (!document.getElementById('cf-turnstile-script')) {
         const script = document.createElement('script');
         script.id = 'cf-turnstile-script';
-        script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+        // Gunakan parameter resmi onload=cfTurnstileOnloadCallback yang otomatis dipanggil Cloudflare saat siap
+        script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=cfTurnstileOnloadCallback';
         script.async = true;
         script.defer = true;
-        script.onload = () => {
-            if (window.turnstile?.ready) {
-                window.turnstile.ready(renderTurnstile);
-            } else {
-                renderTurnstile();
-            }
-        };
         script.onerror = () => {
             isLoading.value = false;
             errorMessage.value = 'Gagal memuat skrip Cloudflare. Periksa koneksi internet atau adblocker Anda.';
         };
         document.head.appendChild(script);
-    } else {
-        if (window.turnstile?.ready) {
-            window.turnstile.ready(renderTurnstile);
-        } else {
-            renderTurnstile();
-        }
     }
 }
 
