@@ -11,9 +11,10 @@
   ============================================================================
 -->
 <script setup>
-import { Head, useForm, router } from '@inertiajs/vue3';
+import { Head, useForm, router, usePage } from '@inertiajs/vue3';
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 import DetailMap from '@/Components/Map/DetailMap.vue';
+import CloudflareTurnstile from '@/Components/CloudflareTurnstile.vue';
 import {
     User,
     LockKeyhole,
@@ -41,13 +42,20 @@ import { getSwal } from '@/lib/alert';
 const props = defineProps({
     loginSuccess: { type: Boolean, default: false },
     biometric_active: { type: Boolean, default: false },
+    turnstile_site_key: { type: String, default: '' },
 });
+
+const page = usePage();
+const turnstileSiteKey = computed(() => props.turnstile_site_key || page.props.turnstile_site_key || '1x00000000000000000000AA');
+const loginTurnstileRef = ref(null);
+const registerTurnstileRef = ref(null);
 
 // ── Form State ──────────────────────────────────────────────────────────
 const form = useForm({
     email: '',
     password: '',
     remember: true,
+    cf_turnstile_response: '',
 });
 
 // ── UI States ───────────────────────────────────────────────────────────
@@ -68,6 +76,7 @@ const registerForm = reactive({
     password: '',
     password_confirmation: '',
     agree: false,
+    cf_turnstile_response: '',
 });
 const registerErrors = ref({});
 const isRegisterSubmitting = ref(false);
@@ -260,6 +269,11 @@ function submitRegister() {
         hasError = true;
     }
 
+    if (!registerForm.cf_turnstile_response) {
+        registerErrors.value.cf_turnstile_response = 'Selesaikan verifikasi keamanan Cloudflare terlebih dahulu.';
+        hasError = true;
+    }
+
     if (hasError) return;
 
     isRegisterSubmitting.value = true;
@@ -269,10 +283,12 @@ function submitRegister() {
         email: registerForm.email.trim(),
         password: registerForm.password,
         password_confirmation: registerForm.password_confirmation,
+        cf_turnstile_response: registerForm.cf_turnstile_response,
     }, {
         onError: (errs) => {
             isRegisterSubmitting.value = false;
             registerErrors.value = errs;
+            registerTurnstileRef.value?.reset();
         },
         onFinish: () => {
             isRegisterSubmitting.value = false;
@@ -327,6 +343,11 @@ function submit() {
         return;
     }
 
+    if (!form.cf_turnstile_response) {
+        form.errors.cf_turnstile_response = 'Selesaikan verifikasi keamanan Cloudflare terlebih dahulu.';
+        return;
+    }
+
     isSubmitting.value = true;
     startProgressSimulation();
 
@@ -337,6 +358,7 @@ function submit() {
             form.reset('password');
         },
         onError: () => {
+            loginTurnstileRef.value?.reset();
             if (progressTimer) clearInterval(progressTimer);
             showLoadingModal.value = false;
         },
@@ -705,19 +727,34 @@ onBeforeUnmount(() => {
                                 </button>
                             </div>
 
+                            <!-- Cloudflare Turnstile CAPTCHA Protection -->
+                            <CloudflareTurnstile
+                                ref="loginTurnstileRef"
+                                v-model="form.cf_turnstile_response"
+                                :site-key="turnstileSiteKey"
+                                :theme="isDark ? 'dark' : 'light'"
+                                size="normal"
+                            />
+                            <p v-if="form.errors.cf_turnstile_response" class="error-msg justify-center">
+                                <AlertCircle class="w-3.5 h-3.5 shrink-0" />
+                                <span>{{ form.errors.cf_turnstile_response }}</span>
+                            </p>
+
                             <!-- Tombol Utama Login dengan Arrow Circle -->
                             <div class="login-btn-wrapper pt-1">
                                 <button
                                     type="submit"
-                                    :disabled="form.processing || isSubmitting"
+                                    :disabled="form.processing || isSubmitting || !form.cf_turnstile_response"
                                     class="login-btn"
+                                    :class="{ 'opacity-50 !cursor-not-allowed': !form.cf_turnstile_response }"
                                 >
                                     <div class="arrow-circle">
                                         <ChevronRight class="w-5 h-5 stroke-[2.8]" />
                                     </div>
 
                                     <div class="login-btn-text">
-                                        <span v-if="!(form.processing || isSubmitting)">Login &rarr;</span>
+                                        <span v-if="!form.cf_turnstile_response">Menunggu Verifikasi Keamanan...</span>
+                                        <span v-else-if="!(form.processing || isSubmitting)">Login &rarr;</span>
                                         <span v-else class="flex items-center justify-center gap-2">
                                             <Loader2 class="w-4 h-4 animate-spin" />
                                             <span>Memverifikasi...</span>
@@ -942,19 +979,34 @@ onBeforeUnmount(() => {
                                 </p>
                             </div>
 
+                            <!-- Cloudflare Turnstile CAPTCHA Protection -->
+                            <CloudflareTurnstile
+                                ref="registerTurnstileRef"
+                                v-model="registerForm.cf_turnstile_response"
+                                :site-key="turnstileSiteKey"
+                                :theme="isDark ? 'dark' : 'light'"
+                                size="normal"
+                            />
+                            <p v-if="registerErrors.cf_turnstile_response" class="error-msg justify-center">
+                                <AlertCircle class="w-3.5 h-3.5 shrink-0" />
+                                <span>{{ registerErrors.cf_turnstile_response }}</span>
+                            </p>
+
                             <!-- Tombol Utama: Daftar Akun → (Arrow Circle) -->
                             <div class="login-btn-wrapper pt-1">
                                 <button
                                     type="submit"
-                                    :disabled="isRegisterSubmitting"
+                                    :disabled="isRegisterSubmitting || !registerForm.cf_turnstile_response"
                                     class="login-btn"
+                                    :class="{ 'opacity-50 !cursor-not-allowed': !registerForm.cf_turnstile_response }"
                                 >
                                     <div class="arrow-circle">
                                         <ChevronRight class="w-5 h-5 stroke-[2.8]" />
                                     </div>
 
                                     <div class="login-btn-text">
-                                        <span v-if="!isRegisterSubmitting">Daftar Akun &rarr;</span>
+                                        <span v-if="!registerForm.cf_turnstile_response">Menunggu Verifikasi Keamanan...</span>
+                                        <span v-else-if="!isRegisterSubmitting">Daftar Akun &rarr;</span>
                                         <span v-else class="flex items-center justify-center gap-2">
                                             <Loader2 class="w-4 h-4 animate-spin" />
                                             <span>Mendaftarkan...</span>

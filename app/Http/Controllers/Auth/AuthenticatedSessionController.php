@@ -44,7 +44,8 @@ class AuthenticatedSessionController extends Controller
         $hasBiometric = \App\Models\WebauthnCredential::exists();
 
         return Inertia::render('Auth/Login', [
-            'biometric_active' => $hasBiometric,
+            'biometric_active'   => $hasBiometric,
+            'turnstile_site_key' => config('services.cloudflare.turnstile_site_key'),
         ]);
     }
 

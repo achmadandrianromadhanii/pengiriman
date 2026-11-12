@@ -53,6 +53,7 @@ class HandleInertiaRequests extends Middleware
             ],
 
             'isMobile' => (bool) preg_match('/Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i', $request->header('User-Agent') ?? ''),
+            'turnstile_site_key' => config('services.cloudflare.turnstile_site_key'),
         ];
     }
 }

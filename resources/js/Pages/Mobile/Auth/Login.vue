@@ -15,7 +15,7 @@
     const { t } = useI18n();
     // ── Import Dependensi ──────────────────────────────────────────────────
     import AuthLayout from '@/Layouts/AuthLayout.vue';
-    import { Head, useForm, router } from '@inertiajs/vue3';
+    import { Head, useForm, router, usePage } from '@inertiajs/vue3';
     import { onBeforeUnmount, onMounted, ref, watch, computed, reactive } from 'vue';
 
     // ── Lucide Icons (hanya yang dipakai) ─────────────────────────────────
@@ -34,22 +34,31 @@
     } from 'lucide-vue-next';
     import { getSwal } from '@/lib/alert';
     import PasswordStrengthPopover from '@/Components/PasswordStrengthPopover.vue';
+    import CloudflareTurnstile from '@/Components/CloudflareTurnstile.vue';
 
     // ── Layout ─────────────────────────────────────────────────────────────
     defineOptions({ layout: AuthLayout });
+
+    const page = usePage();
 
     // ── Props dari Backend ─────────────────────────────────────────────────
     const props = defineProps({
         loginSuccess: { type: Boolean, default: false },
         // [UPDATE: V3] Backend mengirim info apakah biometrik aktif
         biometric_active: { type: Boolean, default: false },
+        turnstile_site_key: { type: String, default: '' },
     });
+
+    const turnstileSiteKey = computed(() => props.turnstile_site_key || page.props.turnstile_site_key || '1x00000000000000000000AA');
+    const loginTurnstileRef = ref(null);
+    const registerTurnstileRef = ref(null);
 
     // ── Form State (Inertia useForm) ───────────────────────────────────────
     const form = useForm({
         email: '',
         password: '',
         remember: false,
+        cf_turnstile_response: '',
     });
 
     // ── Reactive State ─────────────────────────────────────────────────────
@@ -68,6 +77,7 @@
         email: '',
         password: '',
         password_confirmation: '',
+        cf_turnstile_response: '',
     });
     const registerErrors = ref({});
     const isRegisterSubmitting = ref(false);
@@ -162,6 +172,12 @@
             return;
         }
 
+        if (!form.cf_turnstile_response) {
+            form.errors.cf_turnstile_response = 'Selesaikan verifikasi keamanan Cloudflare terlebih dahulu.';
+            if (window.innerWidth < 768) triggerShake();
+            return;
+        }
+
         // [DESKTOP] Tampilkan loading modal + progress bar
         if (window.innerWidth >= 768) {
             showDesktopLoading.value = true;
@@ -181,12 +197,11 @@
                 form.reset('password');
             },
             onError: () => {
+                loginTurnstileRef.value?.reset();
                 // Desktop: Sembunyikan modal loading
                 if (window.innerWidth >= 768) {
                     showDesktopLoading.value = false;
                     if (progressTimer) clearInterval(progressTimer);
-
-
                 }
                 // Mobile: Sembunyikan modal + shake
                 if (window.innerWidth < 768) {
@@ -276,6 +291,11 @@
             hasError = true;
         }
 
+        if (!registerForm.cf_turnstile_response) {
+            registerErrors.value.cf_turnstile_response = 'Selesaikan verifikasi keamanan Cloudflare terlebih dahulu.';
+            hasError = true;
+        }
+
         if (hasError) {
             triggerShake();
             return;
@@ -288,10 +308,12 @@
             email: registerForm.email.trim(),
             password: registerForm.password,
             password_confirmation: registerForm.password_confirmation,
+            cf_turnstile_response: registerForm.cf_turnstile_response,
         }, {
             onError: (errs) => {
                 isRegisterSubmitting.value = false;
                 registerErrors.value = errs;
+                registerTurnstileRef.value?.reset();
                 triggerShake();
             },
             onFinish: () => {
@@ -664,15 +686,31 @@
                             </button>
                         </div>
 
+                        <!-- Cloudflare Turnstile CAPTCHA Protection -->
+                        <CloudflareTurnstile
+                            ref="loginTurnstileRef"
+                            v-model="form.cf_turnstile_response"
+                            :site-key="turnstileSiteKey"
+                            theme="auto"
+                            size="flexible"
+                        />
+                        <p
+                            v-if="form.errors.cf_turnstile_response"
+                            class="text-[10.5px] text-rose-500 text-center flex items-center justify-center gap-1 leading-none -mt-1 mb-1"
+                        >
+                            <AlertCircle class="w-3 h-3 shrink-0" />
+                            {{ form.errors.cf_turnstile_response }}
+                        </p>
+
                         <!-- Login Button -->
                         <div class="pt-1">
                             <button
                                 type="submit"
-                                :disabled="form.processing"
-                                class="w-full h-10 bg-[#2563EB] hover:bg-blue-700 active:scale-[0.99] text-white font-bold text-sm rounded-xl shadow-none transition-all flex items-center justify-center disabled:opacity-75"
+                                :disabled="form.processing || !form.cf_turnstile_response"
+                                class="w-full h-10 bg-[#2563EB] hover:bg-blue-700 active:scale-[0.99] text-white font-bold text-sm rounded-xl shadow-none transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <Loader2 v-if="form.processing" class="w-4 h-4 animate-spin mr-1.5" />
-                                <span>Login</span>
+                                <span>{{ !form.cf_turnstile_response ? 'Menunggu Verifikasi Keamanan...' : 'Login' }}</span>
                             </button>
                         </div>
                     </form>
@@ -887,15 +925,31 @@
                             </p>
                         </div>
 
+                        <!-- Cloudflare Turnstile CAPTCHA Protection -->
+                        <CloudflareTurnstile
+                            ref="registerTurnstileRef"
+                            v-model="registerForm.cf_turnstile_response"
+                            :site-key="turnstileSiteKey"
+                            theme="auto"
+                            size="flexible"
+                        />
+                        <p
+                            v-if="registerErrors.cf_turnstile_response"
+                            class="text-[10.5px] text-rose-500 text-center flex items-center justify-center gap-1 leading-none -mt-1 mb-1"
+                        >
+                            <AlertCircle class="w-3 h-3 shrink-0" />
+                            {{ registerErrors.cf_turnstile_response }}
+                        </p>
+
                         <!-- Tombol Submit Daftar -->
                         <div class="pt-1.5">
                             <button
                                 type="submit"
-                                :disabled="isRegisterSubmitting"
-                                class="w-full h-10 bg-[#2563EB] hover:bg-blue-700 active:scale-[0.99] text-white font-bold text-sm rounded-xl shadow-none transition-all flex items-center justify-center disabled:opacity-75"
+                                :disabled="isRegisterSubmitting || !registerForm.cf_turnstile_response"
+                                class="w-full h-10 bg-[#2563EB] hover:bg-blue-700 active:scale-[0.99] text-white font-bold text-sm rounded-xl shadow-none transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <Loader2 v-if="isRegisterSubmitting" class="w-4 h-4 animate-spin mr-1.5" />
-                                <span>Daftar</span>
+                                <span>{{ !registerForm.cf_turnstile_response ? 'Menunggu Verifikasi Keamanan...' : 'Daftar' }}</span>
                             </button>
                         </div>
                     </form>

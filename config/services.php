@@ -47,4 +47,9 @@ return [
         'redirect' => env('FACEBOOK_REDIRECT_URI', '/auth/facebook/callback'),
     ],
 
+    'cloudflare' => [
+        'turnstile_site_key'   => env('CLOUDFLARE_TURNSTILE_SITE_KEY', '1x00000000000000000000AA'),
+        'turnstile_secret_key' => env('CLOUDFLARE_TURNSTILE_SECRET_KEY', '1x0000000000000000000000000000000AA'),
+    ],
+
 ];

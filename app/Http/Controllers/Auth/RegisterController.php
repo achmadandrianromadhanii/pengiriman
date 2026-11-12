@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\Admin;
 use App\Models\LoginHistory;
+use App\Rules\TurnstileRule;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -31,15 +32,17 @@ class RegisterController extends Controller
                 'regex:/[^a-zA-Z0-9]/', // Minimal 1 karakter spesial
                 'confirmed',
             ],
+            'cf_turnstile_response' => ['required', 'string', new TurnstileRule],
         ], [
-            'name.required'      => 'Nama lengkap wajib diisi.',
-            'email.required'     => 'Alamat email wajib diisi.',
-            'email.email'        => 'Format alamat email tidak valid.',
-            'email.unique'       => 'Alamat email ini sudah terdaftar. Silakan login atau gunakan email lain.',
-            'password.required'  => 'Password wajib diisi.',
-            'password.min'       => 'Password harus memiliki panjang minimal 12 karakter.',
-            'password.regex'     => 'Password harus memenuhi seluruh syarat popover (huruf besar, huruf kecil, angka, dan simbol).',
-            'password.confirmed' => 'Konfirmasi password tidak cocok dengan password yang dimasukkan.',
+            'name.required'                  => 'Nama lengkap wajib diisi.',
+            'email.required'                 => 'Alamat email wajib diisi.',
+            'email.email'                    => 'Format alamat email tidak valid.',
+            'email.unique'                   => 'Alamat email ini sudah terdaftar. Silakan login atau gunakan email lain.',
+            'password.required'              => 'Password wajib diisi.',
+            'password.min'                   => 'Password harus memiliki panjang minimal 12 karakter.',
+            'password.regex'                 => 'Password harus memenuhi seluruh syarat popover (huruf besar, huruf kecil, angka, dan simbol).',
+            'password.confirmed'             => 'Konfirmasi password tidak cocok dengan password yang dimasukkan.',
+            'cf_turnstile_response.required' => 'Verifikasi keamanan Cloudflare wajib diselesaikan.',
         ]);
 
         // Buat akun admin baru dengan status aktif
