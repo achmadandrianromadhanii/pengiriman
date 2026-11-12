@@ -52,6 +52,17 @@ class TurnstileRule implements ValidationRule
             $result = $response->json();
 
             if (! ($result['success'] ?? false)) {
+                // Di lingkungan local/testing, jika menggunakan dummy test token Cloudflare
+                if (app()->environment('local', 'testing')) {
+                    $testResponse = Http::asForm()->timeout(4)->post('https://challenges.cloudflare.com/turnstile/v0/siteverify', [
+                        'secret'   => '1x0000000000000000000000000000000AA',
+                        'response' => $value,
+                    ]);
+                    if ($testResponse->json('success') === true) {
+                        return;
+                    }
+                }
+
                 Log::warning('Cloudflare Turnstile verification failed', [
                     'ip'          => $ip,
                     'error-codes' => $result['error-codes'] ?? [],

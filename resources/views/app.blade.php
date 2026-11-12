@@ -45,6 +45,9 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
+    <!-- Cloudflare Turnstile API (Explicit Render) -->
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
+
     @routes
     @vite('resources/js/app.js')
     @inertiaHead
