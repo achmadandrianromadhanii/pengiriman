@@ -1,6 +1,6 @@
 <template>
     <div class="turnstile-container flex flex-col items-center justify-center my-2.5 w-full">
-        <!-- 1. State Loading (Aktif saat mengunduh skrip Cloudflare) -->
+        <!-- 1. State Loading -->
         <div
             v-if="isLoading && !errorMessage"
             class="flex items-center gap-2 py-2 px-3 text-xs text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/60 rounded-xl border border-slate-200/80 dark:border-slate-800 animate-pulse my-1"
@@ -42,23 +42,19 @@
                     <span>Coba Lagi</span>
                 </button>
 
-                <!-- Tombol Fallback Pengujian Lokal jika di localhost -->
+                <!-- Tombol Beralih ke Pengujian Lokal jika di localhost/127.0.0.1 -->
                 <button
                     v-if="isLocalEnvironment && currentSiteKey !== '1x00000000000000000000AA'"
                     type="button"
-                    @click="useTestKey"
+                    @click="switchToTestKey"
                     class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-medium rounded-lg transition-all flex items-center gap-1 cursor-pointer shadow-sm"
-                    title="Gunakan kunci pengujian Cloudflare yang selalu valid di localhost"
                 >
-                    <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                    <span>Mode Pengujian Lokal</span>
+                    <span>Gunakan Mode Pengujian Lokal</span>
                 </button>
             </div>
         </div>
 
-        <!-- 3. Wadah Widget Turnstile Asli (TIDAK BOLEH DISPLAY:NONE SAAT MEMUAT) -->
+        <!-- 3. Wadah Widget Turnstile Asli -->
         <div
             ref="widgetContainer"
             class="cf-turnstile-slot flex justify-center w-full min-h-[65px]"
@@ -75,6 +71,23 @@
             </svg>
             <span>Verifikasi keamanan berhasil</span>
         </p>
+
+        <!-- 5. Info Badge di Mode Pengujian Lokal -->
+        <div
+            v-if="isLocalEnvironment && currentSiteKey === '1x00000000000000000000AA' && !errorMessage"
+            class="flex items-center gap-1.5 text-[10.5px] text-amber-600 dark:text-amber-400/90 mt-1"
+        >
+            <span class="inline-block w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+            <span>Mode Pengujian Lokal (127.0.0.1)</span>
+            <button
+                type="button"
+                @click="switchToProdKey"
+                class="underline hover:text-amber-700 dark:hover:text-amber-300 ml-1 cursor-pointer font-medium"
+                title="Coba gunakan Site Key produksi jika domain 127.0.0.1 sudah didaftarkan di Cloudflare"
+            >
+                Uji Kunci Produksi
+            </button>
+        </div>
     </div>
 </template>
 
@@ -106,21 +119,46 @@ const widgetContainer = ref(null);
 const isLoading = ref(true);
 const verified = ref(false);
 const errorMessage = ref('');
-const currentSiteKey = ref(props.siteKey || '1x00000000000000000000AA');
 
 let widgetId = null;
 let pollInterval = null;
 let retryCount = 0;
+let isRendering = false;
 
 const isLocalEnvironment = computed(() => {
     if (typeof window === 'undefined') return false;
+    const host = window.location.hostname;
     return (
-        window.location.hostname === 'localhost' ||
-        window.location.hostname === '127.0.0.1' ||
-        window.location.hostname.endsWith('.test') ||
-        window.location.hostname.endsWith('.local')
+        host === 'localhost' ||
+        host === '127.0.0.1' ||
+        host === '::1' ||
+        host.endsWith('.test') ||
+        host.endsWith('.local')
     );
 });
+
+// Menentukan sitekey aktif:
+// Di komputer lokal (localhost / 127.0.0.1), secara default gunakan kunci uji Cloudflare (1x00000000000000000000AA)
+// agar tidak pernah muncul 400 Bad Request / Error 110200 di peramban.
+// Di hosting produksi (softsend-app.vercel.app), SELALU gunakan props.siteKey produksi.
+function getInitialSiteKey() {
+    if (typeof window === 'undefined') return props.siteKey;
+
+    if (isLocalEnvironment.value) {
+        try {
+            const forcedMode = sessionStorage.getItem('cf_turnstile_mode');
+            if (forcedMode === 'prod' && props.siteKey) {
+                return props.siteKey;
+            }
+        } catch (e) {}
+        // Default di lokal: kunci pengujian resmi Cloudflare yang selalu valid di IP dan localhost
+        return '1x00000000000000000000AA';
+    }
+
+    return props.siteKey || '1x00000000000000000000AA';
+}
+
+const currentSiteKey = ref(getInitialSiteKey());
 
 function ensureScriptLoaded(callback) {
     if (window.turnstile && typeof window.turnstile.render === 'function') {
@@ -128,7 +166,11 @@ function ensureScriptLoaded(callback) {
         return;
     }
 
-    if (!document.getElementById('cf-turnstile-script')) {
+    const hasScript =
+        document.getElementById('cf-turnstile-script') ||
+        document.querySelector('script[src*="challenges.cloudflare.com/turnstile"]');
+
+    if (!hasScript) {
         const script = document.createElement('script');
         script.id = 'cf-turnstile-script';
         script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
@@ -141,7 +183,6 @@ function ensureScriptLoaded(callback) {
         document.head.appendChild(script);
     }
 
-    // Polling non-blocking sampai window.turnstile.render siap
     let elapsed = 0;
     if (pollInterval) clearInterval(pollInterval);
 
@@ -160,12 +201,24 @@ function ensureScriptLoaded(callback) {
     }, 50);
 }
 
+function destroyWidget() {
+    if (widgetId !== null && window.turnstile && typeof window.turnstile.remove === 'function') {
+        try {
+            window.turnstile.remove(widgetId);
+        } catch (e) {}
+        widgetId = null;
+    }
+    if (widgetContainer.value) {
+        widgetContainer.value.innerHTML = '';
+    }
+}
+
 function renderTurnstile() {
     if (!widgetContainer.value) return;
 
     // Pastikan elemen sudah terpasang di DOM dokumen
     if (!document.body.contains(widgetContainer.value)) {
-        if (retryCount < 25) {
+        if (retryCount < 20) {
             retryCount++;
             setTimeout(renderTurnstile, 60);
         }
@@ -178,18 +231,15 @@ function renderTurnstile() {
         return;
     }
 
-    // Bersihkan widget sebelumnya jika ada
-    if (widgetId !== null) {
-        try {
-            window.turnstile.remove(widgetId);
-        } catch (e) {}
-        widgetId = null;
-    }
+    // Cegah rendering ganda secara bersamaan
+    if (isRendering) return;
+    isRendering = true;
 
-    widgetContainer.value.innerHTML = '';
+    // Bersihkan widget sebelumnya
+    destroyWidget();
     errorMessage.value = '';
 
-    const effectiveKey = currentSiteKey.value || props.siteKey || '1x00000000000000000000AA';
+    const effectiveKey = currentSiteKey.value || '1x00000000000000000000AA';
 
     try {
         widgetId = window.turnstile.render(widgetContainer.value, {
@@ -197,6 +247,7 @@ function renderTurnstile() {
             theme: props.theme || 'auto',
             size: props.size || 'normal',
             callback: (token) => {
+                isRendering = false;
                 isLoading.value = false;
                 verified.value = true;
                 errorMessage.value = '';
@@ -209,37 +260,54 @@ function renderTurnstile() {
                 emit('expire');
             },
             'error-callback': (code) => {
+                isRendering = false;
                 isLoading.value = false;
                 verified.value = false;
                 emit('update:modelValue', '');
 
-                const isLocal = isLocalEnvironment.value;
+                const errorCode = String(code || '');
+                console.warn('[Cloudflare Turnstile] Error callback:', errorCode);
 
-                if (code === '600010' || code === '300030' || String(code).includes('domain')) {
-                    if (isLocal) {
+                // SEGERA hancurkan widget yang gagal agar browser tidak mengulang request 400 Bad Request & postMessage
+                destroyWidget();
+
+                const isLocal = isLocalEnvironment.value;
+                const isDomainError = errorCode === '110200' || errorCode === '600010' || errorCode.includes('domain');
+
+                if (isDomainError) {
+                    if (isLocal && currentSiteKey.value !== '1x00000000000000000000AA') {
+                        // Kunci produksi ditolak karena domain 127.0.0.1 belum ada di dashboard Cloudflare
+                        console.info('[Cloudflare Turnstile] Domain local belum diizinkan pada kunci produksi. Beralih otomatis ke mode pengujian lokal.');
+                        try {
+                            sessionStorage.removeItem('cf_turnstile_mode');
+                        } catch (e) {}
+                        currentSiteKey.value = '1x00000000000000000000AA';
+                        errorMessage.value = '';
+                        isLoading.value = true;
+                        setTimeout(renderTurnstile, 150);
+                        return;
+                    } else if (isLocal) {
                         errorMessage.value =
-                            "Domain 'localhost' belum didaftarkan di Cloudflare Turnstile dashboard Anda. Anda dapat mendaftarkan 'localhost' di Cloudflare atau klik 'Mode Pengujian Lokal' di bawah.";
+                            "Verifikasi keamanan lokal gagal. Klik 'Coba Lagi' untuk memuat ulang.";
                     } else {
                         errorMessage.value =
-                            'Domain ini belum diizinkan di Cloudflare Turnstile (Error ' + code + '). Pastikan domain telah didaftarkan pada Dashboard Cloudflare.';
+                            'Domain web ini belum diizinkan di Cloudflare Turnstile (Error ' + errorCode + '). Pastikan domain telah didaftarkan pada Cloudflare Dashboard.';
                     }
-                } else if (code === '110200') {
-                    // Widget already rendered, abaikan
-                    return;
                 } else {
-                    errorMessage.value = 'Verifikasi Cloudflare gagal (Kode: ' + (code || 'ERR') + '). Silakan klik Coba Lagi.';
+                    errorMessage.value = 'Verifikasi keamanan gagal (Kode: ' + (errorCode || 'ERR') + '). Silakan klik Coba Lagi.';
                 }
 
-                emit('error', code);
+                emit('error', errorCode);
             },
         });
 
-        // Widget sudah berhasil dirender ke DOM
+        isRendering = false;
         isLoading.value = false;
     } catch (err) {
         console.error('Turnstile render exception:', err);
+        isRendering = false;
         isLoading.value = false;
-        errorMessage.value = 'Terjadi kendala saat merender widget Cloudflare.';
+        errorMessage.value = 'Terjadi kendala saat merender verifikasi Cloudflare.';
     }
 }
 
@@ -260,8 +328,22 @@ function retryRender() {
     renderTurnstile();
 }
 
-function useTestKey() {
+function switchToTestKey() {
+    try {
+        sessionStorage.removeItem('cf_turnstile_mode');
+    } catch (e) {}
     currentSiteKey.value = '1x00000000000000000000AA';
+    errorMessage.value = '';
+    isLoading.value = true;
+    retryCount = 0;
+    renderTurnstile();
+}
+
+function switchToProdKey() {
+    try {
+        sessionStorage.setItem('cf_turnstile_mode', 'prod');
+    } catch (e) {}
+    currentSiteKey.value = props.siteKey || '0x4AAAAAAF-ETW-sVXo5zp-u';
     errorMessage.value = '';
     isLoading.value = true;
     retryCount = 0;
@@ -290,8 +372,15 @@ watch(
     () => props.siteKey,
     (newVal) => {
         if (newVal) {
-            currentSiteKey.value = newVal;
-            renderTurnstile();
+            let forced = false;
+            try {
+                forced = sessionStorage.getItem('cf_turnstile_mode') === 'prod';
+            } catch (e) {}
+
+            if (!isLocalEnvironment.value || forced) {
+                currentSiteKey.value = newVal;
+                renderTurnstile();
+            }
         }
     }
 );
@@ -301,12 +390,7 @@ onBeforeUnmount(() => {
         clearInterval(pollInterval);
         pollInterval = null;
     }
-    if (window.turnstile && widgetId !== null) {
-        try {
-            window.turnstile.remove(widgetId);
-        } catch (e) {}
-        widgetId = null;
-    }
+    destroyWidget();
 });
 </script>
 
