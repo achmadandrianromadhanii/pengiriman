@@ -368,63 +368,27 @@
         }
         if (redirectTimer) clearTimeout(redirectTimer);
         if (progressTimer) clearInterval(progressTimer);
-        if (typeof window !== 'undefined' && window.visualViewport && viewportResizeHandler) {
-            window.visualViewport.removeEventListener('resize', viewportResizeHandler);
-        }
     });
-
-    // =====================================================================
-    // [UPDATE: V3] Tampilkan bottom sheet biometrik saat mount (mobile only)
-    // =====================================================================
-    // Cara Kerja: Setelah halaman login dimuat, jika biometrik aktif dan
-    // perangkat mendukung WebAuthn, bottom sheet muncul otomatis.
-    // =====================================================================
-    // [UPDATE: V3] Tampilkan bottom sheet biometrik saat mount (mobile only)
-    
-    // [KEYBOARD FIX] Deteksi status keyboard virtual mobile agar UI tetap stabil & rapi
-    const isKeyboardOpen = ref(false);
-    let initialViewportHeight = 0;
-    let viewportResizeHandler = null;
-
-    function onFieldFocus() {
-        if (typeof window !== 'undefined' && window.innerWidth < 768) {
-            isKeyboardOpen.value = true;
-        }
-    }
-
-    function onFieldBlur() {
-        if (typeof window !== 'undefined' && window.innerWidth < 768) {
-            setTimeout(() => {
-                if (!document.activeElement || document.activeElement.tagName !== 'INPUT') {
-                    isKeyboardOpen.value = false;
-                }
-            }, 180);
-        }
-    }
 
     // ── Password Strength Popover Handlers ────────────────────────────────
     const showLoginPasswordPopover = ref(false);
     const showRegisterPasswordPopover = ref(false);
 
     function onLoginPasswordFocus() {
-        onFieldFocus();
         showLoginPasswordPopover.value = true;
     }
 
     function onLoginPasswordBlur() {
-        onFieldBlur();
         setTimeout(() => {
             showLoginPasswordPopover.value = false;
         }, 180);
     }
 
     function onRegisterPasswordFocus() {
-        onFieldFocus();
         showRegisterPasswordPopover.value = true;
     }
 
     function onRegisterPasswordBlur() {
-        onFieldBlur();
         setTimeout(() => {
             showRegisterPasswordPopover.value = false;
         }, 180);
@@ -434,14 +398,6 @@
         if (typeof document !== 'undefined') {
             document.documentElement.classList.add('login-page-active');
             document.body.classList.add('login-page-active');
-        }
-        if (typeof window !== 'undefined' && window.visualViewport) {
-            initialViewportHeight = window.visualViewport.height;
-            viewportResizeHandler = () => {
-                // Jika viewport mengecil lebih dari 120px, berarti keyboard virtual sedang terbuka
-                isKeyboardOpen.value = window.visualViewport.height < (initialViewportHeight - 120);
-            };
-            window.visualViewport.addEventListener('resize', viewportResizeHandler);
         }
 
         if (
@@ -540,16 +496,12 @@
 <template>
     <Head :title="viewMode === 'register' ? 'Register' : 'Login'" />
     <div
-        class="login-mobile-page w-full h-full max-h-[100svh] bg-white dark:bg-slate-950 flex flex-col justify-between items-center px-4 py-2.5 select-none transition-colors relative"
-        :class="[isKeyboardOpen ? 'overflow-y-auto no-scrollbar' : 'overflow-hidden']"
+        class="login-mobile-page w-full min-h-dvh h-full bg-white dark:bg-slate-950 flex flex-col justify-between items-center px-4 py-2.5 select-none transition-colors relative overflow-y-auto no-scrollbar overscroll-contain"
     >
-        <!-- Content Container (Harmonious Centered Grouping, Zero Excessive Gap, Fits All Android Devices) -->
+        <!-- Content Container (Stable Anchor, Zero Bouncing, Lightweight) -->
         <div
-            class="w-full max-w-[345px] mx-auto flex-1 flex flex-col relative transition-all duration-200"
-            :class="[
-                isShake ? 'animate-shake' : '',
-                isKeyboardOpen ? 'justify-start pt-1 gap-2' : 'justify-center gap-2.5'
-            ]"
+            class="w-full max-w-[345px] mx-auto flex-1 flex flex-col justify-center gap-2.5 relative"
+            :class="{ 'animate-shake': isShake }"
         >
             <!-- Tombol Kembali ke Login (Khusus mode register) -->
             <button
@@ -564,10 +516,7 @@
             </button>
 
             <!-- 1. TOP BRAND HEADER -->
-            <div
-                class="flex flex-col items-center text-center shrink-0 transition-all duration-200"
-                :class="[isKeyboardOpen ? 'pt-0.5 pb-0.5' : 'pt-1.5 pb-1']"
-            >
+            <div class="flex flex-col items-center text-center shrink-0 pt-1 pb-1">
                 <img
                     src="/images/logo-softsend-hd.png"
                     alt="SoftSend Logo"
@@ -609,11 +558,14 @@
                                 <Mail class="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" stroke-width="1.75" />
                                 <input
                                     v-model="form.email"
-                                    type="text"
+                                    type="email"
+                                    inputmode="email"
                                     autocomplete="username"
+                                    autocapitalize="none"
+                                    autocorrect="off"
+                                    spellcheck="false"
+                                    enterkeyhint="next"
                                     placeholder="Masukkan email anda"
-                                    @focus="onFieldFocus"
-                                    @blur="onFieldBlur"
                                     class="w-full bg-transparent text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none border-none p-0 focus:ring-0 leading-tight"
                                 />
                             </div>
@@ -636,6 +588,10 @@
                                     v-model="form.password"
                                     :type="showPassword ? 'text' : 'password'"
                                     autocomplete="current-password"
+                                    autocapitalize="none"
+                                    autocorrect="off"
+                                    spellcheck="false"
+                                    enterkeyhint="done"
                                     placeholder="Masukkan password anda"
                                     @focus="onLoginPasswordFocus"
                                     @blur="onLoginPasswordBlur"
@@ -715,8 +671,8 @@
                         </div>
                     </form>
 
-                    <!-- Elemen yang disembunyikan saat keyboard aktif agar tidak menumpuk/terangkat -->
-                    <div v-show="!isKeyboardOpen" class="transition-opacity duration-200">
+                    <!-- Divider & Social Buttons -->
+                    <div>
                         <!-- Divider: Atau masuk dengan -->
                         <div class="relative flex items-center justify-center my-2">
                             <div class="absolute inset-0 flex items-center">
@@ -813,9 +769,9 @@
                                     v-model="registerForm.name"
                                     type="text"
                                     autocomplete="name"
+                                    autocapitalize="words"
+                                    enterkeyhint="next"
                                     placeholder="Masukkan nama lengkap anda"
-                                    @focus="onFieldFocus"
-                                    @blur="onFieldBlur"
                                     class="w-full bg-transparent text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none border-none p-0 focus:ring-0 leading-tight"
                                 />
                             </div>
@@ -837,10 +793,13 @@
                                 <input
                                     v-model="registerForm.email"
                                     type="email"
+                                    inputmode="email"
                                     autocomplete="email"
+                                    autocapitalize="none"
+                                    autocorrect="off"
+                                    spellcheck="false"
+                                    enterkeyhint="next"
                                     placeholder="Masukkan email anda"
-                                    @focus="onFieldFocus"
-                                    @blur="onFieldBlur"
                                     class="w-full bg-transparent text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none border-none p-0 focus:ring-0 leading-tight"
                                 />
                             </div>
@@ -863,6 +822,10 @@
                                     v-model="registerForm.password"
                                     :type="showRegisterPassword ? 'text' : 'password'"
                                     autocomplete="new-password"
+                                    autocapitalize="none"
+                                    autocorrect="off"
+                                    spellcheck="false"
+                                    enterkeyhint="next"
                                     placeholder="Buat password anda"
                                     @focus="onRegisterPasswordFocus"
                                     @blur="onRegisterPasswordBlur"
@@ -901,9 +864,11 @@
                                     v-model="registerForm.password_confirmation"
                                     :type="showRegisterPasswordConfirm ? 'text' : 'password'"
                                     autocomplete="new-password"
+                                    autocapitalize="none"
+                                    autocorrect="off"
+                                    spellcheck="false"
+                                    enterkeyhint="done"
                                     placeholder="Masukkan ulang password anda"
-                                    @focus="onFieldFocus"
-                                    @blur="onFieldBlur"
                                     class="w-full bg-transparent text-[13px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none border-none p-0 focus:ring-0 leading-tight"
                                 />
                                 <button
@@ -954,8 +919,8 @@
                         </div>
                     </form>
 
-                    <!-- Keterangan Singkat Create Account (Disembunyikan saat keyboard aktif agar tidak menumpuk) -->
-                    <div v-show="!isKeyboardOpen" class="mt-2.5 text-center px-2 transition-opacity duration-200">
+                    <!-- Keterangan Singkat Create Account -->
+                    <div class="mt-2.5 text-center px-2">
                         <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">
                             Akun baru akan diverifikasi oleh tim administrator SoftSend sebelum dapat digunakan untuk mengakses layanan pengiriman.
                         </p>
@@ -964,10 +929,8 @@
             </div>
 
             <!-- 3. FOOTER SECTION (TERMS + NOCTRYNX CORP + HOME BAR) -->
-            <!-- Disembunyikan saat keyboard aktif agar tidak bertubrukan dengan form -->
             <div
-                v-show="!isKeyboardOpen"
-                class="pt-1 pb-0.5 text-center shrink-0 transition-opacity duration-200"
+                class="pt-1 pb-0.5 text-center shrink-0"
             >
                 <!-- Disclaimer Syarat & Privasi -->
                 <p class="text-[10.5px] text-slate-500 dark:text-slate-400 mb-1 leading-none">
@@ -1111,17 +1074,17 @@
 </template>
 
 <style scoped>
-    /* Kunci total root dokumen di mobile HANYA saat di halaman login/register agar bebas scrollbar & tidak bisa naik turun */
+    /* Kunci root dokumen di mobile HANYA saat di halaman login/register agar bebas scrollbar & stabil */
     :global(html.login-page-active),
     :global(body.login-page-active),
     :global(html.login-page-active #app),
     :global(body.login-page-active #app) {
+        min-height: 100% !important;
         height: 100% !important;
-        max-height: 100svh !important;
-        overflow: hidden !important;
-        overscroll-behavior: none !important;
         margin: 0 !important;
         padding: 0 !important;
+        overflow-x: hidden !important;
+        -webkit-overflow-scrolling: touch;
     }
 
     :global(html.login-page-active),
@@ -1138,10 +1101,17 @@
     }
 
     .login-mobile-page {
-        height: 100% !important;
-        max-height: 100svh !important;
-        overscroll-behavior: none !important;
-        touch-action: pan-x;
+        min-height: 100dvh;
+        min-height: 100vh;
+        width: 100%;
+        overscroll-behavior-y: contain;
+        touch-action: manipulation;
+        -webkit-overflow-scrolling: touch;
+        /* Hardware GPU Acceleration & Anti-flicker */
+        transform: translateZ(0);
+        -webkit-transform: translateZ(0);
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
     }
 
     /* Hilangkan scrollbar native */
