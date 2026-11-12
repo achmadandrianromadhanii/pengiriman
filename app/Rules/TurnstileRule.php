@@ -30,18 +30,30 @@ class TurnstileRule implements ValidationRule
             return;
         }
 
+        // Token pengujian resmi Cloudflare
+        if (app()->environment('local', 'testing') && $value === 'XXXX.DUMMY.TOKEN.XXXX') {
+            return;
+        }
+
         try {
-            $response = Http::asForm()->timeout(6)->post('https://challenges.cloudflare.com/turnstile/v0/siteverify', [
+            $params = [
                 'secret'   => $secretKey,
                 'response' => $value,
-                'remoteip' => request()->ip(),
-            ]);
+            ];
+
+            // Hanya sertakan remoteip jika berupa IP publik (bukan loopback/private)
+            $ip = request()->ip();
+            if ($ip && filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+                $params['remoteip'] = $ip;
+            }
+
+            $response = Http::asForm()->timeout(6)->post('https://challenges.cloudflare.com/turnstile/v0/siteverify', $params);
 
             $result = $response->json();
 
             if (! ($result['success'] ?? false)) {
                 Log::warning('Cloudflare Turnstile verification failed', [
-                    'ip'          => request()->ip(),
+                    'ip'          => $ip,
                     'error-codes' => $result['error-codes'] ?? [],
                 ]);
 

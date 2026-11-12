@@ -692,7 +692,7 @@
                             v-model="form.cf_turnstile_response"
                             :site-key="turnstileSiteKey"
                             theme="auto"
-                            size="flexible"
+                            size="normal"
                         />
                         <p
                             v-if="form.errors.cf_turnstile_response"
@@ -931,7 +931,7 @@
                             v-model="registerForm.cf_turnstile_response"
                             :site-key="turnstileSiteKey"
                             theme="auto"
-                            size="flexible"
+                            size="normal"
                         />
                         <p
                             v-if="registerErrors.cf_turnstile_response"
