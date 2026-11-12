@@ -38,6 +38,19 @@
                     "value": "public, max-age=86400"
                 }
             ]
+        },
+        {
+            "source": "/manifest.webmanifest",
+            "headers": [
+                {
+                    "key": "Content-Type",
+                    "value": "application/manifest+json"
+                },
+                {
+                    "key": "Cache-Control",
+                    "value": "public, max-age=86400"
+                }
+            ]
         }
     ],
     "routes": [
@@ -46,7 +59,11 @@
             "dest": "/build/$1"
         },
         {
-            "src": "/(.*\\.(css|js|woff|woff2|ttf|eot|jpg|jpeg|png|gif|svg|ico|webp|mp4))",
+            "src": "/manifest\\.webmanifest",
+            "dest": "/manifest.webmanifest"
+        },
+        {
+            "src": "/(.*\\.(css|js|woff|woff2|ttf|eot|jpg|jpeg|png|gif|svg|ico|webp|mp4|webmanifest|json))",
             "dest": "/$1"
         },
         {

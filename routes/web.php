@@ -17,6 +17,18 @@ use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 
 // ─── AUTH ────────────────────────────────────────────────────────────
+// ─── PWA Web App Manifest Fallback ────────────────────────────────────
+Route::get('/manifest.webmanifest', function () {
+    $path = public_path('manifest.webmanifest');
+    if (! file_exists($path)) {
+        abort(404);
+    }
+    return response()->file($path, [
+        'Content-Type' => 'application/manifest+json; charset=utf-8',
+        'Cache-Control' => 'public, max-age=86400',
+    ]);
+});
+
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
     Route::post('/login', [AuthenticatedSessionController::class, 'store'])->middleware('throttle:login');
